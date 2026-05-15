@@ -1082,11 +1082,491 @@ var FetchTable = []opCode{
 		Execute: func(c *cpu, arg operand, step int) bool {
 			switch step {
 			case 0:
+				c.temp.pointer = c.fetchone()
 				return false
+			case 1:
+				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 2:
+				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				return false
+			case 3:
+				addr := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = addr + uint16(c.Y)
+
+				if c.pageCrossed {
+					return false
+				}
+				fallthrough
+			case 4:
+				val := c.mem.Read(c.temp.addr)
+				c.A ^= val
+				c.SetFlagNZ(c.A)
+				return true
 			default:
 				fmt.Println("bad at 0x51")
 				return true
 			}
+		},
+	},
+	0x55: {
+		Name: "EOR ZP,X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				val := c.mem.Read(uint16(c.temp.pointer))
+				c.A ^= val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Print("bad at 0x55")
+				return true
+			}
+		},
+	},
+	0x56: {
+		Name: "LSR ZP,X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 3:
+				var carry bool
+				c.temp.val, carry = performLSR(c.temp.val)
+				c.updateFlag(Carry, carry)
+				c.SetFlagNZ(c.temp.val)
+				return false
+			case 4:
+				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				return true
+			default:
+				fmt.Println("bad at 0x56")
+				return true
+			}
+		},
+	},
+	0x58: {
+		Name: "CLI impl",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.clearFlag(Interrupt)
+			return true
+		},
+	},
+	0x59: {
+		Name: "EOR abs,Y",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				addr := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = addr + uint16(c.Y)
+
+				if crossedPage(addr, c.temp.addr) {
+					return false
+				}
+
+				fallthrough
+			case 3:
+				val := c.mem.Read(c.temp.addr)
+				c.A ^= val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("bad at 0x59")
+				return true
+			}
+		},
+	}, 0x5D: {
+		Name: "EOR abs,X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				addr := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = addr + uint16(c.X)
+
+				if crossedPage(addr, c.temp.addr) {
+					return false
+				}
+
+				fallthrough
+			case 3:
+				val := c.mem.Read(c.temp.addr)
+				c.A ^= val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("bad at 0x5D")
+				return true
+			}
+		},
+	}, 0x5E: {
+		Name: "LSR ABS,X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				addr := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = addr + uint16(c.X)
+				return false
+			case 3:
+				c.temp.val = c.mem.Read(c.temp.addr)
+				return false
+			case 4:
+				var carry bool
+				c.temp.val, carry = performLSR(c.temp.val)
+				c.updateFlag(Carry, carry)
+				c.SetFlagNZ(c.temp.val)
+				return false
+			case 5:
+				c.mem.Write(c.temp.addr, c.temp.val)
+				return true
+			default:
+				fmt.Println("bad at 0x5E")
+				return true
+			}
+		},
+	},
+	0x60: {
+		Name: "RTI IMPL",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				return false
+			case 1:
+				return false
+			case 2:
+				c.temp.low = c.popStack()
+				return false
+			case 3:
+				c.temp.low = c.popStack()
+				c.PC = builduint16(c.temp.low, c.temp.high)
+				return false
+			case 4:
+				c.PC++
+				return true
+			default:
+				fmt.Println("somethign bat at 0x60")
+				return true
+			}
+		},
+	},
+	0x61: {
+		Name: "ADC IND,X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 3:
+				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				return false
+			case 4:
+				c.temp.val = c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				return false
+			case 5:
+				c.ADC(c.temp.val)
+				return true
+			default:
+				fmt.Println("something bad at 0x61")
+				return true
+			}
+		},
+	},
+	0x65: {
+		Name: "ADC ZP",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				val := c.mem.Read(uint16(c.temp.pointer))
+				c.ADC(val)
+				return true
+			default:
+				fmt.Print("somethign bad at 0x65")
+				return true
+			}
+		},
+	},
+	0x66: {
+		Name: "ROR ZP",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 2:
+				c.temp.val = c.ROR(c.temp.val)
+				return false
+			case 3:
+				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				return true
+			default:
+				fmt.Println("bad at 0x66")
+				return true
+			}
+		},
+	},
+	0x68: {
+		Name: "PLA A",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				return false
+			case 1:
+				return false
+			case 2:
+				c.A = c.popStack()
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Print("something wrong at 0x68")
+				return true
+			}
+		},
+	},
+	0x69: {
+		Name: "ADC #",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			val := c.fetchone()
+			c.ADC(val)
+			return true
+		},
+	},
+	0x6A: {
+		Name: "ROR A",
+		Execute: func(c *cpu, arg operand, step int) bool {
+
+			c.A = c.ROR(c.A)
+			return true
+		},
+	},
+	0x6C: {
+		Name: "JMP IND",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				pointer := builduint16(c.temp.low, c.temp.high)
+
+				low := c.mem.Read(pointer)
+				var high uint8
+				if c.temp.low == 0xFF {
+					high = c.mem.Read(pointer & 0xFF00)
+				} else {
+					high = c.mem.Read(pointer + 1)
+				}
+
+				c.PC = builduint16(low, high)
+				return true
+			default:
+				fmt.Println("something wrong with 0x6C")
+				return true
+			}
+		},
+	},
+	0x6D: {
+		Name: "ADC ABS",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				c.ADC(val)
+				return true
+			default:
+				fmt.Println("something bad at 0x6D")
+				return true
+			}
+		},
+	},
+	0x6E: {
+		Name: "ROR ABS",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				c.temp.addr = builduint16(c.temp.low, c.temp.high)
+				c.temp.val = c.mem.Read(c.temp.addr)
+				return false
+			case 3:
+				c.temp.val = c.ROR(c.temp.val)
+				return false
+			case 4:
+				c.mem.Write(c.temp.addr, c.temp.val)
+				return true
+			default:
+				fmt.Println("something bad at 0x6E")
+				return true
+			}
+		},
+	}, 0x70: {
+		Name: "BVS",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.val = c.fetchone()
+				if !c.getFlag(oVerflow) {
+					return true
+				}
+				return false
+			case 1:
+				offset := int8(c.temp.val)
+				oldPC := c.PC
+
+				c.PC = uint16(int32(oldPC) + int32(offset))
+
+				if !crossedPage(oldPC, c.PC) {
+					return true
+				} else {
+					return false
+				}
+
+			case 2:
+				return true
+			default:
+				fmt.Println("bad at 0x70")
+				return true
+			}
+		},
+	},
+	0x71: {
+		Name: "ADC IND Y",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.low = c.mem.Read(uint16(c.pointer))
+				return false
+			case 2:
+				c.temp.high = c.mem.Read(uint16(c.pointer + 1))
+				return false
+			case 3:
+				baseaddr := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = baseaddr + uint16(c.Y)
+
+				if crossedPage(baseaddr, c.temp.addr) {
+					return false
+				}
+
+				fallthrough
+			case 4:
+				c.temp.val = c.mem.Read(c.temp.addr)
+				c.ADC(c.temp.val)
+				return true
+
+			default:
+				fmt.Println("something bad at 0x71")
+				return true
+			}
+		},
+	},
+	0x75: {
+		Name: "ADC ZP,X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				val := c.mem.Read(uint16(c.temp.pointer))
+				c.ADC(val)
+				return true
+			default:
+				fmt.Println("bad at 0x75")
+				return true
+			}
+		},
+	},
+	0x76: {
+		Name: "ROR ZP,X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 3:
+				c.temp.val = c.ROR(c.temp.val)
+				return false
+			case 4:
+				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				return true
+			default:
+				fmt.Println("bad at 0x76")
+				return true
+			}
+		},
+	},
+	0x78: {
+		Name: "SEI IMPL",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.setFlag(Interrupt)
+			return true
 		},
 	},
 }

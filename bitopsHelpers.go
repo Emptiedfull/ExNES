@@ -11,6 +11,42 @@ func performASL(val uint8) (shifted uint8, carry bool) {
 	return val, c
 }
 
+func (c *cpu) ADC(val uint8) {
+	ACC := uint16(c.A)
+	MEM := uint16(val)
+
+	var CAR uint16 = 0
+	if c.getFlag(Carry) {
+		CAR = 1
+	}
+
+	result := ACC + MEM + CAR
+
+	c.updateFlag(Carry, result > 0xFF)
+
+	overflow := ((ACC ^ result) & (MEM ^ result) & 0x80) != 0
+	c.updateFlag(oVerflow, overflow)
+
+	c.A = uint8(result & 0xFF)
+
+	c.SetFlagNZ(c.A)
+}
+
+func (c *cpu) ROR(val uint8) uint8 {
+	var oldcarry uint8 = 0
+	if c.getFlag(Carry) {
+		oldcarry = 1
+	}
+
+	newCarry := (val & 0x01) != 0
+	result := (val >> 1) | (oldcarry << 7)
+
+	c.updateFlag(Carry, newCarry)
+	c.SetFlagNZ(result)
+
+	return result
+}
+
 func performROL(val uint8, carry bool) (uint8, bool) {
 	var oldcarry uint8 = 0
 	if carry {
