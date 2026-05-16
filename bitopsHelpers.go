@@ -32,6 +32,27 @@ func (c *cpu) ADC(val uint8) {
 	c.SetFlagNZ(c.A)
 }
 
+func (c *cpu) SBC(val uint8) {
+	inverted := ^val
+
+	a := c.A
+	carry := uint16(0)
+	if c.getFlag(Carry) {
+		carry = 1
+	}
+
+	sum := uint16(a) + uint16(inverted) + carry
+
+	result8 := uint8(sum)
+
+	c.updateFlag(Carry, sum > 0xFF)
+
+	hasOverflow := ((uint16(a) ^ sum) & (uint16(inverted) ^ sum) & 0x0080) != 0
+	c.updateFlag(oVerflow, hasOverflow)
+
+	c.A = result8
+}
+
 func (c *cpu) ROR(val uint8) uint8 {
 	var oldcarry uint8 = 0
 	if c.getFlag(Carry) {
@@ -45,6 +66,17 @@ func (c *cpu) ROR(val uint8) uint8 {
 	c.SetFlagNZ(result)
 
 	return result
+}
+
+func (c *cpu) COMPARE(A, B uint8) uint8 {
+	result := A - B
+
+	c.updateFlag(Carry, A >= B)
+	c.updateFlag(Zero, A == B)
+	c.updateFlag(Negative, (result&0x80) != 0)
+
+	return result
+
 }
 
 func performROL(val uint8, carry bool) (uint8, bool) {
