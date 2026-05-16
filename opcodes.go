@@ -19,60 +19,12 @@ type operand struct {
 }
 
 var FetchTable = []opCode{
-	0xA9: {
-		Name: "LDA immediate",
-		Execute: func(c *cpu, arg operand, step int) bool {
 
-			value := c.mem.Read(c.PC)
-			c.A = value
-			c.PC++
-
-			c.SetFlagNZ(value)
-
-			return true
-
-		},
-		addrMode: AddrModeImm,
-	},
 	0xEA: {
 		Name: "NOP",
 		Execute: func(c *cpu, arg operand, step int) bool {
 			return true
 		},
-	},
-	0xAA: {
-		Name: "TAX",
-		Execute: func(c *cpu, arg operand, step int) bool {
-			val := c.A
-			c.X = val
-
-			c.SetFlagNZ(val)
-
-			return true
-		}, addrMode: AddrModeImp,
-	},
-	0x8D: {
-		Name: "STA",
-		Execute: func(c *cpu, arg operand, step int) bool {
-			switch step {
-			case 0:
-				//fetching low
-				c.temp.low = c.fetchone()
-				return false
-			case 1:
-				c.temp.high = c.fetchone()
-				return false
-			case 2:
-				addr := (uint16(c.temp.high) << 8) | uint16(c.temp.low)
-				val := c.A
-
-				c.mem.Write(addr, val)
-				return true
-			default:
-				return true
-			}
-
-		}, addrMode: AddrModeAbs,
 	},
 	0xE8: {
 		Name: "INX",
@@ -82,37 +34,7 @@ var FetchTable = []opCode{
 			return true
 		},
 	},
-	0xA2: {
-		Name: "LDX",
-		Execute: func(c *cpu, arg operand, step int) bool {
-			c.X = c.fetchone()
-			c.SetFlagNZ(c.X)
-			return true
-		},
-	}, 0xA0: {
-		Name: "LDY",
-		Execute: func(c *cpu, arg operand, step int) bool {
-			c.Y = c.fetchone()
-			c.SetFlagNZ(c.Y)
-			return true
-		},
-	}, 0x85: {
-		Name: "STA",
-		Execute: func(c *cpu, arg operand, step int) bool {
-			switch step {
-			case 0:
-				c.temp.low = c.fetchone()
-				return false
-			case 1:
-				addr := uint16(c.temp.low)
-				val := c.A
-				c.mem.Write(addr, val)
-				return true
-			default:
-				return true
-			}
-		},
-	}, 0x01: {
+	0x01: {
 		Name: "ORA (Indirect, X)",
 		Execute: func(c *cpu, arg operand, step int) bool {
 			switch step {
@@ -1567,6 +1489,609 @@ var FetchTable = []opCode{
 		Execute: func(c *cpu, arg operand, step int) bool {
 			c.setFlag(Interrupt)
 			return true
+		},
+	},
+	0x79: {
+		Name: "ADC ABS Y",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				baseAddr := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = baseAddr + uint16(c.Y)
+
+				if crossedPage(baseAddr, c.temp.addr) {
+					return false
+
+				}
+				fallthrough
+			case 3:
+				val := c.mem.Read(c.temp.addr)
+				c.ADC(val)
+				return true
+			default:
+				fmt.Println("bad at 0x79")
+				return true
+			}
+		},
+	},
+	0x7D: {
+		Name: "ADC ABS X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				baseAddr := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = baseAddr + uint16(c.X)
+
+				if crossedPage(baseAddr, c.temp.addr) {
+					return false
+
+				}
+				fallthrough
+			case 3:
+				val := c.mem.Read(c.temp.addr)
+				c.ADC(val)
+				return true
+			default:
+				fmt.Println("bad at 0x7D")
+				return true
+			}
+		},
+	},
+	0x7E: {
+		Name: "ROR ABS,X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				c.temp.addr = builduint16(c.temp.low, c.temp.high) + uint16(c.X)
+				return false
+			case 3:
+				c.temp.val = c.mem.Read(c.temp.addr)
+				return false
+			case 4:
+				c.temp.val = c.ROR(c.temp.val)
+				return false
+			case 5:
+				c.mem.Write(c.temp.addr, c.temp.val)
+				return true
+			default:
+				fmt.Println("somethign bad at 0x7E")
+				return true
+			}
+		},
+	},
+	0x81: {
+		Name: "STA IND X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 3:
+				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				return false
+			case 4:
+				adrr := builduint16(c.temp.low, c.temp.high)
+				c.mem.Write(adrr, c.A)
+				return true
+			default:
+				fmt.Println("something bad at 0x81")
+				return true
+			}
+		},
+	},
+	0x84: {
+		Name: "STY ZP",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.mem.Write(uint16(c.temp.pointer), c.Y)
+				return true
+			default:
+				fmt.Println("something bad at 0x84")
+				return true
+			}
+		},
+	},
+	0x85: {
+		Name: "STA ZP",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.mem.Write(uint16(c.temp.pointer), c.A)
+				return true
+			default:
+				fmt.Println("something bad at 0x85")
+				return true
+			}
+		},
+	},
+	0x86: {
+		Name: "STX ZP",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.mem.Write(uint16(c.temp.pointer), c.X)
+				return true
+			default:
+				fmt.Println("something bad at 0x86")
+				return true
+			}
+		},
+	},
+	0x88: {
+		Name: "DEY",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.Y--
+			c.SetFlagNZ(c.Y)
+			return true
+		},
+	},
+	0x8A: {
+		Name: "TXA",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.A = c.X
+			c.SetFlagNZ(c.A)
+			return true
+		},
+	},
+	0x8C: {
+		Name: "STY",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				addr := builduint16(c.temp.low, c.temp.high)
+				c.mem.Write(addr, c.Y)
+				return true
+			default:
+				fmt.Println("Something bad at 0x8C")
+				return true
+			}
+		},
+	},
+	0x8D: {
+		Name: "STA",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				addr := builduint16(c.temp.low, c.temp.high)
+				c.mem.Write(addr, c.A)
+				return true
+			default:
+				fmt.Println("something bad at 0x8D")
+				return true
+			}
+
+		},
+	},
+	0x8E: {
+		Name: "STX ABS",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				addr := builduint16(c.temp.low, c.temp.high)
+				c.mem.Write(addr, c.X)
+				return true
+			default:
+				fmt.Println("something bad at 0x8E")
+				return true
+			}
+
+		},
+	},
+	0x90: {
+		Name: "BCC",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.val = c.fetchone()
+
+				if c.getFlag(Carry) {
+					return true
+				}
+
+				return false
+
+			case 1:
+				offset := int8(c.temp.val)
+				oldPc := c.PC
+
+				c.PC = uint16(int32(oldPc) + int32(offset))
+
+				if crossedPage(oldPc, c.PC) {
+					return false
+				} else {
+					return true
+				}
+			case 2:
+				return false
+			default:
+				fmt.Println("something bad 0x90")
+				return false
+			}
+		},
+	},
+	0x91: {
+		Name: "STA IND Y",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 2:
+				c.temp.high = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 3:
+				base := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = base + uint16(c.Y)
+				return false
+			case 4:
+				c.mem.Write(c.temp.addr, c.A)
+				return true
+
+			default:
+				fmt.Println("something bad at 0x91")
+				return true
+			}
+		},
+	},
+	0x94: {
+		Name: "STY ZP X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.mem.Write(uint16(c.temp.pointer), c.Y)
+				return true
+			default:
+				fmt.Print("something bad at 0x94")
+				return true
+			}
+		},
+	},
+	0x95: {
+		Name: "STA ZP X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.mem.Write(uint16(c.temp.pointer), c.A)
+				return true
+			default:
+				fmt.Print("something bad at 0x95")
+				return true
+			}
+		},
+	},
+	0x96: {
+		Name: "STX ZP Y",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.mem.Write(uint16(c.temp.pointer), c.Y)
+				return true
+			default:
+				fmt.Print("something bad at 0x96")
+				return true
+			}
+		},
+	},
+	0x98: {
+		Name: "TYA",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.A = c.Y
+			c.SetFlagNZ(c.A)
+			return true
+		},
+	},
+	0x99: {
+		Name: "STA ABS Y ",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				addr := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = addr + uint16(c.Y)
+				return false
+			case 3:
+				c.mem.Write(c.temp.addr, c.A)
+				return true
+			default:
+				fmt.Println("bad at 0x99")
+				return true
+			}
+		},
+	},
+	0x9A: {
+		Name: "TXS",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.S = c.X
+			return true
+		},
+	},
+	0x9D: {
+		Name: "STA ABS X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				addr := builduint16(c.temp.low, c.temp.high)
+				c.temp.addr = addr + uint16(c.X)
+				return false
+			case 3:
+				c.mem.Write(c.temp.addr, c.A)
+				return true
+			default:
+				fmt.Println("bad at 0x9D")
+				return true
+			}
+		},
+	},
+	0xA0: {
+		Name: "LDY IMM",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.Y = c.fetchone()
+			c.SetFlagNZ(c.Y)
+			return true
+		},
+	},
+	0xA1: {
+		Name: "LDA IND X",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 3:
+				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				return false
+			case 4:
+				addr := builduint16(c.temp.low, c.temp.high)
+				val := c.mem.Read(addr)
+
+				c.A = val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("bad at 0xA1")
+				return true
+			}
+		},
+	},
+	0xA2: {
+		Name: "LDX IMM",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.X = c.fetchone()
+			c.SetFlagNZ(c.X)
+			return true
+		},
+	},
+	0xA4: {
+		Name: "LDY ZP",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				val := c.mem.Read(uint16(c.temp.pointer))
+				c.Y = val
+				c.SetFlagNZ(c.Y)
+				return true
+			default:
+				fmt.Println("bad at 0xA4")
+				return true
+			}
+		},
+	},
+	0xA5: {
+		Name: "LDA ZP",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				val := c.mem.Read(uint16(c.temp.pointer))
+				c.A = val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("bad at 0xA5")
+				return true
+			}
+		},
+	},
+	0xA6: {
+		Name: "LDX ZP",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				val := c.mem.Read(uint16(c.temp.pointer))
+				c.X = val
+				c.SetFlagNZ(c.X)
+				return true
+			default:
+				fmt.Println("bad at 0xA6")
+				return true
+			}
+		},
+	},
+	0xA8: {
+		Name: "TAY",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.Y = c.A
+			c.SetFlagNZ(c.Y)
+			return true
+		},
+	},
+	0xA9: {
+		Name: "LDA IMM",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.A = c.fetchone()
+			c.SetFlagNZ(c.A)
+			return true
+		},
+	},
+	0xAA: {
+		Name: "TAX",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			c.X = c.A
+
+			c.SetFlagNZ(c.X)
+
+			return true
+		},
+	},
+	0xAC: {
+		Name: "LDY ABS",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				c.Y = val
+				c.SetFlagNZ(c.Y)
+				return true
+			default:
+				fmt.Println("something bad at 0xAC")
+				return true
+			}
+		},
+	},
+	0xAD: {
+		Name: "LDA ABS",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				c.A = val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("something bad at 0xAD")
+				return true
+			}
+		},
+	},
+	0xAE: {
+		Name: "LDY ABS",
+		Execute: func(c *cpu, arg operand, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				c.X = val
+				c.SetFlagNZ(c.X)
+				return true
+			default:
+				fmt.Println("something bad at 0xAE")
+				return true
+			}
 		},
 	},
 }
