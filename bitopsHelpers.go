@@ -47,10 +47,11 @@ func (c *cpu) SBC(val uint8) {
 
 	c.updateFlag(Carry, sum > 0xFF)
 
-	hasOverflow := ((uint16(a) ^ sum) & (uint16(inverted) ^ sum) & 0x0080) != 0
+	hasOverflow := ((a ^ result8) & (inverted ^ result8) & 0x80) != 0
 	c.updateFlag(oVerflow, hasOverflow)
 
 	c.A = result8
+	c.SetFlagNZ(c.A)
 }
 
 func (c *cpu) ROR(val uint8) uint8 {

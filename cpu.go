@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type flags = uint8
 
 const (
@@ -13,24 +15,6 @@ const (
 	Negative        = 1 << 7
 )
 
-type AddrMode uint8
-
-const (
-	AddrModeImp AddrMode = iota + 1
-	AddrModeAcc
-	AddrModeImm
-	AddrModeZp
-	AddrModeZpX
-	AddrModeZpY
-	AddrModeAbs
-	AddrModeAbsX
-	AddrModeAbsY
-	AddrModeInd
-	AddrModeIndX
-	AddrModeIndY
-	AddrModeRel
-)
-
 type cpu struct {
 	PC uint16 //program counter
 	S  uint8  //stack pointer
@@ -41,6 +25,30 @@ type cpu struct {
 
 	mem *bus
 	temp
+
+	currentOp   uint8
+	currentstep int
+	totalCycles int
+}
+
+func (c *cpu) tick() {
+	c.totalCycles++
+	if c.currentstep == 0 {
+		c.currentOp = c.fetchone()
+		c.totalCycles++
+	}
+
+	opcode := FetchTable[c.currentOp]
+
+	finished := opcode.Execute(c, c.currentstep)
+	fmt.Println(opcode.Name, c.PC, c.totalCycles)
+	if finished {
+		c.currentstep = 0
+		c.temp = temp{}
+	} else {
+		c.currentstep++
+	}
+
 }
 
 type temp struct {
@@ -50,13 +58,11 @@ type temp struct {
 	pointer uint8
 	addr    uint16
 	val     uint8
-
-	pageCrossed bool
 }
 
 type bus struct {
-	internal [2048]uint8
-	external []uint8
+	internal [2048]byte
+	external []byte
 }
 
 func (b *bus) Read(addr uint16) uint8 {
