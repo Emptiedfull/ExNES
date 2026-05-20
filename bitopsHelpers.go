@@ -95,3 +95,18 @@ func performLSR(val uint8) (shifted uint8, carry bool) {
 	val >>= 1
 	return val, c
 }
+
+func getbit(val uint8, pos int8) uint8 {
+	return (val >> pos) & 1
+}
+
+func getbitBool(val uint8, pos int8) bool {
+	return getbit(val, pos) == 1
+}
+
+func AssignBit(val uint8, pos uint8, state bool) uint8 {
+	if state {
+		return val | (1 << pos)
+	}
+	return val &^ (1 << pos)
+}

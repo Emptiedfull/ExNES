@@ -16,6 +16,8 @@ const (
 )
 
 type cpu struct {
+	console *console
+
 	PC uint16 //program counter
 	S  uint8  //stack pointer
 	P  flags  //processor status
@@ -29,6 +31,7 @@ type cpu struct {
 	currentOp   uint8
 	currentstep int
 	totalCycles int
+	Stall       int
 }
 
 func (c *cpu) tick() {
@@ -61,11 +64,13 @@ type temp struct {
 }
 
 type bus struct {
+	cpu      *cpu
 	internal [2048]byte
 	external []byte
 }
 
 func (b *bus) Read(addr uint16) uint8 {
+	var val uint8 = 0
 	if addr <= 0x1FFF {
 		// RAM Mirroring: $0000-$07FF is the real RAM.
 		// $0800-$1FFF mirrors it.
@@ -79,15 +84,35 @@ func (b *bus) Read(addr uint16) uint8 {
 		return b.external[romAddr]
 	}
 
+	switch {
+	case addr <= 0x1FFF:
+		val = b.internal[addr&0x07FF]
+	case 0x2000 <= addr && addr <= 0x3FFF:
+		RegIndex := (addr - 0x2000) % 8
+		val = b.cpu.console.Ppu.ReadReg(RegIndex, b.cpu.console.OpenBusVal)
+	case addr >= 0x8000:
+		romaddr := addr - 0x8000
+		if len(b.external) == 0x4000 {
+			val = b.external[romaddr%0x4000]
+		} else {
+			val = b.external[romaddr]
+		}
+
+	}
+
+	b.cpu.console.OpenBusVal = val
+
 	return 0
 }
 
 func (b *bus) Write(addr uint16, val uint8) {
-	//temp logic add handling later
-	if addr <= 0x8000 {
-		b.internal[addr] = val
 
-	} else {
+	switch {
+	case addr <= 8000:
+		b.internal[addr] = val
+	case addr == 0x4014:
+		b.cpu.console.ExecuteOAMDMA(val)
+	default:
 		b.external[addr-0x8000] = val
 	}
 }
