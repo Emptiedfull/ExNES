@@ -380,10 +380,9 @@ var FetchTable = []opCode{
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
-				fmt.Println(c.temp.low)
+
 				return false
 			case 1:
-				fmt.Println(c.PC)
 				return false
 
 			case 2:
@@ -394,7 +393,6 @@ var FetchTable = []opCode{
 				return false
 			case 4:
 				c.temp.high = c.fetchone()
-				fmt.Println(builduint16(c.temp.low, c.temp.high))
 				c.PC = builduint16(c.temp.low, c.temp.high)
 				return true
 			default:

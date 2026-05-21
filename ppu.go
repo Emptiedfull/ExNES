@@ -1,13 +1,23 @@
 package main
 
+import "fmt"
+
 //for any readers, please stop here I barely understand what ive done
 
 type ppu struct {
-	mem ppu_mem
+	mem     ppu_mem
+	console *console
 
 	Dot      int
 	Scanline int
 	Frame    int
+
+	pallete Pallete
+
+	backBuffer  []byte
+	frontBuffer []byte
+
+	DrawFlg bool
 
 	verticalMirroring bool
 }
@@ -117,6 +127,10 @@ func (p *ppu) read(addr uint16) uint8 {
 func (p *ppu) Write(addr uint16, val uint8) {
 	addr &= 0x3FFF
 
+	if addr >= 0x2000 && addr <= 0x23FF {
+		fmt.Printf("[PPU Write] CPU writing Tile ID 0x%02X to VRAM Addr: 0x%04X (Scanline: %d, Dot: %d)\n", val, addr, p.Scanline, p.Dot)
+	}
+
 	switch {
 	case addr <= 0x1FFF:
 		p.mem.chrROM[addr] = val
@@ -126,7 +140,7 @@ func (p *ppu) Write(addr uint16, val uint8) {
 	case addr <= 0x3FFF:
 		palleteAddr := (addr - 0x3F00) % 32
 
-		if palleteAddr >= 16 && palleteAddr%4 == 0 {
+		if palleteAddr >= 16 && (palleteAddr&0x03) == 0 {
 			palleteAddr -= 16
 		}
 
@@ -150,7 +164,7 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 
 		result |= (openBusVal & 0x1F)
 
-		p.mem.nmiOcc = false
+		p.mem.Vblank = false
 		p.nmiChange()
 
 		return result
@@ -200,8 +214,9 @@ func (p *ppu) nmiChange() {
 func (p *ppu) WriteReg(reg uint16, val uint8) {
 	switch reg {
 	case 0: //PPUCTRL
-		p.mem.nmiOut = p.mem.register.NmiEnable
+
 		p.mem.register.NmiEnable = getbitBool(val, 7)
+		p.mem.nmiOut = p.mem.register.NmiEnable
 		p.mem.register.SpriteSize = getbitBool(val, 5)
 		p.mem.register.BgPattern = getbitBool(val, 4)
 		p.mem.register.SpritePattern = getbitBool(val, 3)
@@ -232,10 +247,10 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 		p.mem.register.AddressLatch = !p.mem.register.AddressLatch
 	case 6:
 		if !p.mem.register.AddressLatch {
-			p.mem.register.TramAddr = (p.mem.register.VramAddr & 0x00FF) | (uint16(val&0x3F) << 8)
+			p.mem.register.TramAddr = (p.mem.register.TramAddr & 0x00FF) | (uint16(val&0x3F) << 8)
 			p.mem.register.AddressLatch = true
 		} else {
-			p.mem.register.TramAddr = (p.mem.register.VramAddr & 0xFF00) | uint16(val)
+			p.mem.register.TramAddr = (p.mem.register.TramAddr & 0xFF00) | uint16(val)
 			p.mem.register.VramAddr = p.mem.register.TramAddr
 			p.mem.register.AddressLatch = false
 		}
@@ -276,7 +291,7 @@ func (p *ppu) Tick() {
 		p.mem.nmiDelay--
 		if p.mem.nmiDelay == 0 {
 			if p.mem.nmiOut && p.mem.nmiOcc {
-				//perform NMI
+				p.console.Cpu.nmiPending = true
 			}
 		}
 	}
@@ -284,14 +299,22 @@ func (p *ppu) Tick() {
 	p.Dot++
 	if p.Dot > 340 {
 		p.Dot = 0
+
+		if p.Scanline < 240 {
+			p.renderScanLine(p.Scanline)
+		}
+
 		p.Scanline++
 		if p.Scanline > 261 {
 			p.Scanline = 0
 			p.Frame++
+
+			copy(p.frontBuffer, p.backBuffer)
 		}
 	}
 
 	if p.Scanline == 241 && p.Dot == 1 {
+		p.DrawFlg = true
 		p.mem.Vblank = true
 		p.mem.nmiOcc = true
 		p.nmiChange()
@@ -299,10 +322,50 @@ func (p *ppu) Tick() {
 
 	if p.Scanline == 261 && p.Dot == 1 {
 		p.mem.nmiOcc = false
+		p.mem.Vblank = false
 		p.mem.register.Sprite0Hit = false
 		p.mem.register.sprietOverflow = false
 
 		p.nmiChange()
+	}
+
+}
+
+func (p *ppu) renderScanLine(scanline int) {
+
+	tileY := scanline / 8
+	fineY := scanline % 8
+
+	rowBaseAddr := tileY * 32
+
+	for tileX := range 32 {
+		nameTableIndex := rowBaseAddr + tileX
+		ppuAddr := uint16(0x2000 + nameTableIndex)
+		mirrored := p.MirrorNameTable(ppuAddr)
+		tileIndex := p.mem.Vram[mirrored]
+
+		tilePix := p.DecodeTile(uint16(tileIndex), 0x0000)
+
+		for fineX := range 8 {
+			colorIndex := tilePix[fineY][fineX]
+
+			paletteRAMIndex := colorIndex
+			if colorIndex == 0 {
+				paletteRAMIndex = 0
+			}
+
+			colorToken := p.mem.Pallete[paletteRAMIndex]
+			rgba := Universal_pallete[colorToken]
+
+			pixelX := (tileX * 8) + (fineX)
+			bufferIdx := (scanline*256 + pixelX) * 4
+
+			p.backBuffer[bufferIdx] = rgba[0]
+			p.backBuffer[bufferIdx+1] = rgba[1]
+			p.backBuffer[bufferIdx+2] = rgba[2]
+			p.backBuffer[bufferIdx+3] = rgba[3]
+
+		}
 	}
 
 }
@@ -314,7 +377,7 @@ func (p *ppu) DecodeTile(tileIndex uint16, offset uint16) [8][8]uint8 {
 
 	for row := uint16(0); row < 8; row++ {
 		lowByte := p.read(base + row)
-		highBye := p.read(base + row + 1)
+		highBye := p.read(base + row + 8)
 
 		for col := uint16(0); col < 8; col++ {
 			bitPos := 7 - col
