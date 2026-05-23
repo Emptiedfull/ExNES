@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 //for any readers, please stop here I barely understand what ive done
 
@@ -127,8 +130,8 @@ func (p *ppu) read(addr uint16) uint8 {
 func (p *ppu) Write(addr uint16, val uint8) {
 	addr &= 0x3FFF
 
-	if addr >= 0x2000 && addr <= 0x23FF {
-		fmt.Printf("[PPU Write] CPU writing Tile ID 0x%02X to VRAM Addr: 0x%04X (Scanline: %d, Dot: %d)\n", val, addr, p.Scanline, p.Dot)
+	if addr >= 0x3F00 {
+		fmt.Printf("[PPU.WRITE ROUTER] Incoming Packet Destination: 0x%04X, Data Payload: 0x%02X\n", addr, val)
 	}
 
 	switch {
@@ -139,7 +142,7 @@ func (p *ppu) Write(addr uint16, val uint8) {
 		p.mem.Vram[mirroredaddr] = val
 	case addr <= 0x3FFF:
 		palleteAddr := (addr - 0x3F00) % 32
-
+		fmt.Printf("[PALETTE WRITE DETECTED] Addr: 0x%04X, Slot: %d, ColorToken: 0x%02X\n", addr, palleteAddr, val)
 		if palleteAddr >= 16 && (palleteAddr&0x03) == 0 {
 			palleteAddr -= 16
 		}
@@ -230,6 +233,7 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 
 		p.nmiChange()
 	case 1: //PPU MASK
+		fmt.Printf("[PPUMASK Write] CPU turned on graphics! Value: 0x%02X\n", val)
 		p.mem.register.EmpBlue = getbitBool(val, 7)
 		p.mem.register.EmpGreen = getbitBool(val, 6)
 		p.mem.register.EmpRed = getbitBool(val, 5)
@@ -251,10 +255,20 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 			p.mem.register.AddressLatch = true
 		} else {
 			p.mem.register.TramAddr = (p.mem.register.TramAddr & 0xFF00) | uint16(val)
-			p.mem.register.VramAddr = p.mem.register.TramAddr
+			p.mem.register.VramAddr = p.mem.register.TramAddr & 0x3FFF
 			p.mem.register.AddressLatch = false
+
+			if p.mem.register.VramAddr >= 0x3F00 {
+				fmt.Printf("[REG 6 HIT] CPU latched a Palette Space Address: 0x%04X\n", p.mem.register.VramAddr)
+			}
 		}
 	case 7:
+
+		if p.mem.register.VramAddr >= 0x3F00 {
+			fmt.Printf("[REG 7 WRITE] CPU writing to PPUDATA! Target: 0x%04X, Value: 0x%02X\n",
+				p.mem.register.VramAddr, val)
+		}
+
 		p.Write(p.mem.register.VramAddr, val)
 		if p.mem.register.AddrIncrement {
 			p.mem.register.VramAddr += 32
@@ -266,7 +280,7 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 }
 
 func (console *console) ExecuteOAMDMA(page uint8) {
-
+	fmt.Println("executing OAMDMA")
 	cpuSrc := uint(page) << 8
 
 	for i := uint16(0); i < 256; i++ {
@@ -301,7 +315,9 @@ func (p *ppu) Tick() {
 		p.Dot = 0
 
 		if p.Scanline < 240 {
+
 			p.renderScanLine(p.Scanline)
+
 		}
 
 		p.Scanline++
@@ -310,11 +326,12 @@ func (p *ppu) Tick() {
 			p.Frame++
 
 			copy(p.frontBuffer, p.backBuffer)
+			p.DrawFlg = true
 		}
 	}
 
 	if p.Scanline == 241 && p.Dot == 1 {
-		p.DrawFlg = true
+
 		p.mem.Vblank = true
 		p.mem.nmiOcc = true
 		p.nmiChange()
@@ -331,6 +348,8 @@ func (p *ppu) Tick() {
 
 }
 
+// NOTE OF NEXT SESSION VRAM AND PALLETE ADDRESES ARE NOT BEING SET CHECK CPU TO PPU PIPELINE
+
 func (p *ppu) renderScanLine(scanline int) {
 
 	tileY := scanline / 8
@@ -342,6 +361,7 @@ func (p *ppu) renderScanLine(scanline int) {
 		nameTableIndex := rowBaseAddr + tileX
 		ppuAddr := uint16(0x2000 + nameTableIndex)
 		mirrored := p.MirrorNameTable(ppuAddr)
+
 		tileIndex := p.mem.Vram[mirrored]
 
 		tilePix := p.DecodeTile(uint16(tileIndex), 0x0000)
@@ -349,25 +369,66 @@ func (p *ppu) renderScanLine(scanline int) {
 		for fineX := range 8 {
 			colorIndex := tilePix[fineY][fineX]
 
-			paletteRAMIndex := colorIndex
-			if colorIndex == 0 {
-				paletteRAMIndex = 0
-			}
+			// paletteRAMIndex := colorIndex
+			// if colorIndex == 0 {
+			// 	paletteRAMIndex = 0
+			// }
 
-			colorToken := p.mem.Pallete[paletteRAMIndex]
-			rgba := Universal_pallete[colorToken]
+			// colorToken := p.mem.Pallete[paletteRAMIndex]
+			// rgba := Universal_pallete[colorToken]
+
+			// pixelX := (tileX * 8) + (fineX)
+			// bufferIdx := (scanline*256 + pixelX) * 4
+
+			// p.backBuffer[bufferIdx] = 255
+			// p.backBuffer[bufferIdx+1] = 0
+			// p.backBuffer[bufferIdx+2] = 0
+			// p.backBuffer[bufferIdx+3] = rgba[3]
+
+			var r, g, b uint8
+			switch colorIndex {
+			case 0:
+				// Background pixels: Pure Black
+				r, g, b = 0, 0, 0
+			case 1:
+				// First color bit: Bright Green
+				r, g, b = 0, 255, 0
+			case 2:
+				// Second color bit: Bright Blue
+				r, g, b = 0, 0, 255
+			case 3:
+				// Combined color bit: Pure White
+				r, g, b = 255, 255, 255
+			}
 
 			pixelX := (tileX * 8) + (fineX)
 			bufferIdx := (scanline*256 + pixelX) * 4
 
-			p.backBuffer[bufferIdx] = rgba[0]
-			p.backBuffer[bufferIdx+1] = rgba[1]
-			p.backBuffer[bufferIdx+2] = rgba[2]
-			p.backBuffer[bufferIdx+3] = rgba[3]
+			p.backBuffer[bufferIdx] = r
+			p.backBuffer[bufferIdx+1] = g
+			p.backBuffer[bufferIdx+2] = b
+			p.backBuffer[bufferIdx+3] = 255
 
 		}
 	}
 
+}
+
+func (p *ppu) DumpBackBufferToFile() {
+	file, err := os.Create("ppu_buffer.raw")
+	if err != nil {
+		fmt.Printf("[DUMP ERROR] Could not create file: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	_, err = file.Write(p.backBuffer)
+	if err != nil {
+		fmt.Printf("[DUMP ERROR] Failed to write buffer data: %v\n", err)
+		return
+	}
+
+	fmt.Println("[DUMP SUCCESS] Saved 256x240 PPU backBuffer snapshot to ppu_buffer.raw!")
 }
 
 func (p *ppu) DecodeTile(tileIndex uint16, offset uint16) [8][8]uint8 {
@@ -376,16 +437,27 @@ func (p *ppu) DecodeTile(tileIndex uint16, offset uint16) [8][8]uint8 {
 	base := offset + (tileIndex * 16)
 
 	for row := uint16(0); row < 8; row++ {
-		lowByte := p.read(base + row)
-		highBye := p.read(base + row + 8)
+
+		lowAddr := base + row
+		highAddr := base + row + 8
+
+		// Bound checking to prevent crashes if math goes wild
+		var lowByte, highByte uint8
+		if lowAddr < uint16(len(p.mem.chrROM)) {
+			lowByte = p.mem.chrROM[lowAddr]
+		}
+		if highAddr < uint16(len(p.mem.chrROM)) {
+			highByte = p.mem.chrROM[highAddr]
+		}
 
 		for col := uint16(0); col < 8; col++ {
 			bitPos := 7 - col
 
 			bit0 := (lowByte >> bitPos) & 1
-			bit1 := (highBye >> bitPos) & 1
+			bit1 := (highByte >> bitPos) & 1
 
 			colorIndex := (bit1 << 1) | bit0 // -1,2,3,4
+
 			decodeTile[row][col] = colorIndex
 		}
 	}

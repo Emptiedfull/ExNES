@@ -92,6 +92,7 @@ func (c *cpu) tick() {
 	}
 
 	if c.currentstep == 0 {
+
 		c.currentOp = c.fetchone()
 		c.totalCycles++
 	}
@@ -160,7 +161,7 @@ func (b *bus) Write(addr uint16, val uint8) {
 		b.cpu.console.Ppu.WriteReg(RegIndex, val)
 	case addr == 0x4014:
 		b.cpu.console.ExecuteOAMDMA(val)
-	case addr >= 0x8000:
+	case addr <= 0x7FFF:
 
 	default:
 		b.external[addr-0x8000] = val

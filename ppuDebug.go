@@ -29,6 +29,7 @@ func (g *console) Draw(screen *ebiten.Image) {
 	opts := &ebiten.DrawImageOptions{}
 	opts.GeoM.Scale(3, 3)
 	screen.DrawImage(g.CanvasImage, opts)
+	g.Ppu.DrawFlg = false
 }
 
 func (g *console) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

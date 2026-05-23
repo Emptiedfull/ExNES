@@ -50,6 +50,10 @@ func (c *console) loadROM(filepath string) error {
 		return fmt.Errorf("failed to read mem: %w", err)
 	}
 
+	for i := 0; i < 16; i++ {
+		fmt.Printf("Byte %02d: 0x%02X\n", i, c.Ppu.mem.chrROM[i])
+	}
+
 	c.Cpu.mem.external = prgData
 	return nil
 
@@ -61,15 +65,14 @@ func (g *console) Update() error {
 		return nil
 	}
 
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		g.Ppu.DumpBackBufferToFile()
+	}
+
 	if !g.Ppu.DrawFlg {
 		for range 89000 {
 			g.tick()
-
 		}
-		if g.Ppu.mem.Vram[50] != 0 {
-			fmt.Println("VRAM IS RECEIVING GRAPHICS DATA!")
-		}
-
 	}
 
 	return nil
