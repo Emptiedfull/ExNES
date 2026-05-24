@@ -1,7 +1,8 @@
-package main_test
+package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -11,12 +12,6 @@ type codeTest struct {
 	Initial cpustate    `json:"initial"`
 	Final   cpustate    `json:"final"`
 	Cycles  []cycleStep `json:"cycles"`
-}
-
-type cycleStep struct {
-	Addr uint16
-	Val  uint8
-	Mode string
 }
 
 func (c *cycleStep) UnmarshalJSON(data []byte) error {
@@ -43,7 +38,7 @@ type cpustate struct {
 	Ram [][]int
 }
 
-func loadJson(t *testing.T, filepath string) {
+func loadJson(t *testing.T, filepath string) []codeTest {
 	file, err := os.ReadFile(filepath)
 	if err != nil {
 		t.Fatalf("failed to read file data %v", err)
@@ -54,9 +49,135 @@ func loadJson(t *testing.T, filepath string) {
 		t.Fatalf("unable to parse test json")
 	}
 
-	t.Log(tests[0].Cycles)
+	return tests
 }
 
 func TestOpcodes(t *testing.T) {
-	loadJson(t, "C:/Users/user/ExNES/ProcessorTests/6502/v1/00.json")
+
+	tests := loadJson(t, "C:/Users/user/ExNES/ProcessorTests/6502/v1/0d.json")
+
+	performTest(t, tests)
+}
+
+func performTest(t *testing.T, tests []codeTest) {
+	c := cpu{
+		mem: &TestBus{},
+	}
+
+	for _, test := range tests {
+		c.LoadCpuState(test.Initial)
+
+		cyclecount := len(test.Cycles)
+
+		for range cyclecount - 1 {
+			c.tick()
+		}
+
+		final, ram := c.GetCpuState()
+		_, err := compareStates(ram, final, test.Final)
+		if err != nil {
+			t.Errorf("Error occured at test: %v, %s \n cycles: %v \n performed: %v", test.Name, err.Error(), test.Cycles, ram.GetHistory())
+		}
+
+		c.mem.ClearHistory()
+
+	}
+}
+
+func (TestBus *TestBus) GetHistory() []cycleStep {
+	return TestBus.History
+}
+
+func (TestBus *TestBus) ClearHistory() {
+	TestBus.History = []cycleStep{}
+}
+
+func compareStates(ram typebus, got, expected cpustate) (bool, error) {
+
+	if got.Pc != expected.Pc {
+		return false, fmt.Errorf("Pc mismatch, got: %v expected %v", got.Pc, expected.Pc)
+	}
+
+	if got.A != expected.A {
+		return false, fmt.Errorf("Register A mismatch got: %v expected %v", got.A, expected.A)
+	}
+
+	if got.X != expected.X {
+		return false, fmt.Errorf("Register X mismatch, got %v expected %v", got.X, expected.X)
+	}
+
+	if got.Y != expected.Y {
+		return false, fmt.Errorf("Register Y mismatch, got %v expected %v", got.Y, expected.Y)
+	}
+
+	if got.S != expected.S {
+		return false, fmt.Errorf("Stack pointer mismatch, got %v expected %v", got.S, expected.S)
+	}
+
+	if got.P != expected.P {
+		return false, fmt.Errorf("Flag mismatch, got %v expected %v", got.P, expected.P)
+	}
+
+	for _, memCell := range expected.Ram {
+		addr := memCell[0]
+		expectedVal := memCell[1]
+
+		if ram.Get(uint16(addr)) != uint8(expectedVal) {
+			return false, fmt.Errorf("Memory mismatch at %b, expected %b got %b", addr, expectedVal, ram.Get(uint16(addr)))
+		}
+
+	}
+
+	return true, nil
+}
+
+type TestBus struct {
+	RAM     [65536]byte
+	History []cycleStep
+}
+
+func (T *TestBus) Read(addr uint16) uint8 {
+	val := T.RAM[addr]
+	T.History = append(T.History, cycleStep{Addr: addr, Val: val, Mode: "read"})
+	return val
+}
+
+func (T *TestBus) Write(addr uint16, val uint8) {
+	T.Set(addr, val)
+	T.History = append(T.History, cycleStep{Addr: addr, Val: val, Mode: "write"})
+}
+
+func (c *cpu) LoadCpuState(state cpustate) {
+	c.PC = state.Pc
+	c.S = state.S
+	c.A = state.A
+	c.X = state.X
+	c.Y = state.Y
+	c.P = state.P
+
+	for _, cell := range state.Ram {
+		addr := uint16(cell[0])
+		val := uint8(cell[1])
+		c.mem.Set(addr, val)
+	}
+}
+
+func (c *cpu) GetCpuState() (cpustate, typebus) {
+	state := cpustate{}
+
+	state.A = c.A
+	state.X = c.X
+	state.Y = c.Y
+	state.Pc = c.PC
+	state.P = c.P
+	state.S = c.S
+	return state, c.mem
+}
+
+func (T *TestBus) Set(addr uint16, val uint8) {
+	T.RAM[addr] = val
+}
+
+func (T *TestBus) Get(addr uint16) uint8 {
+	return T.RAM[addr]
 }

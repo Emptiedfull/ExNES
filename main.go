@@ -54,7 +54,7 @@ func (c *console) loadROM(filepath string) error {
 		fmt.Printf("Byte %02d: 0x%02X\n", i, c.Ppu.mem.chrROM[i])
 	}
 
-	c.Cpu.mem.external = prgData
+	//c.Cpu.mem.external = prgData
 	return nil
 
 }
@@ -101,9 +101,25 @@ func initializeConsole() *console {
 	c.Ppu.console = c
 
 	c.Cpu.mem = &bus{}
-	c.Cpu.mem.cpu = c.Cpu
+	//c.Cpu.mem.cpu = c.Cpu
 
 	return c
+}
+
+func (b *bus) GetHistory() []cycleStep {
+	return nil
+}
+
+func (b *bus) ClearHistory() {
+	return
+}
+
+func (b *bus) Set(addr uint16, val uint8) {
+	return
+}
+
+func (b *bus) Get(addr uint16) uint8 {
+	return 0
 }
 
 func main() {

@@ -22,12 +22,12 @@ type cpu struct {
 
 	PC uint16 //program counter
 	S  uint8  //stack pointer
-	P  flags  //processor status
+	P  uint8  //processor status
 	A  uint8  //Accumulator
 	X  uint8
 	Y  uint8
 
-	mem *bus
+	mem typebus
 	temp
 
 	nmiPending   bool
@@ -38,6 +38,21 @@ type cpu struct {
 	currentstep int
 	totalCycles int
 	Stall       int
+}
+
+type cycleStep struct {
+	Addr uint16
+	Val  uint8
+	Mode string
+}
+
+type typebus interface {
+	Read(uint16) uint8
+	Write(uint16, uint8)
+	Set(uint16, uint8)
+	Get(uint16) uint8
+	GetHistory() []cycleStep
+	ClearHistory()
 }
 
 func (c *cpu) executeNmiCycle() {
