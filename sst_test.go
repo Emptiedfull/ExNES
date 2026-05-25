@@ -38,6 +38,8 @@ type cpustate struct {
 	Ram [][]int
 }
 
+const Dir = "C:/Users/user/ExNES/65x02/nes6502/v1/"
+
 func loadJson(t *testing.T, filepath string) []codeTest {
 	file, err := os.ReadFile(filepath)
 	if err != nil {
@@ -52,14 +54,38 @@ func loadJson(t *testing.T, filepath string) []codeTest {
 	return tests
 }
 
-func TestOpcodes(t *testing.T) {
+func getTestNames(t *testing.T) []string {
+	entries, err := os.ReadDir(Dir)
+	if err != nil {
+		t.Fatalf("unable to read file %v", err)
+	}
 
-	tests := loadJson(t, "C:/Users/user/ExNES/ProcessorTests/6502/v1/0d.json")
+	var testNames []string
 
-	performTest(t, tests)
+	for _, entry := range entries {
+		testNames = append(testNames, entry.Name())
+	}
+
+	return testNames
 }
 
-func performTest(t *testing.T, tests []codeTest) {
+func TestOpcodes(t *testing.T) {
+
+	tests := getTestNames(t)
+
+	performTest(t, tests[7])
+	for _, test := range tests[100:] {
+		performTest(t, test)
+	}
+
+}
+
+func performTest(t *testing.T, testName string) {
+
+	testDir := Dir + testName
+
+	tests := loadJson(t, testDir)
+
 	c := cpu{
 		mem: &TestBus{},
 	}
@@ -77,11 +103,15 @@ func performTest(t *testing.T, tests []codeTest) {
 		_, err := compareStates(ram, final, test.Final)
 		if err != nil {
 			t.Errorf("Error occured at test: %v, %s \n cycles: %v \n performed: %v", test.Name, err.Error(), test.Cycles, ram.GetHistory())
+			return
 		}
 
 		c.mem.ClearHistory()
+		c.isJamming = false
 
 	}
+
+	t.Log(testName, "PASSED")
 }
 
 func (TestBus *TestBus) GetHistory() []cycleStep {

@@ -10,6 +10,40 @@ type opCode struct {
 }
 
 var FetchTable = []opCode{
+	0x00: {
+		Name: "BRK",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.fetchone()
+				return false
+			case 1:
+				c.pushStack(uint8(c.PC >> 8))
+				return false
+			case 2:
+				c.pushStack(uint8(c.PC & 0x0FF))
+				return false
+			case 3:
+				c.setFlag(Break)
+
+				c.pushStack(c.P)
+				c.updateFlag(Break, false)
+				c.setFlag(Interrupt)
+				return false
+			case 4:
+				c.temp.low = c.mem.Read(0xFFFE)
+
+				return false
+			case 5:
+				c.temp.high = c.mem.Read(0xFFFF)
+				c.PC = builduint16(c.low, c.high)
+				return true
+			default:
+				fmt.Println("somethign wrong at 0x00")
+				return true
+			}
+		},
+	},
 
 	0x01: {
 		Name: "ORA (Indirect, X)",
@@ -38,7 +72,72 @@ var FetchTable = []opCode{
 			}
 
 		},
-	}, 0x05: {
+	},
+	0x02: {
+		Name: "JAM",
+		Execute: func(c *cpu, step int) bool {
+
+			c.isJamming = true
+
+			return true
+		},
+	},
+
+	0x03: {
+		Name: "SLO",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.pointer += c.X
+				return false
+			case 2:
+				c.low = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 3:
+				c.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.addr = builduint16(c.low, c.high)
+				return false
+			case 4:
+				c.temp.val = c.mem.Read(c.temp.addr)
+				return false
+			case 5:
+				c.temp.val = c.ASL(c.val)
+				return false
+			case 6:
+				c.mem.Write(c.addr, c.val)
+
+				c.A |= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+
+				fmt.Println("something really wrong at 0x03")
+				return true
+
+			}
+		},
+	},
+
+	0x04: {
+		Name: "NOP ZP",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.fetchone()
+				return false
+			case 1:
+				return true
+			default:
+				fmt.Println("something wrong at 0x04")
+				return false
+			}
+		},
+	},
+
+	0x05: {
 		Name: "ORA zeropage",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -81,7 +180,35 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x08: {
+	},
+
+	0x07: {
+		Name: "SLO ZPG",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.val = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 2:
+				c.val = c.ASL(c.val)
+				return false
+			case 3:
+				c.mem.Write(uint16(c.pointer), c.val)
+
+				c.A |= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("somethign wrong at 0x07")
+				return true
+			}
+		},
+	},
+
+	0x08: {
 		Name: "PHP impl",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -116,7 +243,39 @@ var FetchTable = []opCode{
 			c.SetFlagNZ(c.A)
 			return true
 		},
-	}, 0x0D: {
+	}, 0x0B: {
+		Name: "ANC ",
+		Execute: func(c *cpu, step int) bool {
+			val := c.fetchone()
+
+			c.A &= val
+			c.updateFlag(Carry, getbitBool(c.A, 7))
+			c.SetFlagNZ(c.A)
+
+			return true
+		},
+	},
+
+	0x0C: {
+		Name: "NOP ABS",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				return true
+			default:
+				fmt.Println("something really wrong at 0x0C")
+				return true
+			}
+		},
+	},
+
+	0x0D: {
 		Name: "ORA ABS",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -162,7 +321,39 @@ var FetchTable = []opCode{
 			}
 
 		},
-	}, 0x10: {
+	},
+
+	0x0F: {
+		Name: "SLO ABS",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.temp.low, c.temp.high)
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 3:
+				c.val = c.ASL(c.val)
+				return false
+			case 4:
+				c.mem.Write(c.addr, c.val)
+
+				c.A |= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("something really wrong at 0x0F")
+				return true
+			}
+		},
+	},
+
+	0x10: {
 		Name: "BPL",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -226,7 +417,73 @@ var FetchTable = []opCode{
 			}
 
 		},
-	}, 0x15: {
+	},
+
+	0x12: {
+		Name: "JAM",
+		Execute: func(c *cpu, step int) bool {
+			c.isJamming = true
+
+			return true
+		},
+	},
+
+	0x13: {
+		Name: "SLO IND Y",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 2:
+				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				return false
+			case 3:
+				baseAddr := builduint16(c.low, c.high)
+				c.addr = baseAddr + uint16(c.Y)
+				return false
+			case 4:
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 5:
+				c.val = c.ASL(c.val)
+				return false
+			case 6:
+				c.mem.Write(c.addr, c.val)
+
+				c.A |= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("something wrong at 0x13")
+				return true
+			}
+		},
+	},
+
+	0x14: {
+		Name: "NOP ZP, X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.pointer += c.X
+				return false
+			case 2:
+				return true
+			default:
+				fmt.Println("something really wrong at 0x14")
+				return true
+			}
+		},
+	},
+
+	0x15: {
 		Name: "ORA oper,X",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -274,6 +531,36 @@ var FetchTable = []opCode{
 
 		},
 	},
+	0x17: {
+		Name: "SLO ZP X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.pointer += c.X
+				return false
+			case 2:
+				c.val = c.mem.Read(uint16(c.pointer))
+				return false
+			case 3:
+				c.val = c.ASL(c.val)
+				return false
+			case 4:
+				c.mem.Write(uint16(c.pointer), c.val)
+
+				c.A |= c.val
+				c.SetFlagNZ(c.A)
+
+				return true
+			default:
+				fmt.Println("soemthign wrong at 0x17")
+				return true
+			}
+		},
+	},
+
 	0x18: {
 		Name: "CLC",
 		Execute: func(c *cpu, step int) bool {
@@ -312,7 +599,77 @@ var FetchTable = []opCode{
 
 			}
 		},
-	}, 0x1D: {
+	},
+
+	0x1A: {
+		Name: "NOP IMPL",
+		Execute: func(c *cpu, step int) bool {
+			return true
+		},
+	},
+
+	0x1B: {
+		Name: "SLO ABS Y",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+
+			case 0:
+				c.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				return false
+			case 3:
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 4:
+				c.val = c.ASL(c.val)
+				return false
+			case 5:
+				c.mem.Write(c.addr, c.val)
+
+				c.A |= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("wrong at 0x1B")
+				return true
+			}
+		},
+	},
+
+	0x1C: {
+		Name: "NOP ABS X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				baseAddr := builduint16(c.low, c.high)
+				newAddr := baseAddr + uint16(c.X)
+
+				if crossedPage(baseAddr, newAddr) {
+					return false
+				}
+
+				fallthrough
+			case 3:
+				return true
+			default:
+				fmt.Println("wrong at 0x1C")
+				return true
+			}
+		},
+	},
+
+	0x1D: {
 		Name: "ORA ABS,X",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -374,7 +731,42 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x20: {
+	},
+
+	0x1F: {
+		Name: "SLO ABS X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.low, c.high) + uint16(c.X)
+				return false
+			case 3:
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 4:
+				c.val = c.ASL(c.val)
+				return false
+			case 5:
+				c.mem.Write(c.addr, c.val)
+
+				c.A |= c.val
+				c.SetFlagNZ(c.A)
+
+				return true
+			default:
+				fmt.Println("something wrong at 0x1F")
+				return true
+			}
+		},
+	},
+
+	0x20: {
 		Name: "JSR",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -427,7 +819,54 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x24: {
+	},
+
+	0x22: {
+		Name: "JAM",
+		Execute: func(c *cpu, step int) bool {
+			c.isJamming = true
+
+			return true
+		},
+	},
+
+	0x23: {
+		Name: "RLA X IND ",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.mem.Read(uint16(c.temp.pointer))
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.low = c.mem.Read(uint16(c.pointer))
+				return false
+			case 3:
+				c.high = c.mem.Read(uint16(c.pointer + 1))
+				return false
+			case 4:
+				c.addr = builduint16(c.low, c.high)
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 5:
+				c.val = c.ROL(c.val)
+				return false
+			case 6:
+				c.mem.Write(c.addr, c.val)
+				c.A &= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("somethign wrong at 0x23")
+				return true
+			}
+		},
+	},
+
+	0x24: {
 		Name: "BITS ZP",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -475,12 +914,13 @@ var FetchTable = []opCode{
 				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-				var carry bool
-				c.temp.val, carry = performROL(c.temp.val, c.getFlag(Carry))
-				c.updateFlag(Carry, carry)
+
+				c.temp.val = c.ROL(c.val)
+
 				return false
 			case 3:
 				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.SetFlagNZ(c.val)
 				return true
 			default:
 				fmt.Println("something bad happened at 0x26")
@@ -488,7 +928,35 @@ var FetchTable = []opCode{
 			}
 
 		},
-	}, 0x28: {
+	},
+
+	0x27: {
+		Name: "RLA ZP",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.val = c.mem.Read(uint16(c.pointer))
+				return false
+			case 2:
+				c.val = c.ROL(c.val)
+				return false
+			case 3:
+				c.mem.Write(uint16(c.pointer), c.val)
+
+				c.A &= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("soemthing wrong at 0x27")
+				return true
+			}
+		},
+	},
+
+	0x28: {
 		Name: "PLP",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -522,7 +990,22 @@ var FetchTable = []opCode{
 			c.SetFlagNZ(c.A)
 			return true
 		},
-	}, 0x2C: {
+	},
+
+	0x2B: {
+		Name: "ANC ",
+		Execute: func(c *cpu, step int) bool {
+			val := c.fetchone()
+
+			c.A &= val
+			c.updateFlag(Carry, getbitBool(c.A, 7))
+			c.SetFlagNZ(c.A)
+
+			return true
+		},
+	},
+
+	0x2C: {
 		Name: "BITS ABS",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -596,7 +1079,40 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x30: {
+	},
+
+	0x2F: {
+		Name: "RLA ABS",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.low, c.high)
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 3:
+				c.val = c.ROL(c.val)
+				return false
+			case 4:
+				c.mem.Write(c.addr, c.val)
+
+				c.A &= c.val
+				c.SetFlagNZ(c.A)
+
+				return true
+			default:
+				fmt.Println("somethign wrong at 2F")
+				return true
+			}
+		},
+	},
+
+	0x30: {
 		Name: "BMI ",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -658,7 +1174,72 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x35: {
+	},
+
+	0x32: {
+		Name: "JAM",
+		Execute: func(c *cpu, step int) bool {
+			c.isJamming = true
+
+			return true
+		},
+	},
+
+	0x33: {
+		Name: "RLA IND Y",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.low = c.mem.Read(uint16(c.pointer))
+				return false
+			case 2:
+				c.high = c.mem.Read(uint16(c.pointer + 1))
+				return false
+			case 3:
+				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				return false
+			case 4:
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 5:
+				c.val = c.ROL(c.val)
+				return false
+			case 6:
+				c.mem.Write(c.addr, c.val)
+
+				c.A &= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("something wrong at 0x33")
+				return true
+			}
+		},
+	},
+
+	0x34: {
+		Name: "NOP ",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.pointer += c.X
+				return false
+			case 2:
+				return true
+			default:
+				fmt.Println("something wrong at 0x34")
+				return true
+			}
+		},
+	},
+
+	0x35: {
 		Name: "AND ZPG,X",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -679,6 +1260,65 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	0x36: {
+		Name: "ROL ZPG,X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.pointer += c.X
+				return false
+			case 2:
+				c.val = c.mem.Read(uint16(c.pointer))
+				return false
+			case 3:
+				c.val = c.ROL(c.val)
+				return false
+			case 4:
+				c.mem.Write(uint16(c.pointer), c.val)
+				c.SetFlagNZ(c.val)
+				return true
+			default:
+				fmt.Println("something wrong at 0x36")
+				return true
+
+			}
+		},
+	},
+
+	0x37: {
+		Name: "RLA ZPG X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.pointer += c.X
+				return false
+			case 2:
+				c.val = c.mem.Read(uint16(c.pointer))
+				return false
+			case 3:
+				c.val = c.ROL(c.val)
+				return false
+			case 4:
+				c.mem.Write(uint16(c.pointer), c.val)
+
+				c.A &= c.val
+				c.SetFlagNZ(c.A)
+
+				return true
+			default:
+				fmt.Println("something wrong at 0x37")
+				return true
+			}
+		},
+	},
+
 	0x38: {
 		Name: "SEC",
 		Execute: func(c *cpu, step int) bool {
@@ -714,6 +1354,75 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	0x3A: {
+		Name: "NOP IMPL",
+		Execute: func(c *cpu, step int) bool {
+			return true
+		},
+	},
+
+	0x3B: {
+		Name: "RLA ABS Y",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				return false
+			case 3:
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 4:
+				c.val = c.ROL(c.val)
+				return false
+			case 5:
+				c.mem.Write(c.addr, c.val)
+
+				c.A &= c.val
+				c.SetFlagNZ(c.A)
+
+				return true
+			default:
+				fmt.Println("something wrong at 3B")
+				return true
+			}
+		},
+	},
+
+	0x3C: {
+		Name: "NOP ABS X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				baseAddr := builduint16(c.low, c.high)
+				newAddr := baseAddr + uint16(c.X)
+
+				if crossedPage(baseAddr, newAddr) {
+					return false
+				}
+
+				fallthrough
+			case 3:
+				return true
+			default:
+				fmt.Println("wrong at 0x1C")
+				return true
+			}
+		},
+	},
+
 	0x3D: {
 		Name: "AND ABS,X",
 		Execute: func(c *cpu, step int) bool {
@@ -775,6 +1484,38 @@ var FetchTable = []opCode{
 
 		},
 	},
+	0x3F: {
+		Name: "RLA ABS X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.low, c.high) + uint16(c.X)
+				return false
+			case 3:
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 4:
+				c.val = c.ROL(c.val)
+				return false
+			case 5:
+				c.mem.Write(c.addr, c.val)
+
+				c.A &= c.val
+				c.SetFlagNZ(c.A)
+
+				return true
+			default:
+				fmt.Println("something wrong at 3B")
+				return true
+			}
+		},
+	},
 	0x40: {
 		Name: "RTI",
 		Execute: func(c *cpu, step int) bool {
@@ -828,6 +1569,68 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	0x42: {
+		Name: "JAM",
+		Execute: func(c *cpu, step int) bool {
+			c.isJamming = true
+
+			return true
+		},
+	},
+
+	0x43: {
+		Name: "SRE X IND ",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.low = c.mem.Read(uint16(c.pointer))
+				return false
+			case 3:
+				c.high = c.mem.Read(uint16(c.pointer + 1))
+				return false
+			case 4:
+				c.addr = builduint16(c.low, c.high)
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 5:
+				c.val = c.LSR(c.val)
+				return false
+			case 6:
+				c.mem.Write(c.addr, c.val)
+
+				c.A ^= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("somethign wrong at 0x43")
+				return true
+			}
+		},
+	},
+
+	0x44: {
+		Name: "NOP ZP",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.fetchone()
+				return false
+			case 1:
+				return true
+			default:
+				fmt.Println("something wrong at 0x04")
+				return false
+			}
+		},
+	},
+
 	0x45: {
 		Name: "EOR ZP",
 		Execute: func(c *cpu, step int) bool {
@@ -869,7 +1672,36 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x48: {
+	},
+
+	0x47: {
+		Name: "SRE ZP",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				return false
+			case 2:
+				c.val = c.LSR(c.val)
+				return false
+			case 3:
+				c.mem.Write(uint16(c.pointer), c.val)
+
+				c.A ^= c.val
+				c.SetFlagNZ(c.A)
+
+				return true
+			default:
+				fmt.Println("something wrong at 0x47")
+				return true
+			}
+		},
+	},
+
+	0x48: {
 		Name: "PHA",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -900,7 +1732,22 @@ var FetchTable = []opCode{
 			c.SetFlagNZ(c.A)
 			return true
 		},
-	}, 0x4C: {
+	},
+
+	0x4B: {
+		Name: "ALR",
+		Execute: func(c *cpu, step int) bool {
+			val := c.fetchone()
+			mid := c.A & val
+
+			c.A = c.LSR(mid)
+			c.SetFlagNZ(c.A)
+
+			return true
+		},
+	},
+
+	0x4C: {
 		Name: "JMP ABS",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -970,6 +1817,37 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	0x4F: {
+		Name: "SRE ABS",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.low, c.high)
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 3:
+				c.val = c.LSR(c.val)
+				return false
+			case 4:
+				c.mem.Write(c.addr, c.val)
+
+				c.A ^= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("soemthing wrong at 0x4f")
+				return true
+			}
+		},
+	},
+
 	0x50: {
 		Name: "BVC",
 		Execute: func(c *cpu, step int) bool {
@@ -1032,6 +1910,69 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	0x52: {
+		Name: "JAM",
+		Execute: func(c *cpu, step int) bool {
+			c.isJamming = true
+			return true
+		},
+	},
+
+	0x53: {
+		Name: "SRE IND Y",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.low = c.mem.Read(uint16(c.pointer))
+				return false
+			case 2:
+				c.high = c.mem.Read(uint16(c.pointer + 1))
+				return false
+			case 3:
+				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				return false
+			case 4:
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 5:
+				c.val = c.LSR(c.val)
+				return false
+			case 6:
+				c.mem.Write(c.addr, c.val)
+
+				c.A ^= c.val
+				c.SetFlagNZ(c.A)
+
+				return true
+			default:
+				fmt.Println("bad at 0x54")
+				return true
+			}
+		},
+	},
+
+	0x54: {
+		Name: "NOP ZP",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.fetchone()
+				return false
+			case 1:
+				return false
+			case 2:
+				return true
+			default:
+				fmt.Println("something wrong at 0x54")
+				return true
+			}
+		},
+	},
+
 	0x55: {
 		Name: "EOR ZP,X",
 		Execute: func(c *cpu, step int) bool {
@@ -1081,6 +2022,37 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	0x57: {
+		Name: "SRE ZP X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.pointer += c.X
+				return false
+			case 2:
+				c.val = c.mem.Read(uint16(c.pointer))
+				return false
+			case 3:
+				c.val = c.LSR(c.val)
+				return false
+			case 4:
+				c.mem.Write(uint16(c.pointer), c.val)
+
+				c.A ^= c.val
+				c.SetFlagNZ(c.A)
+
+				return true
+			default:
+				fmt.Println("something wrong at 0x57")
+				return true
+			}
+		},
+	},
+
 	0x58: {
 		Name: "CLI impl",
 		Execute: func(c *cpu, step int) bool {
@@ -1117,7 +2089,76 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x5D: {
+	},
+
+	0x5A: {
+		Name: "NOP IMPL",
+		Execute: func(c *cpu, step int) bool {
+			return true
+		},
+	},
+
+	0x5b: {
+		Name: "SRE ABS Y",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				return false
+			case 3:
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 4:
+				c.val = c.LSR(c.val)
+				return false
+			case 5:
+				c.mem.Write(c.addr, c.val)
+
+				c.A ^= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("somethign wrong at 0x5b")
+				return true
+			}
+		},
+	},
+
+	0x5C: {
+		Name: "NOP ABS X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				baseAddr := builduint16(c.low, c.high)
+				newAddr := baseAddr + uint16(c.X)
+
+				if crossedPage(baseAddr, newAddr) {
+					return false
+				}
+
+				fallthrough
+			case 3:
+				return true
+			default:
+				fmt.Println("wrong at 0x5C")
+				return true
+			}
+		},
+	},
+
+	0x5D: {
 		Name: "EOR abs,X",
 		Execute: func(c *cpu, step int) bool {
 			switch step {
@@ -1178,6 +2219,39 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	0x5F: {
+		Name: "SRE ABS X",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.low = c.fetchone()
+				return false
+			case 1:
+				c.temp.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.low, c.high) + uint16(c.X)
+				return false
+			case 3:
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 4:
+				c.val = c.LSR(c.val)
+				return false
+			case 5:
+				c.mem.Write(c.addr, c.val)
+
+				c.A ^= c.val
+				c.SetFlagNZ(c.A)
+				return true
+			default:
+				fmt.Println("somethign wrong at 0x5F")
+				return true
+			}
+		},
+	},
+
 	0x60: {
 		Name: "RTS IMPL",
 		Execute: func(c *cpu, step int) bool {
@@ -1210,7 +2284,9 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
+
 				return false
 			case 2:
 				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
@@ -1228,6 +2304,67 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	0x62: {
+		Name: "JAM",
+		Execute: func(c *cpu, step int) bool {
+			c.isJamming = true
+
+			return true
+		},
+	},
+
+	0x63: {
+		Name: "RRA X IND",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.temp.pointer = c.fetchone()
+				return false
+			case 1:
+				c.temp.pointer += c.X
+				return false
+			case 2:
+				c.temp.low = c.mem.Read(uint16(c.pointer))
+				return false
+			case 3:
+				c.temp.high = c.mem.Read(uint16(c.pointer + 1))
+				return false
+			case 4:
+				c.addr = builduint16(c.low, c.high)
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 5:
+				c.mem.Write(c.addr, c.val)
+				c.val = c.ROR(c.val)
+				return false
+			case 6:
+				c.mem.Write(c.addr, c.val)
+				c.ADC(c.val)
+				return true
+			default:
+				fmt.Println("something bad at 0x63")
+				return true
+			}
+		},
+	},
+
+	0x64: {
+		Name: "NOP ZP",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.fetchone()
+				return false
+			case 1:
+				return true
+			default:
+				fmt.Println("something wrong at 0x04")
+				return false
+			}
+		},
+	},
+
 	0x65: {
 		Name: "ADC ZP",
 		Execute: func(c *cpu, step int) bool {
@@ -1267,6 +2404,33 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	0x67: {
+		Name: "RRA ZP",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.pointer = c.fetchone()
+				return false
+			case 1:
+				c.val = c.mem.Read(uint16(c.pointer))
+				return false
+			case 2:
+				c.val = c.ROR(c.val)
+				return false
+			case 3:
+				c.mem.Write(uint16(c.pointer), c.val)
+
+				c.ADC(c.val)
+				return true
+			default:
+				fmt.Println("something wrong at 0x67")
+				return true
+
+			}
+		},
+	},
+
 	0x68: {
 		Name: "PLA A",
 		Execute: func(c *cpu, step int) bool {
@@ -1301,6 +2465,23 @@ var FetchTable = []opCode{
 			return true
 		},
 	},
+
+	0x6B: {
+		Name: "ARR",
+		Execute: func(c *cpu, step int) bool {
+			val := c.fetchone()
+			mid := c.A & val
+
+			c.A = c.ROR(mid)
+
+			c.updateFlag(Carry, getbitBool(c.A, 6))
+			c.updateFlag(oVerflow, (getbit(c.A, 6)^getbit(c.A, 5)) == 1)
+			c.SetFlagNZ(c.A)
+
+			return true
+		},
+	},
+
 	0x6C: {
 		Name: "JMP IND",
 		Execute: func(c *cpu, step int) bool {
@@ -1315,7 +2496,7 @@ var FetchTable = []opCode{
 				c.temp.addr = builduint16(c.temp.low, c.temp.high)
 
 				c.temp.val = c.mem.Read(c.temp.addr)
-				fmt.Println(c.temp.addr)
+
 				return false
 			case 3:
 				var high uint8
@@ -1324,7 +2505,7 @@ var FetchTable = []opCode{
 				} else {
 					high = c.mem.Read(c.temp.addr + 1)
 				}
-				fmt.Println(c.temp.low, c.temp.high)
+
 				c.PC = builduint16(c.temp.val, high)
 				return true
 			default:
@@ -1378,7 +2559,38 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x70: {
+	},
+
+	0x6F: {
+		Name: "RRA ABS",
+		Execute: func(c *cpu, step int) bool {
+			switch step {
+			case 0:
+				c.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+			case 2:
+				c.addr = builduint16(c.low, c.high)
+				c.val = c.mem.Read(c.addr)
+				return false
+			case 3:
+				c.val = c.ROR(c.val)
+				return false
+			case 4:
+				c.mem.Write(c.addr, c.val)
+
+				c.ADC(c.val)
+				return true
+			default:
+				fmt.Println("somethign wrong at 0x6F")
+				return true
+			}
+		},
+	},
+
+	0x70: {
 		Name: "BVS",
 		Execute: func(c *cpu, step int) bool {
 			switch step {

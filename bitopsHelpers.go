@@ -11,16 +11,25 @@ func performASL(val uint8) (shifted uint8, carry bool) {
 	return val, c
 }
 
-func (c *cpu) ADC(val uint8) {
-	ACC := uint16(c.A)
-	MEM := uint16(val)
+func (c *cpu) ASL(val uint8) (shifted uint8) {
 
-	var CAR uint16 = 0
+	s, carry := performASL(val)
+
+	c.updateFlag(Carry, carry)
+	return s
+}
+
+func (c *cpu) ADC(val uint8) {
+
+	var CAR uint8 = 0
 	if c.getFlag(Carry) {
 		CAR = 1
 	}
 
-	result := ACC + MEM + CAR
+	ACC := uint16(c.A)
+	MEM := uint16(val)
+
+	result := ACC + MEM + uint16(CAR)
 
 	c.updateFlag(Carry, result > 0xFF)
 
@@ -90,10 +99,22 @@ func performROL(val uint8, carry bool) (uint8, bool) {
 	return res, newCarry
 }
 
+func (c *cpu) ROL(val uint8) uint8 {
+	r, co := performROL(val, c.getFlag(Carry))
+	c.updateFlag(Carry, co)
+	return r
+}
+
 func performLSR(val uint8) (shifted uint8, carry bool) {
 	c := val&0x01 != 0
 	val >>= 1
 	return val, c
+}
+
+func (c *cpu) LSR(val uint8) uint8 {
+	r, co := performLSR(val)
+	c.updateFlag(Carry, co)
+	return r
 }
 
 func getbit(val uint8, pos int8) uint8 {

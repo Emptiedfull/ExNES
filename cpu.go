@@ -38,6 +38,8 @@ type cpu struct {
 	currentstep int
 	totalCycles int
 	Stall       int
+
+	isJamming bool
 }
 
 type cycleStep struct {
@@ -93,6 +95,12 @@ func (c *cpu) executeNmiCycle() {
 }
 
 func (c *cpu) tick() {
+
+	if c.isJamming {
+		c.mem.Read(c.PC)
+		return
+	}
+
 	c.totalCycles++
 
 	if c.currentstep == 0 && c.nmiPending {
