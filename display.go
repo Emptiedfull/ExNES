@@ -22,7 +22,7 @@ var Universal_pallete = [64][4]byte{
 }
 
 func (p *ppu) GenBuffer() []byte {
-	buffer := make([]byte, 256*128*4) //height*width*rgba
+	buffer := make([]byte, 256*128*4)
 
 	for bank := uint16(0); bank < 2; bank++ {
 		bankOffset := bank * 0x1000
