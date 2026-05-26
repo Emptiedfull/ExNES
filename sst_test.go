@@ -73,10 +73,11 @@ func TestOpcodes(t *testing.T) {
 
 	tests := getTestNames(t)
 
-	performTest(t, tests[7])
-	for _, test := range tests[200:] {
+	for _, test := range tests[:255] {
 		performTest(t, test)
 	}
+
+	fmt.Println("ALL TESTS PASSED")
 
 }
 

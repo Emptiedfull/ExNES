@@ -204,4 +204,6 @@ func (c *cpu) reset() {
 	c.P = 0x24
 
 	c.console.ready = true
+	c.isJamming = false
+	c.temp = temp{}
 }
