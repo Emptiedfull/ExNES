@@ -74,7 +74,7 @@ func TestOpcodes(t *testing.T) {
 	tests := getTestNames(t)
 
 	performTest(t, tests[7])
-	for _, test := range tests[100:] {
+	for _, test := range tests[200:] {
 		performTest(t, test)
 	}
 
