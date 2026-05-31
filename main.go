@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -37,21 +36,19 @@ func (c *console) loadROM(filepath string) error {
 		return fmt.Errorf("invalid nes header")
 	}
 
-	prgSize := int(header[4]) * 16384
-	//chrBanks := int(header[5])
+	prgBanks := int(header[4])
+	prgSize := prgBanks * 16384
 
 	prgData := make([]byte, prgSize)
 	if _, err := io.ReadFull(file, prgData); err != nil {
 		return fmt.Errorf("error reading prgData: %w", err)
 	}
 
+	c.Cpu.mem.FillArr(0, prgData)
+
 	c.Ppu.mem.chrROM = make([]uint8, 8192)
 	if _, err := io.ReadFull(file, c.Ppu.mem.chrROM); err != nil {
 		return fmt.Errorf("failed to read mem: %w", err)
-	}
-
-	for i := 0; i < 16; i++ {
-		fmt.Printf("Byte %02d: 0x%02X\n", i, c.Ppu.mem.chrROM[i])
 	}
 
 	//c.Cpu.mem.external = prgData
@@ -99,11 +96,23 @@ func initializeConsole() *console {
 
 	c.Cpu.console = c
 	c.Ppu.console = c
+	c.OpenBusVal = 0
 
-	c.Cpu.mem = &bus{}
-	//c.Cpu.mem.cpu = c.Cpu
+	c.Cpu.mem = &bus{
+		cpu: c.Cpu,
+	}
 
 	return c
+}
+
+func (b *bus) FillArr(addr uint16, data []byte) error {
+
+	size := len(data)
+	b.external = make([]byte, size)
+
+	copy(b.external[addr:], data)
+	return nil
+
 }
 
 func (b *bus) GetHistory() []cycleStep {
@@ -122,18 +131,28 @@ func (b *bus) Get(addr uint16) uint8 {
 	return 0
 }
 
-func main() {
-	c := initializeConsole()
-	fmt.Println("running")
-	err := c.loadROM("C:/Users/user/ExNES/games/dk.nes")
-	//err := c.loadROM("C:/Users/user/ExNES/nestest.nes")
-	c.Cpu.reset()
+// func main() {
+// 	// c := initializeConsole()
+// 	// fmt.Println("running")
+// 	// err := c.loadROM("C:/Users/user/ExNES/games/dk.nes")
+// 	// //err := c.loadROM("C:/Users/user/ExNES/nestest.nes")
+// 	// c.Cpu.reset()
 
-	fmt.Println(err)
+// 	// fmt.Println(err)
 
-	ebiten.SetWindowSize(768, 384)
+// 	// ebiten.SetWindowSize(768, 384)
 
-	if err := ebiten.RunGame(c); err != nil {
-		log.Fatal(err)
-	}
-}
+// 	// if err := ebiten.RunGame(c); err != nil {
+// 	// 	log.Fatal(err)
+// 	// }
+
+// 	c := initializeConsole()
+// 	err := c.loadROM("C:/Users/user/ExNES/games/dk.nes")
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+
+// 	c.Cpu.reset()
+
+// 	fmt.Println(c.Cpu.lookAhead(c.Cpu.PC))
+// }

@@ -5,13 +5,17 @@ import (
 )
 
 type opCode struct {
-	Name    string
-	Execute func(c *cpu, step int) bool
+	Name           string
+	AddressingMode addressingMode
+	Size           uint8
+	Execute        func(c *cpu, step int) bool
 }
 
 var FetchTable = []opCode{
 	0x00: {
-		Name: "BRK",
+		Name:           "BRK",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -46,7 +50,9 @@ var FetchTable = []opCode{
 	},
 
 	0x01: {
-		Name: "ORA (Indirect, X)",
+		Name:           "ORA",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -74,7 +80,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x02: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 
 			c.isJamming = true
@@ -84,7 +92,9 @@ var FetchTable = []opCode{
 	},
 
 	0x03: {
-		Name: "SLO",
+		Name:           "SLO",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -122,7 +132,9 @@ var FetchTable = []opCode{
 	},
 
 	0x04: {
-		Name: "NOP ZP",
+		Name:           "NOP",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -138,7 +150,9 @@ var FetchTable = []opCode{
 	},
 
 	0x05: {
-		Name: "ORA zeropage",
+		Name:           "ORA",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -153,8 +167,12 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x06: {
-		Name: "ASL Zero Page",
+	},
+
+	0x06: {
+		Name:           "ASL",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -183,7 +201,9 @@ var FetchTable = []opCode{
 	},
 
 	0x07: {
-		Name: "SLO ZPG",
+		Name:           "SLO",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -209,7 +229,9 @@ var FetchTable = []opCode{
 	},
 
 	0x08: {
-		Name: "PHP impl",
+		Name:           "PHP impl",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -222,16 +244,23 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x09: {
-		Name: "ORA IMM",
+	},
+	0x09: {
+		Name:           "ORA",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 			c.A |= val
 			c.SetFlagNZ(c.A)
 			return true
 		},
-	}, 0x0A: {
-		Name: "ASL A",
+	},
+	0x0A: {
+
+		Name:           "ASL A",
+		AddressingMode: Accumulator,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			var f bool
 			c.A, f = performASL(c.A)
@@ -243,8 +272,11 @@ var FetchTable = []opCode{
 			c.SetFlagNZ(c.A)
 			return true
 		},
-	}, 0x0B: {
-		Name: "ANC ",
+	},
+	0x0B: {
+		Name:           "ANC",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 
@@ -257,7 +289,9 @@ var FetchTable = []opCode{
 	},
 
 	0x0C: {
-		Name: "NOP ABS",
+		Name:           "NOP",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -276,7 +310,9 @@ var FetchTable = []opCode{
 	},
 
 	0x0D: {
-		Name: "ORA ABS",
+		Name:           "ORA",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -294,8 +330,11 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x0E: {
-		Name: "ASL ABS",
+	},
+	0x0E: {
+		Name:           "ASL",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -324,7 +363,9 @@ var FetchTable = []opCode{
 	},
 
 	0x0F: {
-		Name: "SLO ABS",
+		Name:           "SLO",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -353,8 +394,12 @@ var FetchTable = []opCode{
 		},
 	},
 
+	// 0x1X Seris- This is not ai pls dont kill me :<
+
 	0x10: {
-		Name: "BPL",
+		Name:           "BPL",
+		AddressingMode: Relative,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -385,7 +430,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x11: {
-		Name: "ORA (IND) Y",
+		Name:           "ORA",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -420,7 +467,9 @@ var FetchTable = []opCode{
 	},
 
 	0x12: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
+		Size:           10,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 
@@ -429,7 +478,9 @@ var FetchTable = []opCode{
 	},
 
 	0x13: {
-		Name: "SLO IND Y",
+		Name:           "SLO IND Y",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -465,7 +516,9 @@ var FetchTable = []opCode{
 	},
 
 	0x14: {
-		Name: "NOP ZP, X",
+		Name:           "NOP",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -484,7 +537,9 @@ var FetchTable = []opCode{
 	},
 
 	0x15: {
-		Name: "ORA oper,X",
+		Name:           "ORA",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -503,8 +558,11 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x16: {
-		Name: "ASL Oper,X",
+	},
+	0x16: {
+		Name:           "ASL Oper,X",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -532,7 +590,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x17: {
-		Name: "SLO ZP X",
+		Name:           "SLO",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -562,14 +622,19 @@ var FetchTable = []opCode{
 	},
 
 	0x18: {
-		Name: "CLC",
+		Name:           "CLC",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.clearFlag(Carry)
 			return true
 		},
 	},
+
 	0x19: {
-		Name: "ORA ABS,Y",
+		Name:           "ORA ABS,Y",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -602,14 +667,17 @@ var FetchTable = []opCode{
 	},
 
 	0x1A: {
-		Name: "NOP IMPL",
+		Name:           "NOP",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			return true
 		},
 	},
 
 	0x1B: {
-		Name: "SLO ABS Y",
+		Name:           "SLO",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 
@@ -642,7 +710,9 @@ var FetchTable = []opCode{
 	},
 
 	0x1C: {
-		Name: "NOP ABS X",
+		Name:           "NOP",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -670,7 +740,9 @@ var FetchTable = []opCode{
 	},
 
 	0x1D: {
-		Name: "ORA ABS,X",
+		Name:           "ORA",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -700,8 +772,12 @@ var FetchTable = []opCode{
 
 			}
 		},
-	}, 0x1E: {
-		Name: "ASL ABS,X",
+	},
+
+	0x1E: {
+		Name:           "ASL",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -734,7 +810,9 @@ var FetchTable = []opCode{
 	},
 
 	0x1F: {
-		Name: "SLO ABS X",
+		Name:           "SLO",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -766,8 +844,12 @@ var FetchTable = []opCode{
 		},
 	},
 
+	//0x2X Series
+
 	0x20: {
-		Name: "JSR",
+		Name:           "JSR",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -792,8 +874,11 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x21: {
-		Name: "AND X,IND",
+	},
+	0x21: {
+		Name:           "AND",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -822,7 +907,9 @@ var FetchTable = []opCode{
 	},
 
 	0x22: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
+		Size:           10,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 
@@ -831,7 +918,9 @@ var FetchTable = []opCode{
 	},
 
 	0x23: {
-		Name: "RLA X IND ",
+		Name:           "RLA",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -867,7 +956,9 @@ var FetchTable = []opCode{
 	},
 
 	0x24: {
-		Name: "BITS ZP",
+		Name:           "BITS",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -886,8 +977,11 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x25: {
-		Name: "AND ZP",
+	},
+	0x25: {
+		Name:           "AND",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -903,8 +997,11 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x26: {
-		Name: "ROL ZP",
+	},
+	0x26: {
+		Name:           "ROL",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -931,7 +1028,9 @@ var FetchTable = []opCode{
 	},
 
 	0x27: {
-		Name: "RLA ZP",
+		Name:           "RLA",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -957,7 +1056,9 @@ var FetchTable = []opCode{
 	},
 
 	0x28: {
-		Name: "PLP",
+		Name:           "PLP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -974,7 +1075,9 @@ var FetchTable = []opCode{
 			}
 		},
 	}, 0x29: {
-		Name: "AND #",
+		Name:           "AND",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 			c.A &= val
@@ -982,7 +1085,9 @@ var FetchTable = []opCode{
 			return true
 		},
 	}, 0x2A: {
-		Name: "ROL A",
+		Name:           "ROL",
+		AddressingMode: Accumulator,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			var carry bool
 			c.A, carry = performROL(c.A, c.getFlag(Carry))
@@ -993,7 +1098,9 @@ var FetchTable = []opCode{
 	},
 
 	0x2B: {
-		Name: "ANC ",
+		Name:           "ANC",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 
@@ -1006,7 +1113,9 @@ var FetchTable = []opCode{
 	},
 
 	0x2C: {
-		Name: "BITS ABS",
+		Name:           "BITS",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1028,8 +1137,12 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x2D: {
-		Name: "AND ABS",
+	},
+
+	0x2D: {
+		Name:           "AND",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1051,8 +1164,12 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x2E: {
-		Name: "ROL ABS",
+	},
+
+	0x2E: {
+		Name:           "ROL",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1082,7 +1199,9 @@ var FetchTable = []opCode{
 	},
 
 	0x2F: {
-		Name: "RLA ABS",
+		Name:           "RLA",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1112,8 +1231,12 @@ var FetchTable = []opCode{
 		},
 	},
 
+	//0x3X Series
+
 	0x30: {
-		Name: "BMI ",
+		Name:           "BMI",
+		AddressingMode: Relative,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1142,8 +1265,11 @@ var FetchTable = []opCode{
 				return true
 			}
 		},
-	}, 0x31: {
-		Name: "AND (IND),Y",
+	},
+	0x31: {
+		Name:           "AND",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1177,7 +1303,9 @@ var FetchTable = []opCode{
 	},
 
 	0x32: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
+		Size:           10,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 
@@ -1186,7 +1314,9 @@ var FetchTable = []opCode{
 	},
 
 	0x33: {
-		Name: "RLA IND Y",
+		Name:           "RLA IND Y",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1221,7 +1351,9 @@ var FetchTable = []opCode{
 	},
 
 	0x34: {
-		Name: "NOP ",
+		Name:           "NOP",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1240,7 +1372,9 @@ var FetchTable = []opCode{
 	},
 
 	0x35: {
-		Name: "AND ZPG,X",
+		Name:           "AND",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1262,7 +1396,9 @@ var FetchTable = []opCode{
 	},
 
 	0x36: {
-		Name: "ROL ZPG,X",
+		Name:           "ROL",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1290,7 +1426,9 @@ var FetchTable = []opCode{
 	},
 
 	0x37: {
-		Name: "RLA ZPG X",
+		Name:           "RLA",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1320,14 +1458,18 @@ var FetchTable = []opCode{
 	},
 
 	0x38: {
-		Name: "SEC",
+		Name:           "SEC",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.setFlag(Carry)
 			return true
 		},
 	},
 	0x39: {
-		Name: "AND abs,Y",
+		Name:           "AND",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1356,14 +1498,18 @@ var FetchTable = []opCode{
 	},
 
 	0x3A: {
-		Name: "NOP IMPL",
+		Name:           "NOP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			return true
 		},
 	},
 
 	0x3B: {
-		Name: "RLA ABS Y",
+		Name:           "RLA",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1396,7 +1542,9 @@ var FetchTable = []opCode{
 	},
 
 	0x3C: {
-		Name: "NOP ABS X",
+		Name:           "NOP",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1424,7 +1572,9 @@ var FetchTable = []opCode{
 	},
 
 	0x3D: {
-		Name: "AND ABS,X",
+		Name:           "AND",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1452,7 +1602,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x3E: {
-		Name: "ROL ABS,X",
+		Name:           "ROL ABS,X",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1485,7 +1637,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x3F: {
-		Name: "RLA ABS X",
+		Name:           "RLA",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1516,8 +1670,13 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	//0x4X Series
+
 	0x40: {
-		Name: "RTI",
+		Name:           "RTI",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1543,7 +1702,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x41: {
-		Name: "EOR X,ind",
+		Name:           "EOR",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1571,7 +1732,8 @@ var FetchTable = []opCode{
 	},
 
 	0x42: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 
@@ -1580,7 +1742,9 @@ var FetchTable = []opCode{
 	},
 
 	0x43: {
-		Name: "SRE X IND ",
+		Name:           "SRE",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1616,7 +1780,9 @@ var FetchTable = []opCode{
 	},
 
 	0x44: {
-		Name: "NOP ZP",
+		Name:           "NOP",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1632,7 +1798,9 @@ var FetchTable = []opCode{
 	},
 
 	0x45: {
-		Name: "EOR ZP",
+		Name:           "EOR",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1649,7 +1817,9 @@ var FetchTable = []opCode{
 			}
 		},
 	}, 0x46: {
-		Name: "LSR ZP",
+		Name:           "LSR",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1675,7 +1845,9 @@ var FetchTable = []opCode{
 	},
 
 	0x47: {
-		Name: "SRE ZP",
+		Name:           "SRE",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1702,7 +1874,9 @@ var FetchTable = []opCode{
 	},
 
 	0x48: {
-		Name: "PHA",
+		Name:           "PHA",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1716,7 +1890,9 @@ var FetchTable = []opCode{
 			}
 		},
 	}, 0x49: {
-		Name: "EOR IMM",
+		Name:           "EOR",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 			c.A ^= val
@@ -1724,7 +1900,9 @@ var FetchTable = []opCode{
 			return true
 		},
 	}, 0x4A: {
-		Name: "LSR A",
+		Name:           "LSR",
+		AddressingMode: Accumulator,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			var carry bool
 			c.A, carry = performLSR(c.A)
@@ -1735,7 +1913,9 @@ var FetchTable = []opCode{
 	},
 
 	0x4B: {
-		Name: "ALR",
+		Name:           "ALR",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 			mid := c.A & val
@@ -1748,7 +1928,9 @@ var FetchTable = []opCode{
 	},
 
 	0x4C: {
-		Name: "JMP ABS",
+		Name:           "JMP",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1769,7 +1951,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x4D: {
-		Name: "EOR ABS",
+		Name:           "EOR",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1789,7 +1973,9 @@ var FetchTable = []opCode{
 			}
 		},
 	}, 0x4E: {
-		Name: "LSR ABS",
+		Name:           "LSR",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1819,7 +2005,9 @@ var FetchTable = []opCode{
 	},
 
 	0x4F: {
-		Name: "SRE ABS",
+		Name:           "SRE",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1848,8 +2036,12 @@ var FetchTable = []opCode{
 		},
 	},
 
+	//0x5X Series
+
 	0x50: {
-		Name: "BVC",
+		Name:           "BVC",
+		AddressingMode: Relative,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1879,7 +2071,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x51: {
-		Name: "EOR IND,Y",
+		Name:           "EOR",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1912,7 +2106,8 @@ var FetchTable = []opCode{
 	},
 
 	0x52: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 			return true
@@ -1920,7 +2115,9 @@ var FetchTable = []opCode{
 	},
 
 	0x53: {
-		Name: "SRE IND Y",
+		Name:           "SRE",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1956,7 +2153,9 @@ var FetchTable = []opCode{
 	},
 
 	0x54: {
-		Name: "NOP ZP",
+		Name:           "NOP",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1974,7 +2173,9 @@ var FetchTable = []opCode{
 	},
 
 	0x55: {
-		Name: "EOR ZP,X",
+		Name:           "EOR",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -1995,7 +2196,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x56: {
-		Name: "LSR ZP,X",
+		Name:           "LSR",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2024,7 +2227,9 @@ var FetchTable = []opCode{
 	},
 
 	0x57: {
-		Name: "SRE ZP X",
+		Name:           "SRE",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2054,14 +2259,18 @@ var FetchTable = []opCode{
 	},
 
 	0x58: {
-		Name: "CLI impl",
+		Name:           "CLI",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.clearFlag(Interrupt)
 			return true
 		},
 	},
 	0x59: {
-		Name: "EOR abs,Y",
+		Name:           "EOR",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2092,14 +2301,18 @@ var FetchTable = []opCode{
 	},
 
 	0x5A: {
-		Name: "NOP IMPL",
+		Name:           "NOP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			return true
 		},
 	},
 
 	0x5b: {
-		Name: "SRE ABS Y",
+		Name:           "SRE ABS Y",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2131,7 +2344,9 @@ var FetchTable = []opCode{
 	},
 
 	0x5C: {
-		Name: "NOP ABS X",
+		Name:           "NOP ABS X",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2159,7 +2374,9 @@ var FetchTable = []opCode{
 	},
 
 	0x5D: {
-		Name: "EOR abs,X",
+		Name:           "EOR",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2188,7 +2405,9 @@ var FetchTable = []opCode{
 			}
 		},
 	}, 0x5E: {
-		Name: "LSR ABS,X",
+		Name:           "LSR",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2221,7 +2440,9 @@ var FetchTable = []opCode{
 	},
 
 	0x5F: {
-		Name: "SRE ABS X",
+		Name:           "SRE",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2252,8 +2473,12 @@ var FetchTable = []opCode{
 		},
 	},
 
+	// 0x6X Series
+
 	0x60: {
-		Name: "RTS IMPL",
+		Name:           "RTS",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2277,7 +2502,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x61: {
-		Name: "ADC IND,X",
+		Name:           "ADC",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2306,7 +2533,8 @@ var FetchTable = []opCode{
 	},
 
 	0x62: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 
@@ -2315,7 +2543,9 @@ var FetchTable = []opCode{
 	},
 
 	0x63: {
-		Name: "RRA X IND",
+		Name:           "RRA",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2350,7 +2580,9 @@ var FetchTable = []opCode{
 	},
 
 	0x64: {
-		Name: "NOP ZP",
+		Name:           "NOP",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2366,7 +2598,9 @@ var FetchTable = []opCode{
 	},
 
 	0x65: {
-		Name: "ADC ZP",
+		Name:           "ADC",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2383,7 +2617,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x66: {
-		Name: "ROR ZP",
+		Name:           "ROR",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2406,7 +2642,9 @@ var FetchTable = []opCode{
 	},
 
 	0x67: {
-		Name: "RRA ZP",
+		Name:           "RRA",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2432,7 +2670,9 @@ var FetchTable = []opCode{
 	},
 
 	0x68: {
-		Name: "PLA A",
+		Name:           "PLA",
+		AddressingMode: Accumulator,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2450,7 +2690,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x69: {
-		Name: "ADC #",
+		Name:           "ADC",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 			c.ADC(val)
@@ -2458,7 +2700,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x6A: {
-		Name: "ROR A",
+		Name:           "ROR",
+		AddressingMode: Accumulator,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 
 			c.A = c.ROR(c.A)
@@ -2467,7 +2711,9 @@ var FetchTable = []opCode{
 	},
 
 	0x6B: {
-		Name: "ARR",
+		Name:           "ARR",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 			mid := c.A & val
@@ -2483,7 +2729,9 @@ var FetchTable = []opCode{
 	},
 
 	0x6C: {
-		Name: "JMP IND",
+		Name:           "JMP IND",
+		AddressingMode: Indirect,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2515,7 +2763,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x6D: {
-		Name: "ADC ABS",
+		Name:           "ADC",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2535,7 +2785,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x6E: {
-		Name: "ROR ABS",
+		Name:           "ROR",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2562,7 +2814,9 @@ var FetchTable = []opCode{
 	},
 
 	0x6F: {
-		Name: "RRA ABS",
+		Name:           "RRA",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2590,8 +2844,12 @@ var FetchTable = []opCode{
 		},
 	},
 
+	//0x7X Series
+
 	0x70: {
-		Name: "BVS",
+		Name:           "BVS",
+		AddressingMode: Relative,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2621,7 +2879,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x71: {
-		Name: "ADC IND Y",
+		Name:           "ADC",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2655,7 +2915,8 @@ var FetchTable = []opCode{
 	},
 
 	0x72: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 			return true
@@ -2663,7 +2924,9 @@ var FetchTable = []opCode{
 	},
 
 	0x73: {
-		Name: "RRA IND Y",
+		Name:           "RRA IND Y",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2696,7 +2959,9 @@ var FetchTable = []opCode{
 	},
 
 	0x74: {
-		Name: "NOP ZP, X",
+		Name:           "NOP",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2715,7 +2980,9 @@ var FetchTable = []opCode{
 	},
 
 	0x75: {
-		Name: "ADC ZP,X",
+		Name:           "ADC",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2735,7 +3002,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x76: {
-		Name: "ROR ZP,X",
+		Name:           "ROR",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2761,7 +3030,9 @@ var FetchTable = []opCode{
 	},
 
 	0x77: {
-		Name: "RRA ZP, X",
+		Name:           "RRA",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2788,14 +3059,18 @@ var FetchTable = []opCode{
 	},
 
 	0x78: {
-		Name: "SEI IMPL",
+		Name:           "SEI",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.setFlag(Interrupt)
 			return true
 		},
 	},
 	0x79: {
-		Name: "ADC ABS Y",
+		Name:           "ADC",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2825,14 +3100,18 @@ var FetchTable = []opCode{
 	},
 
 	0x7A: {
-		Name: "NOP IMPL",
+		Name:           "NOP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			return true
 		},
 	},
 
 	0x7B: {
-		Name: "RRA ABS Y",
+		Name:           "RRA",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2862,7 +3141,9 @@ var FetchTable = []opCode{
 	},
 
 	0x7C: {
-		Name: "NOP ABS X",
+		Name:           "NOP",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2890,7 +3171,9 @@ var FetchTable = []opCode{
 	},
 
 	0x7D: {
-		Name: "ADC ABS X",
+		Name:           "ADC",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2919,7 +3202,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x7E: {
-		Name: "ROR ABS,X",
+		Name:           "ROR",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2948,7 +3233,9 @@ var FetchTable = []opCode{
 	},
 
 	0x7F: {
-		Name: "RRA ABS X",
+		Name:           "RRA",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -2978,7 +3265,9 @@ var FetchTable = []opCode{
 	},
 
 	0x80: {
-		Name: "NOP",
+		Name:           "NOP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.fetchone()
 			return true
@@ -2986,7 +3275,9 @@ var FetchTable = []opCode{
 	},
 
 	0x81: {
-		Name: "STA IND X",
+		Name:           "STA",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3013,7 +3304,8 @@ var FetchTable = []opCode{
 	},
 
 	0x82: {
-		Name: "NOP",
+		Name:           "NOP",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			c.fetchone()
 			return true
@@ -3021,7 +3313,9 @@ var FetchTable = []opCode{
 	},
 
 	0x83: {
-		Name: "SAX X IND",
+		Name:           "SAX",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3050,7 +3344,9 @@ var FetchTable = []opCode{
 	},
 
 	0x84: {
-		Name: "STY ZP",
+		Name:           "STY",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3066,7 +3362,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x85: {
-		Name: "STA ZP",
+		Name:           "STA",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3082,7 +3380,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x86: {
-		Name: "STX ZP",
+		Name:           "STX",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3099,7 +3399,9 @@ var FetchTable = []opCode{
 	},
 
 	0x87: {
-		Name: "SAX ZP",
+		Name:           "SAX",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3117,7 +3419,9 @@ var FetchTable = []opCode{
 	},
 
 	0x88: {
-		Name: "DEY",
+		Name:           "DEY",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.Y--
 			c.SetFlagNZ(c.Y)
@@ -3126,7 +3430,9 @@ var FetchTable = []opCode{
 	},
 
 	0x89: {
-		Name: "NOP",
+		Name:           "NOP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.fetchone()
 			return true
@@ -3134,7 +3440,9 @@ var FetchTable = []opCode{
 	},
 
 	0x8A: {
-		Name: "TXA",
+		Name:           "TXA",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.A = c.X
 			c.SetFlagNZ(c.A)
@@ -3143,7 +3451,9 @@ var FetchTable = []opCode{
 	},
 
 	0x8B: {
-		Name: "ANE IMM",
+		Name:           "ANE",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 
 			imm := c.fetchone()
@@ -3158,7 +3468,9 @@ var FetchTable = []opCode{
 	},
 
 	0x8C: {
-		Name: "STY",
+		Name:           "STY",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3178,7 +3490,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x8D: {
-		Name: "STA",
+		Name:           "STA",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3199,7 +3513,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x8E: {
-		Name: "STX ABS",
+		Name:           "STX",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3220,7 +3536,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x8F: {
-		Name: "SAX ABS",
+		Name:           "SAX",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3240,8 +3558,13 @@ var FetchTable = []opCode{
 			}
 		},
 	},
+
+	//0x9X Series
+
 	0x90: {
-		Name: "BCC",
+		Name:           "BCC",
+		AddressingMode: Relative,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3273,7 +3596,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x91: {
-		Name: "STA IND Y",
+		Name:           "STA",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3301,7 +3626,8 @@ var FetchTable = []opCode{
 	},
 
 	0x92: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 			return true
@@ -3309,7 +3635,9 @@ var FetchTable = []opCode{
 	},
 
 	0x93: {
-		Name: "SHA IND Y",
+		Name:           "SHA",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3344,7 +3672,9 @@ var FetchTable = []opCode{
 	},
 
 	0x94: {
-		Name: "STY ZP X",
+		Name:           "STY",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3363,7 +3693,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x95: {
-		Name: "STA ZP X",
+		Name:           "STA",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3402,7 +3734,9 @@ var FetchTable = []opCode{
 	},
 
 	0x97: {
-		Name: "SAX ZP Y",
+		Name:           "SAX",
+		AddressingMode: ZeroPageY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3422,7 +3756,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x98: {
-		Name: "TYA",
+		Name:           "TYA",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.A = c.Y
 			c.SetFlagNZ(c.A)
@@ -3430,7 +3766,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x99: {
-		Name: "STA ABS Y ",
+		Name:           "STA",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3453,7 +3791,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0x9A: {
-		Name: "TXS",
+		Name:           "TXS",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.S = c.X
 			return true
@@ -3461,7 +3801,9 @@ var FetchTable = []opCode{
 	},
 
 	0x9B: {
-		Name: "TAS ABS Y",
+		Name:           "TAS",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3494,7 +3836,9 @@ var FetchTable = []opCode{
 	},
 
 	0x9C: {
-		Name: "SHY ABS X",
+		Name:           "SHY",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3539,7 +3883,9 @@ var FetchTable = []opCode{
 	},
 
 	0x9D: {
-		Name: "STA ABS X",
+		Name:           "STA",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3563,7 +3909,9 @@ var FetchTable = []opCode{
 	},
 
 	0x9E: {
-		Name: "SHX ABS Y",
+		Name:           "SHX",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3608,7 +3956,9 @@ var FetchTable = []opCode{
 	},
 
 	0x9F: {
-		Name: "SHA ABS Y",
+		Name:           "SHA",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3653,7 +4003,9 @@ var FetchTable = []opCode{
 	},
 
 	0xA0: {
-		Name: "LDY IMM",
+		Name:           "LDY",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			c.Y = c.fetchone()
 			c.SetFlagNZ(c.Y)
@@ -3661,7 +4013,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xA1: {
-		Name: "LDA IND X",
+		Name:           "LDA IND X",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3690,7 +4044,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xA2: {
-		Name: "LDX IMM",
+		Name:           "LDX",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			c.X = c.fetchone()
 			c.SetFlagNZ(c.X)
@@ -3698,7 +4054,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xA3: {
-		Name: "LAX X IND ",
+		Name:           "LAX",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3730,7 +4088,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xA4: {
-		Name: "LDY ZP",
+		Name:           "LDY",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3748,7 +4108,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xA5: {
-		Name: "LDA ZP",
+		Name:           "LDA",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3766,7 +4128,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xA6: {
-		Name: "LDX ZP",
+		Name:           "LDX",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3785,7 +4149,9 @@ var FetchTable = []opCode{
 	},
 
 	0xA7: {
-		Name: "LAX ZP",
+		Name:           "LAX",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3807,7 +4173,9 @@ var FetchTable = []opCode{
 	},
 
 	0xA8: {
-		Name: "TAY",
+		Name:           "TAY",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.Y = c.A
 			c.SetFlagNZ(c.Y)
@@ -3815,7 +4183,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xA9: {
-		Name: "LDA IMM",
+		Name:           "LDA",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			c.A = c.fetchone()
 			c.SetFlagNZ(c.A)
@@ -3823,7 +4193,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xAA: {
-		Name: "TAX",
+		Name:           "TAX",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.X = c.A
 
@@ -3834,7 +4206,9 @@ var FetchTable = []opCode{
 	},
 
 	0xAB: {
-		Name: "LXA",
+		Name:           "LXA",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			imm := c.fetchone()
 
@@ -3851,7 +4225,9 @@ var FetchTable = []opCode{
 	},
 
 	0xAC: {
-		Name: "LDY ABS",
+		Name:           "LDY",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3872,7 +4248,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xAD: {
-		Name: "LDA ABS",
+		Name:           "LDA",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3893,7 +4271,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xAE: {
-		Name: "LDY ABS",
+		Name:           "LDY",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3915,7 +4295,9 @@ var FetchTable = []opCode{
 	},
 
 	0xAF: {
-		Name: "LAX ABS",
+		Name:           "LAX",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3940,7 +4322,9 @@ var FetchTable = []opCode{
 	},
 
 	0xB0: {
-		Name: "BCS",
+		Name:           "BCS",
+		AddressingMode: Relative,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -3970,7 +4354,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xB1: {
-		Name: "LDA IND Y",
+		Name:           "LDA",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4003,7 +4389,8 @@ var FetchTable = []opCode{
 		},
 	},
 	0xB2: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 			return true
@@ -4011,7 +4398,9 @@ var FetchTable = []opCode{
 	},
 
 	0xB3: {
-		Name: "LAX IND Y",
+		Name:           "LAX",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4050,7 +4439,9 @@ var FetchTable = []opCode{
 	},
 
 	0xB4: {
-		Name: "LDY ZPG X",
+		Name:           "LDY",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4070,7 +4461,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xB5: {
-		Name: "LDA ZPG X",
+		Name:           "LDA",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4090,7 +4483,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xB6: {
-		Name: "LDX ZPG Y",
+		Name:           "LDX",
+		AddressingMode: ZeroPageY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4111,7 +4506,9 @@ var FetchTable = []opCode{
 	},
 
 	0xB7: {
-		Name: "LAX ZP Y",
+		Name:           "LAX",
+		AddressingMode: ZeroPageY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4137,14 +4534,18 @@ var FetchTable = []opCode{
 	},
 
 	0xB8: {
-		Name: "CLV",
+		Name:           "CLV",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.clearFlag(oVerflow)
 			return true
 		},
 	},
 	0xB9: {
-		Name: "LDA ABS Y",
+		Name:           "LDA",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4173,7 +4574,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xBA: {
-		Name: "TSX",
+		Name:           "TSX",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.X = c.S
 			c.SetFlagNZ(c.X)
@@ -4182,7 +4585,9 @@ var FetchTable = []opCode{
 	},
 
 	0xBB: {
-		Name: "LAS ABS Y",
+		Name:           "LAS",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4221,7 +4626,9 @@ var FetchTable = []opCode{
 	},
 
 	0xBC: {
-		Name: "LDY ABS X",
+		Name:           "LDY",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4250,7 +4657,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xBD: {
-		Name: "LDA ABS X",
+		Name:           "LDA",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4279,7 +4688,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xBE: {
-		Name: "LDX ABS Y",
+		Name:           "LDX",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4308,7 +4719,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xBF: {
-		Name: "LAX ABS Y",
+		Name:           "LAX",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4342,7 +4755,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xC0: {
-		Name: "CMY",
+		Name:           "CMY",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 			c.COMPARE(c.Y, val)
@@ -4350,7 +4765,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xC1: {
-		Name: "CMP IND X",
+		Name:           "CMP",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4376,7 +4793,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xC2: {
-		Name: "NOP",
+		Name:           "NOP",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			c.fetchone()
 			return true
@@ -4384,7 +4803,9 @@ var FetchTable = []opCode{
 	},
 
 	0xC3: {
-		Name: "DCP X IND",
+		Name:           "DCP",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4421,7 +4842,9 @@ var FetchTable = []opCode{
 	},
 
 	0xC4: {
-		Name: "CPY ZP",
+		Name:           "CPY",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4438,7 +4861,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xC5: {
-		Name: "CPM ZP",
+		Name:           "CPM",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4455,7 +4880,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xC6: {
-		Name: "DEC ZP",
+		Name:           "DEC",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4480,7 +4907,9 @@ var FetchTable = []opCode{
 	},
 
 	0xC7: {
-		Name: "DCP ZP",
+		Name:           "DCP",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4504,7 +4933,9 @@ var FetchTable = []opCode{
 	},
 
 	0xC8: {
-		Name: "INY",
+		Name:           "INY",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.Y++
 			c.SetFlagNZ(c.Y)
@@ -4512,14 +4943,18 @@ var FetchTable = []opCode{
 		},
 	},
 	0xC9: {
-		Name: "CMP #",
+		Name:           "CMP",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			c.COMPARE(c.A, c.fetchone())
 			return true
 		},
 	},
 	0xCA: {
-		Name: "DEX",
+		Name:           "DEX",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.X--
 			c.SetFlagNZ(c.X)
@@ -4527,7 +4962,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xCB: {
-		Name: "SBX",
+		Name:           "SBX",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			val := c.fetchone()
 
@@ -4543,7 +4980,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xCC: {
-		Name: "CPY ABS",
+		Name:           "CPY",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4563,7 +5002,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xCD: {
-		Name: "CPM ABS",
+		Name:           "CPM",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4583,7 +5024,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xCE: {
-		Name: "DEC ABS",
+		Name:           "DEC",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4610,7 +5053,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xCF: {
-		Name: "DCP ABS",
+		Name:           "DCP",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4637,7 +5082,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xD0: {
-		Name: "BNE",
+		Name:           "BNE",
+		AddressingMode: Relative,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4668,7 +5115,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xD1: {
-		Name: "CMP IND Y ",
+		Name:           "CMP",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4702,7 +5151,8 @@ var FetchTable = []opCode{
 	},
 
 	0xD2: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 			return true
@@ -4710,7 +5160,9 @@ var FetchTable = []opCode{
 	},
 
 	0xD3: {
-		Name: "DCP IND Y",
+		Name:           "DCP",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4744,7 +5196,9 @@ var FetchTable = []opCode{
 	},
 
 	0xD4: {
-		Name: "NOP ZPG X",
+		Name:           "NOP",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4765,7 +5219,9 @@ var FetchTable = []opCode{
 	},
 
 	0xD5: {
-		Name: "CMP ZP X",
+		Name:           "CMP",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4784,7 +5240,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xD6: {
-		Name: "DEC ZP X",
+		Name:           "DEC",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4811,7 +5269,9 @@ var FetchTable = []opCode{
 	},
 
 	0xD7: {
-		Name: "DCP ZP X",
+		Name:           "DCP",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4839,14 +5299,18 @@ var FetchTable = []opCode{
 	},
 
 	0xD8: {
-		Name: "CLD",
+		Name:           "CLD",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.clearFlag(Decimal)
 			return true
 		},
 	},
 	0xD9: {
-		Name: "CMP ABS Y",
+		Name:           "CMP",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4873,7 +5337,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xDA: {
-		Name: "NOP",
+		Name:           "NOP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 
 			return true
@@ -4881,7 +5347,9 @@ var FetchTable = []opCode{
 	},
 
 	0xDB: {
-		Name: "DCP ABS Y",
+		Name:           "DCP",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4911,7 +5379,9 @@ var FetchTable = []opCode{
 	},
 
 	0xDC: {
-		Name: "NOP ABS X",
+		Name:           "NOP",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4939,7 +5409,9 @@ var FetchTable = []opCode{
 	},
 
 	0xDD: {
-		Name: "CMP ABS X",
+		Name:           "CMP",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4966,7 +5438,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xDE: {
-		Name: "DEC ABS X",
+		Name:           "DEC",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -4997,7 +5471,9 @@ var FetchTable = []opCode{
 	},
 
 	0xDF: {
-		Name: "DCP ABS X",
+		Name:           "DCP",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5027,14 +5503,18 @@ var FetchTable = []opCode{
 	},
 
 	0xE0: {
-		Name: "CPX #",
+		Name:           "CPX",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			c.COMPARE(c.X, c.fetchone())
 			return true
 		},
 	},
 	0xE1: {
-		Name: "SBC IND X",
+		Name:           "SBC",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5060,7 +5540,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xE2: {
-		Name: "NOP",
+		Name:           "NOP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.fetchone()
 			return true
@@ -5068,7 +5550,9 @@ var FetchTable = []opCode{
 	},
 
 	0xE3: {
-		Name: "ISC",
+		Name:           "ISC",
+		AddressingMode: IndirectX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5102,7 +5586,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xE4: {
-		Name: "CPX ZP",
+		Name:           "CPX",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5118,7 +5604,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xE5: {
-		Name: "SBC ZP",
+		Name:           "SBC",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5134,7 +5622,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xE6: {
-		Name: "INC ZP",
+		Name:           "INC",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5158,7 +5648,9 @@ var FetchTable = []opCode{
 	},
 
 	0xE7: {
-		Name: "ISC ZP",
+		Name:           "ISC",
+		AddressingMode: ZeroPage,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5182,7 +5674,9 @@ var FetchTable = []opCode{
 	},
 
 	0xE8: {
-		Name: "INX IMPL",
+		Name:           "INX",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.X++
 			c.SetFlagNZ(c.X)
@@ -5190,20 +5684,26 @@ var FetchTable = []opCode{
 		},
 	},
 	0xE9: {
-		Name: "SBC #",
+		Name:           "SBC",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			c.SBC(c.fetchone())
 			return true
 		},
 	}, 0xEA: {
-		Name: "NOP",
+		Name:           "NOP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			return true
 		},
 	},
 
 	0xEB: {
-		Name: "USBC",
+		Name:           "USBC",
+		AddressingMode: Immediate,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			c.SBC(c.fetchone())
 			return true
@@ -5211,7 +5711,9 @@ var FetchTable = []opCode{
 	},
 
 	0xEC: {
-		Name: "CPX ABS",
+		Name:           "CPX ABS",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5230,7 +5732,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xED: {
-		Name: "SBC ABS",
+		Name:           "SBC",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5249,7 +5753,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xEE: {
-		Name: "INC ABS",
+		Name:           "INC",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5275,7 +5781,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xEF: {
-		Name: "ISC ABS",
+		Name:           "ISC",
+		AddressingMode: Absolute,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5302,7 +5810,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xF0: {
-		Name: "BEQ",
+		Name:           "BEQ",
+		AddressingMode: Relative,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5333,7 +5843,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xF1: {
-		Name: "SBC IND Y ",
+		Name:           "SBC",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5363,7 +5875,8 @@ var FetchTable = []opCode{
 		},
 	},
 	0xF2: {
-		Name: "JAM",
+		Name:           "JAM",
+		AddressingMode: Implied,
 		Execute: func(c *cpu, step int) bool {
 			c.isJamming = true
 			return true
@@ -5371,7 +5884,9 @@ var FetchTable = []opCode{
 	},
 
 	0xF3: {
-		Name: "ISC IND Y",
+		Name:           "ISC",
+		AddressingMode: IndirectY,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5404,7 +5919,9 @@ var FetchTable = []opCode{
 	},
 
 	0xF4: {
-		Name: "NOP ZP X",
+		Name:           "NOP",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5423,7 +5940,9 @@ var FetchTable = []opCode{
 	},
 
 	0xF5: {
-		Name: "SBC ZP X",
+		Name:           "SBC",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5442,7 +5961,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xF6: {
-		Name: "INC ZP X",
+		Name:           "INC",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5469,7 +5990,9 @@ var FetchTable = []opCode{
 	},
 
 	0xF7: {
-		Name: "ISC ZP X",
+		Name:           "ISC",
+		AddressingMode: ZeroPageX,
+		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5496,14 +6019,18 @@ var FetchTable = []opCode{
 	},
 
 	0xF8: {
-		Name: "SED IMPL",
+		Name:           "SED",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			c.setFlag(Decimal)
 			return true
 		},
 	},
 	0xF9: {
-		Name: "SBC ABS Y",
+		Name:           "SBC",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5531,14 +6058,18 @@ var FetchTable = []opCode{
 	},
 
 	0xFA: {
-		Name: "NOP IMPL",
+		Name:           "NOP",
+		AddressingMode: Implied,
+		Size:           1,
 		Execute: func(c *cpu, step int) bool {
 			return true
 		},
 	},
 
 	0xFB: {
-		Name: "ISC ABS Y",
+		Name:           "ISC",
+		AddressingMode: AbsoluteY,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5568,7 +6099,9 @@ var FetchTable = []opCode{
 	},
 
 	0xFC: {
-		Name: "NOP ABS X",
+		Name:           "NOP",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5596,7 +6129,9 @@ var FetchTable = []opCode{
 	},
 
 	0xFD: {
-		Name: "SBC ABS X",
+		Name:           "SBC",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:
@@ -5624,7 +6159,9 @@ var FetchTable = []opCode{
 		},
 	},
 	0xFE: {
-		Name: "INC ABS X",
+		Name:           "INC",
+		AddressingMode: AbsoluteX,
+		Size:           3,
 		Execute: func(c *cpu, step int) bool {
 			switch step {
 			case 0:

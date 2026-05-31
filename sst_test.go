@@ -193,6 +193,10 @@ func (c *cpu) LoadCpuState(state cpustate) {
 	}
 }
 
+func (t *TestBus) FillArr(addr uint16, data []byte) error {
+	return nil
+}
+
 func (c *cpu) GetCpuState() (cpustate, typebus) {
 	state := cpustate{}
 

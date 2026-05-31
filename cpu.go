@@ -55,6 +55,7 @@ type typebus interface {
 	Get(uint16) uint8
 	GetHistory() []cycleStep
 	ClearHistory()
+	FillArr(uint16, []byte) error
 }
 
 func (c *cpu) executeNmiCycle() {
