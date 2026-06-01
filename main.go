@@ -82,6 +82,20 @@ func initializeConsole() *console {
 	return c
 }
 
+func (c *console) tick() {
+	if c.Cpu.Stall > 0 {
+		c.Cpu.Stall--
+		c.Cpu.totalCycles++
+	} else {
+		c.Cpu.tick()
+	}
+
+	c.Ppu.Tick()
+	c.Ppu.Tick()
+	c.Ppu.Tick()
+
+}
+
 func (b *bus) FillArr(addr uint16, data []byte) error {
 
 	size := len(data)

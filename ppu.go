@@ -17,8 +17,10 @@ type ppu struct {
 
 	pallete Pallete
 
-	backBuffer  []byte
-	frontBuffer []byte
+	backBuffer  []uint8
+	frontBuffer []uint8
+
+	debugBuffer []uint8
 
 	DrawFlg bool
 
@@ -130,10 +132,6 @@ func (p *ppu) read(addr uint16) uint8 {
 func (p *ppu) Write(addr uint16, val uint8) {
 	addr &= 0x3FFF
 
-	if addr >= 0x3F00 {
-		fmt.Printf("[PPU.WRITE ROUTER] Incoming Packet Destination: 0x%04X, Data Payload: 0x%02X\n", addr, val)
-	}
-
 	switch {
 	case addr <= 0x1FFF:
 		p.mem.chrROM[addr] = val
@@ -157,18 +155,17 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 		p.mem.register.AddressLatch = false
 
 		var result uint8
+		result |= (openBusVal & 0x1F)
 
 		result = AssignBit(result, 6, p.mem.register.Sprite0Hit)
 		result = AssignBit(result, 5, p.mem.register.sprietOverflow)
 
-		if p.mem.nmiOcc {
+		if p.mem.Vblank {
 			result = AssignBit(result, 7, true)
+			fmt.Println("setting vblank true")
 		}
 
-		result |= (openBusVal & 0x1F)
-
 		p.mem.Vblank = false
-		p.nmiChange()
 
 		return result
 	case 4:
@@ -205,15 +202,6 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 	}
 }
 
-func (p *ppu) nmiChange() {
-	nmi := p.mem.nmiOcc && p.mem.nmiOut
-	if nmi != p.mem.nmiPrev {
-		p.mem.nmiDelay = 3
-	}
-	p.mem.nmiPrev = nmi
-
-}
-
 func (p *ppu) WriteReg(reg uint16, val uint8) {
 	switch reg {
 	case 0: //PPUCTRL
@@ -229,9 +217,8 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 		p.mem.register.BaseNameTable = val & 0x03
 
 		p.mem.register.TramAddr = p.mem.register.TramAddr & 0xF3FF
-		p.mem.register.TramAddr = p.mem.register.TramAddr | (uint16(val&0x03) << 10) //updating t scroll coords
+		p.mem.register.TramAddr = p.mem.register.TramAddr | (uint16(val&0x03) << 10)
 
-		p.nmiChange()
 	case 1: //PPU MASK
 		fmt.Printf("[PPUMASK Write] CPU turned on graphics! Value: 0x%02X\n", val)
 		p.mem.register.EmpBlue = getbitBool(val, 7)
@@ -334,7 +321,7 @@ func (p *ppu) Tick() {
 
 		p.mem.Vblank = true
 		p.mem.nmiOcc = true
-		p.nmiChange()
+
 	}
 
 	if p.Scanline == 261 && p.Dot == 1 {
@@ -343,7 +330,6 @@ func (p *ppu) Tick() {
 		p.mem.register.Sprite0Hit = false
 		p.mem.register.sprietOverflow = false
 
-		p.nmiChange()
 	}
 
 }

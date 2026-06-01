@@ -161,3 +161,54 @@ legend {
     gap: 4px;
 }
 
+
+button {
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--text-color);
+    background: linear-gradient(to bottom, #ffffff 0%, #f2f2f2 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    padding: 3px 12px;
+    min-height: 23px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    user-select: none;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+    transition: background 0.1s ease, border-color 0.1s ease;
+}
+
+
+button:hover {
+    background: linear-gradient(to bottom, #fbfdfe 0%, #eef5fa 100%);
+    border-color: #90b8f0;
+}
+
+
+button:active {
+    background: #e2eef7;
+    border-color: var(--highlight-border);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+
+button:focus-visible {
+    outline: 1px dashed var(--text-muted);
+    outline-offset: -3px;
+}
+
+
+
+
+button.btn-primary {
+    background: linear-gradient(to bottom, #f9fafb 0%, #f3f4f6 100%);
+    border-color: #9ca3af;
+    font-weight: 500;
+}
+button.btn-primary:hover {
+    border-color: var(--highlight-border);
+    background: var(--highlight-bg);
+}

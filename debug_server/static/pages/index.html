@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExNES</title>
-    <link rel="stylesheet" href="static/styles/index.css">
+    <link rel="stylesheet" href="static/styles/index.css?v=1">
 </head>
 <body>
+    
 
     <div class="workspace">
         
@@ -22,10 +23,10 @@
             <fieldset>
                 <legend>CPU Status</legend>
                 <div class="grid-row">
-                    <div class="data-field"><label>A:</label><input type="text" value="0" readonly></div>
-                    <div class="data-field"><label>X:</label><input type="text" value="0" readonly></div>
-                    <div class="data-field"><label>Y:</label><input type="text" value="0" readonly></div>
-                    <div class="data-field"><label>PC:</label><input type="text" value="F4FF" readonly></div>
+                    <div class="data-field" ><label>A:</label><input type="text" value="0" readonly id="A"></div>
+                    <div class="data-field"><label>X:</label><input type="text" value="0" readonly id="X"></div>
+                    <div class="data-field"><label>Y:</label><input type="text" value="0" readonly id="Y"></div>
+                    <div class="data-field"><label>PC:</label><input type="text" value="F4FF" readonly id="PC"></div>
                 </div>
                 <div class="data-field" style="margin-bottom: 8px;">
                     <label style="width: 45px;">Cycle:</label>
@@ -58,6 +59,15 @@
                     <div class="checkbox-item"><input type="checkbox" checked disabled><label>Sprites Enabled</label></div>
                     <div class="checkbox-item"><input type="checkbox" checked disabled><label>NMI on vBlank</label></div>
                 </div>
+            </fieldset>
+             <fieldset>
+                <legend>Controls</legend>
+                <div class="grid-row">
+                    <div class="data-field"><label><button id="start-debugger">Start Debugger</button></div>
+                    <div class="data-field"><label>Fr#:</label><input type="text" value="1377" readonly></div>
+                    <div class="data-field"><label>SL:</label><input type="text" value="240" readonly></div>
+                </div>
+              
             </fieldset>
 
           

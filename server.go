@@ -25,16 +25,32 @@ var debugConsole Debugger
 func run_server() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/hello", startDebugger)
+	mux.HandleFunc("/Debugger/reset", startDebugger)
 	mux.HandleFunc("/cpu/state", getCpuState)
 	mux.HandleFunc("/cpu/lookAhead", getLookAhead)
 	mux.HandleFunc("/cpu/step", runCycle)
 	mux.HandleFunc("/disassembly", getDissambly)
+	mux.HandleFunc("/screen/get/Debug", getDebugScreen)
+	mux.HandleFunc("/ppu/debugCHR", runChrViewer)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalf("error running server")
 	}
+}
+
+func runChrViewer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	debugConsole.console.DebugChrRom()
+	fmt.Fprint(w, "Success")
+}
+
+func getDebugScreen(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/octet-stream")
+
+	w.Write(debugConsole.console.Ppu.debugBuffer)
 }
 
 func startDebugger(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +63,9 @@ func startDebugger(w http.ResponseWriter, r *http.Request) {
 
 	debugConsole.console = c
 	debugConsole.Disassembly = make(map[uint16]AssemblyLine)
+
+	c.Ppu.debugBuffer = make([]uint8, 512*64)
+
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Success")
 }
@@ -87,12 +106,11 @@ func getDissambly(w http.ResponseWriter, r *http.Request) {
 }
 
 func runCycle(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	stepsStr := r.URL.Query().Get("steps")
 	if stepsStr == "" {
 		stepsStr = "1"
 	}
-	fmt.Println(stepsStr)
 	steps, err := strconv.Atoi(stepsStr)
 	if err != nil {
 		http.Error(w, "invalid steps parameter", http.StatusBadRequest)
@@ -100,12 +118,18 @@ func runCycle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	debugConsole.console.stepCycles(steps)
-	fmt.Println("ticking")
 
-	fmt.Fprintf(w, "cycles ran succesfully %v", debugConsole.console.Cpu.PC)
+	fmt.Fprintf(w, "cycles ran succesfully %x", debugConsole.console.Cpu.PC)
+
 }
 
 func getCpuState(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if debugConsole.console == nil {
+		http.Error(w, "console not started", http.StatusInternalServerError)
+		return
+	}
+
 	state := debugConsole.console.Cpu.GetSate()
 
 	err := json.NewEncoder(w).Encode(state)
