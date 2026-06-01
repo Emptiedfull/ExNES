@@ -28,14 +28,16 @@ func (c *cycleStep) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type cpustate struct {
-	Pc  uint16 `json:"pc"`
-	S   uint8  `json:"s"`
-	A   uint8  `json:"a"`
-	X   uint8  `json:"x"`
-	Y   uint8  `json:"y"`
-	P   uint8  `json:"p"`
-	Ram [][]int
+func (c *cpu) GetCpuState() (cpustate, typebus) {
+	state := cpustate{}
+
+	state.A = c.A
+	state.X = c.X
+	state.Y = c.Y
+	state.Pc = c.PC
+	state.P = c.P
+	state.S = c.S
+	return state, c.mem
 }
 
 const Dir = "C:/Users/user/ExNES/65x02/nes6502/v1/"
@@ -195,18 +197,6 @@ func (c *cpu) LoadCpuState(state cpustate) {
 
 func (t *TestBus) FillArr(addr uint16, data []byte) error {
 	return nil
-}
-
-func (c *cpu) GetCpuState() (cpustate, typebus) {
-	state := cpustate{}
-
-	state.A = c.A
-	state.X = c.X
-	state.Y = c.Y
-	state.Pc = c.PC
-	state.P = c.P
-	state.S = c.S
-	return state, c.mem
 }
 
 func (T *TestBus) Set(addr uint16, val uint8) {

@@ -5,10 +5,10 @@ import (
 )
 
 type opCode struct {
-	Name           string
-	AddressingMode addressingMode
-	Size           uint8
-	Execute        func(c *cpu, step int) bool
+	Name           string                      `json:"name"`
+	AddressingMode addressingMode              `json:"mode"`
+	Size           uint8                       `json:"size"`
+	Execute        func(c *cpu, step int) bool `json:"-"`
 }
 
 var FetchTable = []opCode{

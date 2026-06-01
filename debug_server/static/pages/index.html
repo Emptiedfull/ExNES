@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExNES</title>
+    <link rel="stylesheet" href="static/styles/index.css">
+</head>
+<body>
+
+    <div class="workspace">
+        
+        <div class="assembly-column">
+            <div class="code-window">
+                
+
+            </div>
+        </div>
+
+        <div class="telemetry-column">
+            
+            <fieldset>
+                <legend>CPU Status</legend>
+                <div class="grid-row">
+                    <div class="data-field"><label>A:</label><input type="text" value="0" readonly></div>
+                    <div class="data-field"><label>X:</label><input type="text" value="0" readonly></div>
+                    <div class="data-field"><label>Y:</label><input type="text" value="0" readonly></div>
+                    <div class="data-field"><label>PC:</label><input type="text" value="F4FF" readonly></div>
+                </div>
+                <div class="data-field" style="margin-bottom: 8px;">
+                    <label style="width: 45px;">Cycle:</label>
+                    <input type="text" value="40975473" readonly style="width: 100px;">
+                </div>
+                <div style="font-weight: 500; margin-bottom: 4px; color: var(--text-muted);">Flags (P: 5)</div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>Carry</label></div>
+                    <div class="checkbox-item"><input type="checkbox" disabled><label>Zero</label></div>
+                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>Interrupt</label></div>
+                    <div class="checkbox-item"><input type="checkbox" disabled><label>Decimal</label></div>
+                    <div class="checkbox-item"><input type="checkbox" disabled><label>Overflow</label></div>
+                    <div class="checkbox-item"><input type="checkbox" disabled><label>Negative</label></div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>PPU Status</legend>
+                <div class="grid-row">
+                    <div class="data-field"><label>Cycle:</label><input type="text" value="16" readonly></div>
+                    <div class="data-field"><label>Fr#:</label><input type="text" value="1377" readonly></div>
+                    <div class="data-field"><label>SL:</label><input type="text" value="240" readonly></div>
+                </div>
+                <div class="grid-row">
+                    <div class="data-field" style="grid-column: span 2;"><label>VRAM Addr:</label><input type="text" value="0802" readonly></div>
+                    <div class="data-field" style="grid-column: span 2;"><label>NT Addr:</label><input type="text" value="2802" readonly></div>
+                </div>
+                <div class="checkbox-group" style="grid-template-columns: 1fr;">
+                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>BG Enabled</label></div>
+                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>Sprites Enabled</label></div>
+                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>NMI on vBlank</label></div>
+                </div>
+            </fieldset>
+
+          
+
+        </div>
+    </div>
+
+    
+
+</body>
+<script src="static/scripts/index.js"></script>
+</html>

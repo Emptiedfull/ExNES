@@ -5,16 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-
-	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type console struct {
 	Cpu        *cpu
 	Ppu        *ppu
 	OpenBusVal uint8
-
-	CanvasImage *ebiten.Image
 
 	ready bool
 }
@@ -56,25 +52,6 @@ func (c *console) loadROM(filepath string) error {
 
 }
 
-func (g *console) Update() error {
-
-	if !g.ready {
-		return nil
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		g.Ppu.DumpBackBufferToFile()
-	}
-
-	if !g.Ppu.DrawFlg {
-		for range 89000 {
-			g.tick()
-		}
-	}
-
-	return nil
-}
-
 // func (g *console) Draw(screen *ebiten.Image) {
 // 	if g.Ppu.DrawFlg {
 // 		fmt.Println("drawing")
@@ -85,7 +62,7 @@ func (g *console) Update() error {
 
 func initializeConsole() *console {
 	c := &console{
-		CanvasImage: ebiten.NewImage(256, 240),
+
 		Ppu: &ppu{
 			backBuffer:  make([]byte, 256*240*4),
 			frontBuffer: make([]byte, 256*240*4),
