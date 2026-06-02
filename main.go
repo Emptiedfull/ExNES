@@ -10,6 +10,7 @@ import (
 type console struct {
 	Cpu        *cpu
 	Ppu        *ppu
+	JoyPad     *joyPad
 	OpenBusVal uint8
 
 	ready bool

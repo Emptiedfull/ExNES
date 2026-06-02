@@ -58,18 +58,23 @@ type typebus interface {
 	FillArr(uint16, []byte) error
 }
 
-func (c *cpu) executeNmiCycle() {
+func (c *cpu) executeNmiCycle() int {
+
 	switch c.nmiStep {
 	case 1:
-		return
+
+		return 2
 	case 2:
-		return
+
+		return 3
 	case 3:
 		c.mem.Write(0x0100+uint16(c.S), uint8(c.PC>>8))
 		c.S--
+		return 4
 	case 4:
 		c.mem.Write(0x0100+uint16(c.S), uint8(c.PC&0xFF))
 		c.S--
+		return 5
 	case 5:
 		Status := c.P
 		Status = AssignBit(Status, 4, false)
@@ -79,20 +84,23 @@ func (c *cpu) executeNmiCycle() {
 		c.S--
 
 		c.setFlag(Interrupt)
+		return 6
 	case 6:
 		c.low = c.mem.Read(0xFFFA)
+		return 7
 	case 7:
 		c.high = c.mem.Read(0xFFFB)
 
 		c.PC = builduint16(c.low, c.high)
 
 		c.executingNmi = false
-		c.nmiStep = 0
-		return
+
+		return 1
+	default:
+		return 1
 
 	}
 
-	c.nmiStep++
 }
 
 func (c *cpu) tick() {
@@ -107,11 +115,11 @@ func (c *cpu) tick() {
 	if c.currentstep == 0 && c.nmiPending {
 		c.executingNmi = true
 		c.nmiPending = false
-		c.nmiStep = 1
 	}
 
 	if c.executingNmi {
-		c.executeNmiCycle()
+
+		c.nmiStep = c.executeNmiCycle()
 		return
 	}
 
@@ -157,6 +165,8 @@ func (b *bus) Read(addr uint16) uint8 {
 	switch {
 	case addr <= 0x1FFF:
 		val = b.internal[addr&0x07FF]
+	case addr == 0x4016:
+		return b.cpu.console.JoyPad.readState()
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		val = b.cpu.console.Ppu.ReadReg(RegIndex, b.cpu.console.OpenBusVal)
@@ -180,6 +190,8 @@ func (b *bus) Write(addr uint16, val uint8) {
 	switch {
 	case addr <= 0x1FFF:
 		b.internal[addr&0x07FF] = val
+	case addr == 0x4016:
+		b.cpu.console.JoyPad.writeStrobe(val & 0x03)
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		b.cpu.console.Ppu.WriteReg(RegIndex, val)
@@ -188,7 +200,7 @@ func (b *bus) Write(addr uint16, val uint8) {
 	case addr <= 0x7FFF:
 
 	default:
-		b.external[addr-0x8000] = val
+
 	}
 }
 

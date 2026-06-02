@@ -212,3 +212,16 @@ button.btn-primary:hover {
     border-color: var(--highlight-border);
     background: var(--highlight-bg);
 }
+button.active{
+    border-color: #155e2f;
+    background: #52e076 ;
+   
+}
+
+button.active:hover{
+    border-color: #0e5326 !important;
+    background: #52e076 !important;
+   
+}
+
+

@@ -32,11 +32,27 @@ func run_server() {
 	mux.HandleFunc("/disassembly", getDissambly)
 	mux.HandleFunc("/screen/get/Debug", getDebugScreen)
 	mux.HandleFunc("/ppu/debugCHR", runChrViewer)
+	mux.HandleFunc("/ppu/debugNameTable", runNameTableViewer)
+	mux.HandleFunc("/screen", getScreenIMM)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalf("error running server")
 	}
+}
+
+func getScreenIMM(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-type", "application/octet-stream")
+
+	if debugConsole.console == nil {
+		http.Error(w, "unable to get screen buffer", http.StatusBadRequest)
+		return
+	}
+
+	w.Write(debugConsole.console.Ppu.backBuffer)
+
 }
 
 func runChrViewer(w http.ResponseWriter, r *http.Request) {
@@ -46,9 +62,21 @@ func runChrViewer(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Success")
 }
 
+func runNameTableViewer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	debugConsole.console.DebugNameTable()
+	fmt.Fprintf(w, "Success")
+
+}
+
 func getDebugScreen(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/octet-stream")
+
+	if debugConsole.console == nil {
+		http.Error(w, "unable to get screen buffer", http.StatusBadRequest)
+		return
+	}
 
 	w.Write(debugConsole.console.Ppu.debugBuffer)
 }

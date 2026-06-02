@@ -27,13 +27,23 @@ type AssemblyLine struct {
 }
 
 type cpustate struct {
-	Pc  uint16 `json:"pc"`
-	S   uint8  `json:"s"`
-	A   uint8  `json:"a"`
-	X   uint8  `json:"x"`
-	Y   uint8  `json:"y"`
-	P   uint8  `json:"p"`
-	Ram [][]int
+	Pc    uint16    `json:"pc"`
+	S     uint8     `json:"s"`
+	A     uint8     `json:"a"`
+	X     uint8     `json:"x"`
+	Y     uint8     `json:"y"`
+	P     uint8     `json:"p"`
+	Flags FlagState `json:"flags"`
+	Ram   [][]int   `json:"-"`
+}
+
+type FlagState struct {
+	Carry     bool `json:"carry"`
+	Overflow  bool `json:"overflow"`
+	Interrupt bool `json:"interrupt"`
+	Zero      bool `json:"zero"`
+	Decimal   bool `json:"decimal"`
+	Negative  bool `json:"negative"`
 }
 
 func DisAssemble(mem typebus, addr uint16, pc uint16) AssemblyLine {
@@ -143,6 +153,17 @@ func (c *cpu) GetSate() cpustate {
 	state.Y = c.Y
 	state.Pc = c.PC
 	state.P = c.P
+
+	f := FlagState{
+		Zero:      getbitBool(state.P, 1),
+		Carry:     getbitBool(state.P, 0),
+		Negative:  getbitBool(state.P, 7),
+		Decimal:   getbitBool(state.P, 3),
+		Interrupt: getbitBool(state.P, 2),
+		Overflow:  getbitBool(state.P, 6),
+	}
+	state.Flags = f
+
 	state.S = c.S
 	return state
 }

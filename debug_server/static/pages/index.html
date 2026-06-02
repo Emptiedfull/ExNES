@@ -34,12 +34,12 @@
                 </div>
                 <div style="font-weight: 500; margin-bottom: 4px; color: var(--text-muted);">Flags (P: 5)</div>
                 <div class="checkbox-group">
-                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>Carry</label></div>
-                    <div class="checkbox-item"><input type="checkbox" disabled><label>Zero</label></div>
-                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>Interrupt</label></div>
-                    <div class="checkbox-item"><input type="checkbox" disabled><label>Decimal</label></div>
-                    <div class="checkbox-item"><input type="checkbox" disabled><label>Overflow</label></div>
-                    <div class="checkbox-item"><input type="checkbox" disabled><label>Negative</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="Carry" checked disabled><label>Carry</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="Zero" disabled><label>Zero</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="Interrupt" checked disabled><label>Interrupt</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="Decimal" disabled><label>Decimal</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="Overflow" disabled><label>Overflow</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="Negative" disabled><label>Negative</label></div>
                 </div>
             </fieldset>
 
@@ -62,11 +62,8 @@
             </fieldset>
              <fieldset>
                 <legend>Controls</legend>
-                <div class="grid-row">
-                    <div class="data-field"><label><button id="start-debugger">Start Debugger</button></div>
-                    <div class="data-field"><label>Fr#:</label><input type="text" value="1377" readonly></div>
-                    <div class="data-field"><label>SL:</label><input type="text" value="240" readonly></div>
-                </div>
+              <button class="btn-primary " id="start-debugger" >Start</button>
+     
               
             </fieldset>
 
