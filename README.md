@@ -55,6 +55,10 @@ Features in place :
 
 The pcb design is complete and [Build Files](controller_kicad) and [Fabrication Files](Fab) are located here
 
+<img width="912" height="459" alt="image" src="https://github.com/user-attachments/assets/fe6b36c2-69eb-4259-8702-3a4fb2e2a532" />
+
+<img width="737" height="437" alt="image" src="https://github.com/user-attachments/assets/c6e2ce7f-530e-4cd8-9049-a15ef333ad4d" />
+
 The case will also be custom designed but is not currently complete
 
 ## Console Details 
