@@ -1,0 +1,11 @@
+Plotted to 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-F_Cu.gbr'.
+Plotted to 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-B_Cu.gbr'.
+Plotted to 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-F_Paste.gbr'.
+Plotted to 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-B_Paste.gbr'.
+Plotted to 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-F_Silkscreen.gbr'.
+Plotted to 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-B_Silkscreen.gbr'.
+Plotted to 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-F_Mask.gbr'.
+Plotted to 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-B_Mask.gbr'.
+Plotted to 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-Edge_Cuts.gbr'.
+Created Gerber job file 'C:\Users\user\OneDrive\Documents\PlatformIO\Projects\ExNes\KiCad\KiCad-job.gbrjob'.
+Info: Done.

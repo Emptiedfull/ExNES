@@ -34,6 +34,7 @@ func run_server() {
 	mux.HandleFunc("/ppu/debugCHR", runChrViewer)
 	mux.HandleFunc("/ppu/debugNameTable", runNameTableViewer)
 	mux.HandleFunc("/screen", getScreenIMM)
+	mux.HandleFunc("/controls/update", updateControls)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
@@ -41,8 +42,41 @@ func run_server() {
 	}
 }
 
-func getScreenIMM(w http.ResponseWriter, r *http.Request) {
+func updateControls(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	var state controlState
+
+	err := json.NewDecoder(r.Body).Decode(&state)
+
+	if err != nil {
+		http.Error(w, "Unable to update controls", http.StatusInternalServerError)
+		return
+	}
+
+	defer r.Body.Close()
+
+	fmt.Println("updating control", state)
+
+	if debugConsole.console == nil {
+		http.Error(w, "Console not started", http.StatusInternalServerError)
+		return
+	}
+
+	debugConsole.console.JoyPad.updateState(state)
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func getScreenIMM(w http.ResponseWriter, r *http.Request) {
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-type", "application/octet-stream")
 

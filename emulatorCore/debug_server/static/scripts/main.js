@@ -8,7 +8,6 @@ const screenWidth = 256;
 const screenHeight = 240;
 const imgData = ctx.createImageData(screenWidth, screenHeight);
 
-
 let lastCalledTime;
 let fpstag = 0;
 
@@ -43,4 +42,49 @@ async function fetchAndRenderFrame() {
 }
 
 
+const controlState = {
+    'a': false,
+    'b': false,
+    'select': false,
+    'start': false,
+    'up':false,
+    'down':false,
+    'left':false,
+    'right':false
+}
 
+const keyMap = {
+    'KeyZ': 'a',
+    'KeyX': 'b',
+    'ShiftLeft': 'select',
+    'Enter':'start',
+    'ArrowUp': 'up',
+    'ArrowDown': 'down',
+    'ArrowLeft': 'left',
+    'ArrowRight': 'right'
+}
+
+window.addEventListener('keydown',(e)=>{
+    if (keyMap[e.code] !== undefined ){
+        
+        controlState[keyMap[e.code]] = true  
+        sendUpdate()
+    }
+})
+
+window.addEventListener('keydown',(e)=>{
+    if (keyMap[e.code] !== undefined){
+        controlState[keyMap[e.code]] = false
+        sendUpdate()
+    }
+})
+
+const sendUpdate = ()=>{
+    fetch('http://localhost:8080/controls/update',{
+        method:"POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(controlState)
+    }).catch(err => console.log(err))
+}
