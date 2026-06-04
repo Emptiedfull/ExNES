@@ -18,6 +18,12 @@ func main() {
 type Debugger struct {
 	console     *console
 	Disassembly map[uint16]AssemblyLine
+
+	screenChannel chan ScreenInfo
+}
+
+type ScreenInfo struct {
+	buffer []uint8
 }
 
 var debugConsole Debugger
@@ -35,11 +41,25 @@ func run_server() {
 	mux.HandleFunc("/ppu/debugNameTable", runNameTableViewer)
 	mux.HandleFunc("/screen", getScreenIMM)
 	mux.HandleFunc("/controls/update", updateControls)
+	mux.HandleFunc("/screen/socket", acceptScreenConn)
+	mux.HandleFunc("/start/console", startConsole)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalf("error running server")
 	}
+}
+
+func startConsole(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	if debugConsole.console == nil {
+		http.Error(w, "console not initialized", http.StatusInternalServerError)
+	}
+
+	go debugConsole.console.startConsoleCycle()
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func updateControls(w http.ResponseWriter, r *http.Request) {
@@ -62,8 +82,6 @@ func updateControls(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer r.Body.Close()
-
-	fmt.Println("updating control", state)
 
 	if debugConsole.console == nil {
 		http.Error(w, "Console not started", http.StatusInternalServerError)
@@ -118,7 +136,7 @@ func getDebugScreen(w http.ResponseWriter, r *http.Request) {
 func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	c := initializeConsole()
-	c.loadROM("C:/Users/user/ExNES/games/dk.nes")
+	c.loadROM("C:/Users/user/ExNES/emulatorCore/games/dk.nes")
 	c.Cpu.reset()
 
 	fmt.Println("console ready for debug")

@@ -8,11 +8,11 @@ const screenWidth = 256;
 const screenHeight = 240;
 const imgData = ctx.createImageData(screenWidth, screenHeight);
 
-let lastCalledTime;
-let fpstag = 0;
+let lastCalledTime = performance.now();
+let framecount = 0;
 
 document.addEventListener("DOMContentLoaded",async()=>{
-    await fetchAndRenderFrame()
+    frameLoop()
 })
 
 async function fetchAndRenderFrame() {
@@ -40,6 +40,15 @@ async function fetchAndRenderFrame() {
     }
 
 }
+
+
+async function frameLoop(){
+    await fetchAndRenderFrame()
+
+    requestAnimationFrame(frameLoop)
+}
+
+
 
 
 const controlState = {

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type joyPad struct {
 	strobe uint8
 	index  uint8
@@ -29,6 +31,7 @@ func (J *joyPad) writeStrobe(val uint8) {
 }
 
 func (J *joyPad) readState() uint8 {
+
 	if J.index > 7 {
 		return 1
 	}
@@ -38,8 +41,11 @@ func (J *joyPad) readState() uint8 {
 	}
 
 	var state uint8 = 0
-
 	state = J.latched[J.index]
+	if state == 1 {
+		fmt.Println(J.index, state)
+	}
+
 	J.index++
 
 	return state

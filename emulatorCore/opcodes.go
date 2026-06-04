@@ -3657,7 +3657,7 @@ var FetchTable = []opCode{
 				highbyteModifier := uint8(c.high + 1)
 				c.temp.val = c.A & c.X & highbyteModifier
 
-				if (c.low + c.Y) > 0xFF {
+				if (uint16(c.low) + uint16(c.Y)) > 0xFF {
 					c.temp.addr = (uint16(c.temp.val) << 8) | (c.temp.addr & 0x00FF)
 				}
 				return false

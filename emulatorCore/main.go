@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
 
 type console struct {
@@ -71,7 +72,7 @@ func initializeConsole() *console {
 		Cpu:        &cpu{},
 		OpenBusVal: 0,
 	}
-
+	c.JoyPad = &joyPad{}
 	c.Cpu.console = c
 	c.Ppu.console = c
 	c.OpenBusVal = 0
@@ -81,6 +82,31 @@ func initializeConsole() *console {
 	}
 
 	return c
+}
+
+var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988)
+
+func (c *console) startConsoleCycle() {
+	ticker := time.NewTicker(1 * time.Millisecond)
+	defer ticker.Stop()
+
+	lastTime := time.Now()
+	var lag int64 = 0
+
+	for range ticker.C {
+		elapsed := time.Since(lastTime).Nanoseconds()
+		lastTime = time.Now()
+		lag += int64(elapsed)
+
+		for lag > nsPerFrame {
+			for range 29781 {
+				c.tick()
+			}
+			lag -= nsPerFrame
+		}
+
+	}
+
 }
 
 func (c *console) tick() {
@@ -112,11 +138,11 @@ func (b *bus) GetHistory() []cycleStep {
 }
 
 func (b *bus) ClearHistory() {
-	return
+
 }
 
 func (b *bus) Set(addr uint16, val uint8) {
-	return
+
 }
 
 func (b *bus) Get(addr uint16) uint8 {

@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type addressingMode int
 
@@ -56,6 +58,10 @@ func DisAssemble(mem typebus, addr uint16, pc uint16) AssemblyLine {
 
 	line := AssemblyLine{}
 	opcode := mem.Read(addr)
+	if opcode == 255 {
+		fmt.Println("invalid opcode")
+		return line
+	}
 	info := FetchTable[opcode]
 	line.Opcode = info
 
