@@ -20,3 +20,7 @@ def nametable():
 @app.get("/main")
 def main():
     return FileResponse("C:/Users/user/ExNES/emulatorCore/debug_server/static/pages/main.html")
+
+@app.get("/socket")
+def socket():
+    return FileResponse("C:/Users/user/ExNES/emulatorCore/debug_server/static/pages/socket.html")

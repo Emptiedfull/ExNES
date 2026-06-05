@@ -43,11 +43,13 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 	connectedClients = append(connectedClients, c)
 	defer removeClient(c)
 
-	go c.runReciever(ctx)
+	c.runReciever(ctx)
 
 }
 
 func (c *client) runReciever(ctx context.Context) {
+
+	fmt.Println("socket recieving", c.ID)
 
 	for {
 		select {
@@ -55,9 +57,10 @@ func (c *client) runReciever(ctx context.Context) {
 			fmt.Println("closing connection", c.ID)
 			return
 		case info := <-debugConsole.screenChannel:
-			fmt.Println(len(info.buffer))
+			c.conn.Write(ctx, websocket.MessageBinary, info.buffer)
 		}
 	}
+
 }
 
 func removeClient(c *client) {

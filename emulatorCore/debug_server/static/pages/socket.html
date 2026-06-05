@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ExNES Viewer websocket</title>
-    <link rel="stylesheet" href="static/styles/ws.css">
+    <title>ExNES Viewer Socket</title>
+    <link rel="stylesheet" href="static/styles/main.css">
 </head>
 <body>
 
-    <fieldset style="border: 1px solid #ababab; border-radius: 4px; padding: 10px; background-color: #ffffff; margin-bottom: 10px;">
-    <legend style="font-weight: bold; padding: 0 5px; font-size: 11px;">CHR-ROM Pattern Table Viewer</legend>
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-        <canvas id="chr-canvas" width="128" height="256" 
-                style="background: #000; width: 128px; height: 256px; image-rendering: pixelated; border: 1px solid #ababab;">
+    <fieldset style="border: 2px solid #333; border-radius: 6px; padding: 15px; background-color: #111; width: max-content; margin: 20px auto;">
+    <legend style="color: #a8388c; font-weight: bold; font-family: monospace; padding: 0 8px; font-size: 14px;">NES ENGINE LIVE VIEWPORT</legend>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+        
+        <canvas id="game-canvas" width="256" height="240" 
+                style="width: 512px; height: 480px; image-rendering: pixelated; image-rendering: crisp-edges; background-color: #102c34; border: 1px solid #222; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
         </canvas>
-        <button id="fetch-chr-btn" style="padding: 4px 10px; cursor: pointer; font-size: 11px;">Load Pattern Table</button>
+
+        <div style="width: 100%; display: flex; justify-content: space-between; font-family: monospace; color: #888; font-size: 11px; padding: 0 4px;">
+            <span id="fps-counter">FPS: 00</span>
+            <span style="color: #3cbcfc;">NROM Mode (Mapper 000)</span>
+        </div>
     </div>
 </fieldset>
-
 </body>
 <script src="static/scripts/ws.js"></script>
 </html>

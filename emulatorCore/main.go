@@ -84,7 +84,7 @@ func initializeConsole() *console {
 	return c
 }
 
-var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988)
+var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 30.0988) // 2
 
 func (c *console) startConsoleCycle() {
 	ticker := time.NewTicker(1 * time.Millisecond)
@@ -103,9 +103,21 @@ func (c *console) startConsoleCycle() {
 				c.tick()
 			}
 			lag -= nsPerFrame
+
+			c.runDisplayUpdates()
 		}
 
 	}
+
+}
+
+func (c *console) runDisplayUpdates() {
+
+	S := ScreenInfo{
+		buffer: c.Ppu.backBuffer,
+	}
+
+	debugConsole.screenChannel <- S
 
 }
 

@@ -8,6 +8,8 @@ type joyPad struct {
 
 	current [8]uint8
 	latched [8]uint8
+
+	debugflag bool
 }
 
 const (
@@ -41,9 +43,13 @@ func (J *joyPad) readState() uint8 {
 	}
 
 	var state uint8 = 0
-	state = J.latched[J.index]
-	if state == 1 {
-		fmt.Println(J.index, state)
+	state = J.current[J.index]
+
+	if J.debugflag {
+		if state == 1 {
+			fmt.Println("Reading control state:", J.current)
+			J.debugflag = false
+		}
 	}
 
 	J.index++
@@ -72,6 +78,10 @@ func (J *joyPad) updateState(c controlState) {
 	J.current[ButtonDown] = uint8(convertBoolToInt(c.Down))
 	J.current[ButtonLeft] = uint8(convertBoolToInt(c.Left))
 	J.current[ButtonRight] = uint8(convertBoolToInt(c.Right))
+
+	fmt.Println("updating state", J.current)
+	J.debugflag = true
+
 }
 
 func convertBoolToInt(b bool) int {

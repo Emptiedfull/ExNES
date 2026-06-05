@@ -74,9 +74,11 @@ const keyMap = {
 }
 
 window.addEventListener('keydown',(e)=>{
+   
     if (keyMap[e.code] !== undefined ){
         
-        controlState[keyMap[e.code]] = true  
+        controlState[keyMap[e.code]] = true 
+        console.log(keyMap[e.code]) 
         sendUpdate()
     }
 })
@@ -96,4 +98,6 @@ const sendUpdate = ()=>{
         },
         body: JSON.stringify(controlState)
     }).catch(err => console.log(err))
+
+    console.log(controlState)
 }
