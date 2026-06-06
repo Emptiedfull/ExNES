@@ -59,7 +59,7 @@ func (c *Controller) HandleConnection() {
 			continue
 		}
 
-		fmt.Println(len(message))
+		fmt.Println(len(message), message)
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Println("scanner error:", err)

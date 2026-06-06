@@ -15,6 +15,8 @@ type ppu struct {
 	backBuffer  []uint8
 	frontBuffer []uint8
 
+	screenChanged bool
+
 	DebugBuffer []uint8
 
 	DrawFlg bool
@@ -303,7 +305,7 @@ func (p *ppu) Tick() {
 
 		if p.Scanline < 240 {
 			p.renderScanline()
-
+			p.screenChanged = true
 		}
 
 		p.Scanline++

@@ -77,42 +77,34 @@ func InitializeConsole() *console {
 	return c
 }
 
-var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988) // 2
+var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 30.0988)
 
 func (c *console) StartConsoleCycle() {
-	ticker := time.NewTicker(1 * time.Millisecond)
-	defer ticker.Stop()
 
-	lastTime := time.Now()
-	var lag int64 = 0
+	targetTime := time.Now()
 
 	var framecount = 0
-	var fpsMilli = 0
 
-	for range ticker.C {
-		fpsMilli++
-		elapsed := time.Since(lastTime).Nanoseconds()
-		lastTime = time.Now()
-		lag += int64(elapsed)
+	for {
 
-		for lag > nsPerFrame {
+		now := time.Now()
+		for now.After(targetTime) {
 			framecount++
+
 			for range 29781 {
 				c.tick()
 			}
-			lag -= nsPerFrame
+
+			targetTime = targetTime.Add(time.Duration(nsPerFrame))
 
 			c.runDisplayUpdates()
 		}
 
-		if fpsMilli > 1000 {
-			fpsMilli = 0
-			fmt.Println("fps:", framecount)
-			framecount = 0
+		timeLeft := time.Until(targetTime)
+		if timeLeft > 0 {
+			time.Sleep(timeLeft)
 		}
-
 	}
-
 }
 
 func (d *Debugger) StepCycles(cycles int) {
@@ -125,12 +117,15 @@ func (d *Debugger) StepCycles(cycles int) {
 }
 
 func (c *console) runDisplayUpdates() {
-
-	S := ScreenInfo{
-		Buffer: c.Ppu.backBuffer,
+	if c.Ppu.screenChanged {
+		S := ScreenInfo{
+			Buffer: c.Ppu.backBuffer,
+		}
+		c.Ppu.screenChanged = false
+		c.ScreenChannel <- S
+	} else {
+		fmt.Println("skipping frame send")
 	}
-
-	c.ScreenChannel <- S
 
 }
 

@@ -49,8 +49,6 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 
 func (c *client) runReciever(ctx context.Context) {
 
-	fmt.Println("socket recieving", c.ID)
-
 	for {
 		select {
 		case <-ctx.Done():

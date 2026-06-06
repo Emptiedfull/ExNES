@@ -12,7 +12,7 @@ import (
 func main() {
 	fmt.Println("running")
 
-	setUpListener()
+	run_server()
 
 }
 
@@ -30,7 +30,7 @@ func run_server() {
 	mux.HandleFunc("/ppu/debugCHR", runChrViewer)
 	mux.HandleFunc("/ppu/debugNameTable", runNameTableViewer)
 	mux.HandleFunc("/screen", getScreenIMM)
-	// mux.HandleFunc("/controls/update", updateControls)
+	mux.HandleFunc("/controls/update", updateControls)
 	mux.HandleFunc("/screen/socket", acceptScreenConn)
 	mux.HandleFunc("/start/console", startConsole)
 

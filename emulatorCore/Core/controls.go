@@ -35,26 +35,19 @@ func (J *joyPad) writeStrobe(val uint8) {
 func (J *joyPad) readState() uint8 {
 
 	if J.index > 7 {
-		return 1
+		fmt.Println("reading", J.index)
+		return 0x40 | 1
 	}
 
 	if J.strobe == 1 {
-		return J.current[ButtonA]
+		J.index = 0
+		return 0x40 | J.current[ButtonA]
 	}
 
-	var state uint8 = 0
-	state = J.current[J.index]
-
-	if J.debugflag {
-		if state == 1 {
-			fmt.Println("Reading control state:", J.current)
-			J.debugflag = false
-		}
-	}
-
+	state := J.latched[J.index]
 	J.index++
 
-	return state
+	return 0x40 | state
 
 }
 
@@ -79,8 +72,6 @@ func (J *joyPad) UpdateState(c ControlState) {
 	J.current[ButtonLeft] = uint8(convertBoolToInt(c.Left))
 	J.current[ButtonRight] = uint8(convertBoolToInt(c.Right))
 
-	fmt.Println("updating state", J.current)
-	J.debugflag = true
 }
 
 func (J *joyPad) UpdateBtnState(btn int, state uint8) {
