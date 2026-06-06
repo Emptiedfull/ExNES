@@ -81,7 +81,10 @@ func (J *joyPad) UpdateState(c ControlState) {
 
 	fmt.Println("updating state", J.current)
 	J.debugflag = true
+}
 
+func (J *joyPad) UpdateBtnState(btn int, state uint8) {
+	J.current[btn] = state
 }
 
 func convertBoolToInt(b bool) int {

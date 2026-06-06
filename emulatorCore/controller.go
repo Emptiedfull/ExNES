@@ -10,6 +10,7 @@ import (
 type Controller struct {
 	conn      net.Conn
 	connected bool
+	ID        string
 }
 
 func setUpListener() {
@@ -32,15 +33,21 @@ func setUpListener() {
 		c := Controller{
 			conn:      conn,
 			connected: false,
+			ID:        genRandomID(),
 		}
 
+		fmt.Println("established connection:", c.ID)
 		go c.HandleConnection()
 
 	}
 }
 
 func (c *Controller) HandleConnection() {
-	defer c.conn.Close()
+	defer func() {
+		c.conn.Close()
+		fmt.Println("connection terminated:", c.ID)
+		c.connected = false
+	}()
 	scanner := bufio.NewScanner(c.conn)
 	for scanner.Scan() {
 
@@ -48,14 +55,13 @@ func (c *Controller) HandleConnection() {
 
 		if message == "ping" {
 			c.connected = true
+
 			continue
 		}
 
-		fmt.Println("message recieved:", scanner.Text())
+		fmt.Println(len(message))
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Println("scanner error:", err)
 	}
-	fmt.Println("Connection terminated")
-	c.connected = false
 }
