@@ -56,8 +56,8 @@ func (c *client) runReciever(ctx context.Context) {
 		case <-ctx.Done():
 			fmt.Println("closing connection", c.ID)
 			return
-		case info := <-debugConsole.screenChannel:
-			c.conn.Write(ctx, websocket.MessageBinary, info.buffer)
+		case info := <-debugConsole.Console.ScreenChannel:
+			c.conn.Write(ctx, websocket.MessageBinary, info.Buffer)
 		}
 	}
 

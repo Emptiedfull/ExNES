@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "ExNES",
+			"path": "../../../../../../ExNES"
+		},
+		{
+			"name": "Controller",
+			"path": ".."
+		}
+	],
+	"settings": {}
+}

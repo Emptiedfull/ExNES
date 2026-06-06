@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"exnes/Core"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,22 +12,11 @@ import (
 func main() {
 	fmt.Println("running")
 
-	run_server()
+	setUpListener()
 
 }
 
-type Debugger struct {
-	console     *console
-	Disassembly map[uint16]AssemblyLine
-
-	screenChannel chan ScreenInfo
-}
-
-type ScreenInfo struct {
-	buffer []uint8
-}
-
-var debugConsole Debugger
+var debugConsole Core.Debugger
 
 func run_server() {
 	mux := http.NewServeMux()
@@ -40,10 +30,9 @@ func run_server() {
 	mux.HandleFunc("/ppu/debugCHR", runChrViewer)
 	mux.HandleFunc("/ppu/debugNameTable", runNameTableViewer)
 	mux.HandleFunc("/screen", getScreenIMM)
-	mux.HandleFunc("/controls/update", updateControls)
+	// mux.HandleFunc("/controls/update", updateControls)
 	mux.HandleFunc("/screen/socket", acceptScreenConn)
 	mux.HandleFunc("/start/console", startConsole)
-	mux.HandleFunc("/test/", testChannel)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
@@ -51,25 +40,15 @@ func run_server() {
 	}
 }
 
-func testChannel(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	S := ScreenInfo{}
-
-	debugConsole.screenChannel <- S
-
-	w.WriteHeader(http.StatusOK)
-}
-
 func startConsole(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	if debugConsole.console == nil {
+	if debugConsole.Console == nil {
 		http.Error(w, "console not initialized", http.StatusInternalServerError)
 		return
 	}
 
-	go debugConsole.console.startConsoleCycle()
+	go debugConsole.Console.StartConsoleCycle()
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -84,7 +63,7 @@ func updateControls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var state controlState
+	var state Core.ControlState
 
 	err := json.NewDecoder(r.Body).Decode(&state)
 
@@ -95,12 +74,12 @@ func updateControls(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
-	if debugConsole.console == nil {
+	if debugConsole.Console == nil {
 		http.Error(w, "Console not started", http.StatusInternalServerError)
 		return
 	}
 
-	debugConsole.console.JoyPad.updateState(state)
+	debugConsole.Console.JoyPad.UpdateState(state)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -110,25 +89,25 @@ func getScreenIMM(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-type", "application/octet-stream")
 
-	if debugConsole.console == nil {
+	if debugConsole.Console == nil {
 		http.Error(w, "unable to get screen buffer", http.StatusBadRequest)
 		return
 	}
 
-	w.Write(debugConsole.console.Ppu.backBuffer)
+	w.Write(debugConsole.Console.Ppu.GetScreenBuffer())
 
 }
 
 func runChrViewer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	debugConsole.console.DebugChrRom()
+	debugConsole.Console.DebugChrRom()
 	fmt.Fprint(w, "Success")
 }
 
 func runNameTableViewer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	debugConsole.console.DebugNameTable()
+	debugConsole.Console.DebugNameTable()
 	fmt.Fprintf(w, "Success")
 
 }
@@ -137,27 +116,27 @@ func getDebugScreen(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/octet-stream")
 
-	if debugConsole.console == nil {
+	if debugConsole.Console == nil {
 		http.Error(w, "unable to get screen buffer", http.StatusBadRequest)
 		return
 	}
 
-	w.Write(debugConsole.console.Ppu.debugBuffer)
+	w.Write(debugConsole.Console.Ppu.DebugBuffer)
 }
 
 func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	c := initializeConsole()
-	c.loadROM("C:/Users/user/ExNES/emulatorCore/games/dk3.nes")
-	c.Cpu.reset()
+	c := Core.InitializeConsole()
+	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/dk3.nes")
+	c.Cpu.Reset()
 
 	fmt.Println("console ready for debug")
 
-	debugConsole.console = c
-	debugConsole.Disassembly = make(map[uint16]AssemblyLine)
-	debugConsole.screenChannel = make(chan ScreenInfo, 100)
+	debugConsole.Console = c
+	debugConsole.Disassembly = make(map[uint16]Core.AssemblyLine)
+	debugConsole.Console.ScreenChannel = make(chan Core.ScreenInfo, 100)
 
-	c.Ppu.debugBuffer = make([]uint8, 512*64)
+	c.Ppu.DebugBuffer = make([]uint8, 512*64)
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Success")
@@ -178,7 +157,7 @@ func getLookAhead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lines := debugConsole.console.Cpu.lookAhead(debugConsole.console.Cpu.PC, size)
+	lines := debugConsole.LookAhead(debugConsole.Console.Cpu.PC, size)
 
 	err = json.NewEncoder(w).Encode(lines)
 	if err != nil {
@@ -210,20 +189,20 @@ func runCycle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	debugConsole.console.stepCycles(steps)
+	debugConsole.StepCycles(steps)
 
-	fmt.Fprintf(w, "cycles ran succesfully %x", debugConsole.console.Cpu.PC)
+	fmt.Fprintf(w, "cycles ran succesfully %x", debugConsole.Console.Cpu.PC)
 
 }
 
 func getCpuState(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if debugConsole.console == nil {
+	if debugConsole.Console == nil {
 		http.Error(w, "console not started", http.StatusInternalServerError)
 		return
 	}
 
-	state := debugConsole.console.Cpu.GetSate()
+	state := debugConsole.Console.Cpu.GetSate()
 
 	err := json.NewEncoder(w).Encode(state)
 

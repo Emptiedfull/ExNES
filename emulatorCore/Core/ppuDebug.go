@@ -2,14 +2,6 @@ package Core
 
 import "fmt"
 
-func (d *Debugger) StepCycles(cycles int) {
-	for range cycles {
-		d.Console.tick()
-
-		d.Disassembly[d.Console.Cpu.PC] = d.DisAssemble(d.Console.Cpu.PC)
-	}
-}
-
 func (c *console) DebugChrRom() {
 
 	Rom := c.Ppu.mem.chrROM

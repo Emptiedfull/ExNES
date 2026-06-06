@@ -1,5 +1,5 @@
-module exnes/m
+module exnes
 
 go 1.24.0
 
-require github.com/coder/websocket v1.8.14 
+require github.com/coder/websocket v1.8.14

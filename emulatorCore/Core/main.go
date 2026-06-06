@@ -107,7 +107,8 @@ func (c *console) StartConsoleCycle() {
 
 		if fpsMilli > 1000 {
 			fpsMilli = 0
-			fmt.Println(framecount)
+			fmt.Println("fps:", framecount)
+			framecount = 0
 		}
 
 	}
@@ -119,6 +120,7 @@ func (d *Debugger) StepCycles(cycles int) {
 		d.Console.tick()
 
 		d.Disassembly[d.Console.Cpu.PC] = d.DisAssemble(d.Console.Cpu.PC)
+
 	}
 }
 
