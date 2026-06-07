@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    await startConsole()
-    console.log("connecting socket")
+     console.log("connecting socket")
     connectSocket()
     
     requestAnimationFrame(renderLoop)

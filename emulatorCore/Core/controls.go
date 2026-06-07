@@ -1,7 +1,5 @@
 package Core
 
-import "fmt"
-
 type joyPad struct {
 	strobe uint8
 	index  uint8
@@ -35,7 +33,6 @@ func (J *joyPad) writeStrobe(val uint8) {
 func (J *joyPad) readState() uint8 {
 
 	if J.index > 7 {
-		fmt.Println("reading", J.index)
 		return 0x40 | 1
 	}
 

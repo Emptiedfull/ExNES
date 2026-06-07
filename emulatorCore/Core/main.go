@@ -97,7 +97,7 @@ func (c *console) StartConsoleCycle() {
 
 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
 
-			c.runDisplayUpdates()
+			c.RunDisplayUpdates()
 		}
 
 		timeLeft := time.Until(targetTime)
@@ -116,7 +116,7 @@ func (d *Debugger) StepCycles(cycles int) {
 	}
 }
 
-func (c *console) runDisplayUpdates() {
+func (c *console) RunDisplayUpdates() {
 	if c.Ppu.screenChanged {
 		S := ScreenInfo{
 			Buffer: c.Ppu.backBuffer,

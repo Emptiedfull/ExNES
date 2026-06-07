@@ -1,7 +1,6 @@
 package Core
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -167,10 +166,9 @@ func (b *bus) Read(addr uint16) uint8 {
 	case addr <= 0x1FFF:
 		val = b.internal[addr&0x07FF]
 	case addr == 0x4016:
-		fmt.Println("reading state")
+
 		return b.cpu.console.JoyPad.readState()
 	case addr == 0x4017:
-		fmt.Println("reading state")
 		return b.cpu.console.JoyPad.readState()
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8

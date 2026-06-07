@@ -24,7 +24,6 @@ func run_server() {
 	mux.HandleFunc("/Debugger/reset", startDebugger)
 	mux.HandleFunc("/cpu/state", getCpuState)
 	mux.HandleFunc("/cpu/lookAhead", getLookAhead)
-	mux.HandleFunc("/cpu/step", runCycle)
 	mux.HandleFunc("/disassembly", getDissambly)
 	mux.HandleFunc("/screen/get/Debug", getDebugScreen)
 	mux.HandleFunc("/ppu/debugCHR", runChrViewer)
@@ -34,10 +33,42 @@ func run_server() {
 	mux.HandleFunc("/screen/socket", acceptScreenConn)
 	mux.HandleFunc("/start/console", startConsole)
 
+	mux.HandleFunc("/run/cycle", runCycle)
+	mux.HandleFunc("/run/frame", runFrame)
+
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalf("error running server")
 	}
+}
+
+func runSingleCycle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	debugConsole.DebugTick()
+	debugConsole.Console.RunDisplayUpdates()
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func run30frame(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	for range 29781 * 30 {
+		debugConsole.DebugTick()
+	}
+}
+
+func runFrame(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	for range 29781 {
+		debugConsole.DebugTick()
+	}
+
+	debugConsole.Console.RunDisplayUpdates()
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func startConsole(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +79,7 @@ func startConsole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go debugConsole.Console.StartConsoleCycle()
+	go debugConsole.StartDebugConsole()
 
 	w.WriteHeader(http.StatusOK)
 }

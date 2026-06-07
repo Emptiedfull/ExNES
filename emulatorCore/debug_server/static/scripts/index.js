@@ -3,11 +3,9 @@ var currentPC = 0
 
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("running")
-      await getState()
-
-    lines = await getLines()
    
-    populateLines(lines)
+   
+    fetchUpdate()
     console.log("setting up buttons")
     await setupButtons()
 
@@ -25,15 +23,37 @@ const setupButtons = async()=>{
 
         if (!response.ok){
             throw new Error("error starting debugger")
-        }else{
-            btn.innerText = "Reset"
-            btn.classList.add("active")
         }
 
-        
+    })
 
+    cyclebtn = document.getElementById("run-cycle")
+    cyclebtn.addEventListener("click",async()=>{
+        console.log("running cycle")
+        const response = await fetch(Base + "run/cycle")
+        if (!response.ok){
+            throw new Error("erorr running cycle")
+        }
+        fetchUpdate()
+    })
+
+    framebtn = document.getElementById("run-frame")
+    framebtn.addEventListener("click",async()=>{
+        const response = await fetch(Base + "run/frame")
+        console.log("running frame")
+        if (!response.ok){
+            throw new Error("error running frame")
+        }
+        fetchUpdate()
+    })
+
+    run30btn = document.getElementById("run-30")
+    run30btn.addEventListener("click",async()=>{
+        const response = await fetch(Base + "run/30frame")
     })
 }
+
+
 
 const getScreenArr = async()=>{
     try{
@@ -60,7 +80,6 @@ const getState = async () =>{
 
         const data = await response.json()
 
-        console.log(document.getElementById("X"))
 
         document.getElementById("A").value = data.a
         document.getElementById("X").value = data.x
@@ -76,7 +95,6 @@ const getState = async () =>{
         togglecheckbox("Negative",data.flags.negative)
         togglecheckbox("Decimal",data.flags.decimal)
 
-        console.log(data)
         
     }catch(error){
         console.log(error)
@@ -107,7 +125,6 @@ const getLines = async () => {
         }
 
         const data = await response.json()
-        console.log(data)
 
         return data
 
@@ -121,10 +138,10 @@ const populateLines = (Lines) => {
         return
     }
     win = document.querySelector(".code-window")
-    console.log(win)
+    win.innerHTML = ""
+
     for (const [addr, line] of Object.entries(Lines)) {
-        console.log(` ${formatHex(addr)} ${line.disassembly}`);
-        
+     
         const lineHTML = `
         <div class="asm-line ${formatHex(addr) == currentPC ? "current-pc" : "" }">
             <span class="addr">${formatHex(addr)}</span>
@@ -135,8 +152,24 @@ const populateLines = (Lines) => {
 
         win.insertAdjacentHTML('beforeend', lineHTML);
     }
+
+    current = document.querySelector(".current-pc")
+    if (current){
+          current.scrollIntoView({
+            behavior: "instant", 
+            block: "center"     
+        })
+    }
+  
+    
 }
 
 const formatHex = (int) => {
     return parseInt(int).toString(16).toUpperCase()
+}
+
+const fetchUpdate = async()=>{
+    lines = await getLines()
+    await populateLines(lines)
+    await getState()
 }

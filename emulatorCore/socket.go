@@ -43,7 +43,9 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 	connectedClients = append(connectedClients, c)
 	defer removeClient(c)
 
-	c.runReciever(ctx)
+	if debugConsole.Console != nil {
+		c.runReciever(ctx)
+	}
 
 }
 

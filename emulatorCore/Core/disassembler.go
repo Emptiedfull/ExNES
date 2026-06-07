@@ -2,6 +2,7 @@ package Core
 
 import (
 	"fmt"
+	"time"
 )
 
 type addressingMode int
@@ -57,6 +58,39 @@ type FlagState struct {
 	Negative  bool `json:"negative"`
 }
 
+func (d *Debugger) StartDebugConsole() {
+
+	targetTime := time.Now()
+
+	var framecount = 0
+
+	for {
+
+		now := time.Now()
+		for now.After(targetTime) {
+			framecount++
+
+			for range 29781 {
+				d.DebugTick()
+			}
+
+			targetTime = targetTime.Add(time.Duration(nsPerFrame))
+
+			d.Console.RunDisplayUpdates()
+		}
+
+		timeLeft := time.Until(targetTime)
+		if timeLeft > 0 {
+			time.Sleep(timeLeft)
+		}
+	}
+}
+
+func (d *Debugger) DebugTick() {
+	d.Console.tick()
+	d.DisAssemble(d.Console.Cpu.PC)
+}
+
 func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	mem := d.Console.Cpu.mem
 	if d.Console != nil {
@@ -68,7 +102,7 @@ func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	line := AssemblyLine{}
 	opcode := mem.Read(addr)
 	if opcode == 255 {
-		fmt.Println("invalid opcode")
+		fmt.Println("invalid opcode", opcode)
 		return line
 	}
 	info := FetchTable[opcode]
