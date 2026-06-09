@@ -206,3 +206,21 @@ func (T *TestBus) Set(addr uint16, val uint8) {
 func (T *TestBus) Get(addr uint16) uint8 {
 	return T.RAM[addr]
 }
+
+func (T *TestBus) returnInternal() [2048]byte {
+	var x [2048]byte
+	return x
+}
+
+func (T *TestBus) returnExternal() []byte {
+	var x []byte
+	return x
+}
+
+func (T *TestBus) loadExternal([]byte) {
+
+}
+
+func (T *TestBus) loadInternal([2048]byte) {
+
+}

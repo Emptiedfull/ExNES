@@ -63,6 +63,12 @@ func (c *client) runReciever(ctx context.Context) {
 
 }
 
+func HandleScreenUpdates() {
+	for s := range debugConsole.Console.ScreenChannel {
+		fmt.Println(s)
+	}
+}
+
 func removeClient(c *client) {
 	for id, conn := range connectedClients {
 		if c == conn {

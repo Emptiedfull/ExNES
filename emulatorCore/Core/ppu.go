@@ -10,16 +10,12 @@ type ppu struct {
 	Scanline int
 	Frame    int
 
-	pallete Pallete
-
 	backBuffer  []uint8
 	frontBuffer []uint8
 
 	screenChanged bool
 
 	DebugBuffer []uint8
-
-	DrawFlg bool
 
 	verticalMirroring bool
 }
@@ -314,7 +310,6 @@ func (p *ppu) Tick() {
 			p.Frame++
 
 			copy(p.frontBuffer, p.backBuffer)
-			p.DrawFlg = true
 		}
 	}
 

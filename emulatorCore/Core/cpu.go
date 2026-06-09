@@ -56,6 +56,10 @@ type typebus interface {
 	GetHistory() []cycleStep
 	ClearHistory()
 	FillArr(uint16, []byte) error
+	returnInternal() [2048]byte
+	returnExternal() []byte
+	loadInternal([2048]byte)
+	loadExternal([]byte)
 }
 
 func (c *cpu) executeNmiCycle() int {
@@ -158,6 +162,24 @@ type bus struct {
 	cpu      *cpu
 	internal [2048]byte
 	external []byte
+}
+
+func (b *bus) returnInternal() [2048]byte {
+	return b.internal
+}
+
+func (b *bus) returnExternal() []byte {
+	dst := make([]byte, len(b.external))
+	copy(dst, b.external)
+	return dst
+}
+
+func (b *bus) loadInternal(x [2048]byte) {
+	b.internal = x
+}
+
+func (b *bus) loadExternal(x []byte) {
+	copy(b.external, x)
 }
 
 func (b *bus) Read(addr uint16) uint8 {

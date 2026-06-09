@@ -26,6 +26,16 @@ const (
 type Debugger struct {
 	Console     *console
 	Disassembly map[uint16]AssemblyLine
+
+	RecentHistory SnapshotBuffer
+}
+
+type SnapshotBuffer struct {
+	frame int
+
+	data  [100]snapshot
+	index int
+	full  bool
 }
 
 type ScreenInfo struct {
@@ -37,7 +47,6 @@ type AssemblyLine struct {
 	Disassembly string `json:"disassembly"`
 	Val         uint8  `json:"val,omitempty"`
 }
-
 type cpustate struct {
 	Pc     uint16    `json:"pc"`
 	S      uint8     `json:"s"`
@@ -70,6 +79,7 @@ func (d *Debugger) StartDebugConsole() {
 		if d.Console.Paused {
 			time.Sleep(100 * time.Millisecond)
 			targetTime = time.Now()
+
 			continue
 		}
 
@@ -78,12 +88,17 @@ func (d *Debugger) StartDebugConsole() {
 			framecount++
 
 			for range 29781 {
+				if d.Console.Paused {
+
+					continue
+				}
 				d.DebugTick()
 			}
 
 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
 
 			d.Console.RunDisplayUpdates()
+			d.AddSnapshot()
 		}
 
 		timeLeft := time.Until(targetTime)
@@ -96,6 +111,7 @@ func (d *Debugger) StartDebugConsole() {
 func (d *Debugger) DebugTick() {
 	d.Console.tick()
 	d.DisAssemble(d.Console.Cpu.PC)
+
 }
 
 func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
@@ -110,6 +126,7 @@ func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	opcode := mem.Read(addr)
 	if opcode == 255 {
 		d.Console.Pause()
+		fmt.Println("Invalid opcode recieved pausing state")
 		return line
 	}
 	info := FetchTable[opcode]

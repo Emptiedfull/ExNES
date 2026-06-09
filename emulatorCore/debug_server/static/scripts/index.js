@@ -245,7 +245,7 @@ const populateLines = (Lines) => {
     
 
 
-}
+} 
 
 const formatHex = (int) => {
     return parseInt(int).toString(16).toUpperCase()
