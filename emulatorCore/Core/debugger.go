@@ -39,14 +39,15 @@ type AssemblyLine struct {
 }
 
 type cpustate struct {
-	Pc    uint16    `json:"pc"`
-	S     uint8     `json:"s"`
-	A     uint8     `json:"a"`
-	X     uint8     `json:"x"`
-	Y     uint8     `json:"y"`
-	P     uint8     `json:"p"`
-	Flags FlagState `json:"flags"`
-	Ram   [][]int   `json:"-"`
+	Pc     uint16    `json:"pc"`
+	S      uint8     `json:"s"`
+	A      uint8     `json:"a"`
+	X      uint8     `json:"x"`
+	Y      uint8     `json:"y"`
+	P      uint8     `json:"p"`
+	Flags  FlagState `json:"flags"`
+	Cycles int       `json:"cycles"`
+	Ram    [][]int   `json:"-"`
 }
 
 type FlagState struct {
@@ -65,6 +66,12 @@ func (d *Debugger) StartDebugConsole() {
 	var framecount = 0
 
 	for {
+
+		if d.Console.Paused {
+			time.Sleep(100 * time.Millisecond)
+			targetTime = time.Now()
+			continue
+		}
 
 		now := time.Now()
 		for now.After(targetTime) {
@@ -102,7 +109,7 @@ func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	line := AssemblyLine{}
 	opcode := mem.Read(addr)
 	if opcode == 255 {
-		fmt.Println("invalid opcode", opcode)
+		d.Console.Pause()
 		return line
 	}
 	info := FetchTable[opcode]
@@ -202,6 +209,7 @@ func (c *cpu) GetSate() cpustate {
 	state.Y = c.Y
 	state.Pc = c.PC
 	state.P = c.P
+	state.Cycles = c.totalCycles
 
 	f := FlagState{
 		Zero:      getbitBool(state.P, 1),

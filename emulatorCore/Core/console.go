@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -17,6 +18,21 @@ type console struct {
 	ScreenChannel chan ScreenInfo
 
 	ready bool
+
+	Paused   bool
+	pausedMu sync.Mutex
+}
+
+func (c *console) Pause() {
+	c.pausedMu.Lock()
+	defer c.pausedMu.Unlock()
+	c.Paused = true
+}
+
+func (c *console) UnPause() {
+	c.pausedMu.Lock()
+	defer c.pausedMu.Unlock()
+	c.Paused = false
 }
 
 func (c *console) LoadROM(filepath string) error {
@@ -86,6 +102,12 @@ func (c *console) StartConsoleCycle() {
 	var framecount = 0
 
 	for {
+
+		if c.Paused {
+			time.Sleep(100 * time.Millisecond)
+			targetTime = time.Now()
+			continue
+		}
 
 		now := time.Now()
 		for now.After(targetTime) {

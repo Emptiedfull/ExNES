@@ -21,7 +21,6 @@ var debugConsole Core.Debugger
 func run_server() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/Debugger/reset", startDebugger)
 	mux.HandleFunc("/cpu/state", getCpuState)
 	mux.HandleFunc("/cpu/lookAhead", getLookAhead)
 	mux.HandleFunc("/disassembly", getDissambly)
@@ -31,15 +30,50 @@ func run_server() {
 	mux.HandleFunc("/screen", getScreenIMM)
 	mux.HandleFunc("/controls/update", updateControls)
 	mux.HandleFunc("/screen/socket", acceptScreenConn)
-	mux.HandleFunc("/start/console", startConsole)
+
+	mux.HandleFunc("/Debugger/reset", startDebugger)
+	mux.HandleFunc("/Debugger/getConsoleStatus", getConsoleStatus)
+
+	mux.HandleFunc("/console/start", startConsole)
+	mux.HandleFunc("/console/pause", pauseConsole)
+	mux.HandleFunc("/console/unpause", unpauseConsole)
+	mux.HandleFunc("/console/getExecStatus", getExecStatus)
 
 	mux.HandleFunc("/run/cycle", runCycle)
 	mux.HandleFunc("/run/frame", runFrame)
+	mux.HandleFunc("/run/frame30", run30frame)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalf("error running server")
 	}
+}
+
+func getConsoleStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	err := json.NewEncoder(w).Encode(debugConsole.Console != nil)
+	if err != nil {
+		http.Error(w, "error getting console status", http.StatusInternalServerError)
+		return
+	}
+}
+
+func getExecStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	if debugConsole.Console == nil {
+		http.Error(w, "console not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	err := json.NewEncoder(w).Encode(debugConsole.Console.Paused)
+	if err != nil {
+		http.Error(w, "unable to encode pause status-very weird", http.StatusInternalServerError)
+		fmt.Println("something really bad happened encoding a bool failing is insane")
+		return
+	}
+
 }
 
 func runSingleCycle(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +91,10 @@ func run30frame(w http.ResponseWriter, r *http.Request) {
 	for range 29781 * 30 {
 		debugConsole.DebugTick()
 	}
+
+	debugConsole.Console.RunDisplayUpdates()
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func runFrame(w http.ResponseWriter, r *http.Request) {
@@ -80,6 +118,33 @@ func startConsole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go debugConsole.StartDebugConsole()
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func pauseConsole(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	if debugConsole.Console == nil {
+		http.Error(w, "console not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	debugConsole.Console.Pause()
+
+	w.WriteHeader(http.StatusOK)
+
+}
+
+func unpauseConsole(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	if debugConsole.Console == nil {
+		http.Error(w, "console not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	debugConsole.Console.UnPause()
 
 	w.WriteHeader(http.StatusOK)
 }

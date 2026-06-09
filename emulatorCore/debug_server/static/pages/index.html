@@ -1,45 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExNES</title>
-    <link rel="stylesheet" href="static/styles/index.css?v=1">
+    <link rel="stylesheet" href="static/styles/index.css?v=0">
 </head>
+
 <body>
-    
+
 
     <div class="workspace">
-        
+
         <div class="assembly-column">
             <div class="code-window">
-                
+
 
             </div>
         </div>
 
         <div class="telemetry-column">
-            
+
             <fieldset>
                 <legend>CPU Status</legend>
                 <div class="grid-row">
-                    <div class="data-field" ><label>A:</label><input type="text" value="0" readonly id="A"></div>
+                    <div class="data-field"><label>A:</label><input type="text" value="0" readonly id="A"></div>
                     <div class="data-field"><label>X:</label><input type="text" value="0" readonly id="X"></div>
                     <div class="data-field"><label>Y:</label><input type="text" value="0" readonly id="Y"></div>
-                    <div class="data-field"><label>PC:</label><input type="text" value="F4FF" readonly id="PC"></div>
+                    <div class="data-field"><label>PC:</label><input type="text" value="0" readonly id="PC"></div>
                 </div>
                 <div class="data-field" style="margin-bottom: 8px;">
                     <label style="width: 45px;">Cycle:</label>
-                    <input type="text" value="40975473" readonly style="width: 100px;">
+                    <input type="text" value="0" readonly style="width: 100px;" id="Cycles">
                 </div>
                 <div style="font-weight: 500; margin-bottom: 4px; color: var(--text-muted);">Flags (P: 5)</div>
                 <div class="checkbox-group">
-                    <div class="checkbox-item"><input type="checkbox" id="Carry" checked disabled><label>Carry</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="Carry" checked disabled><label>Carry</label>
+                    </div>
                     <div class="checkbox-item"><input type="checkbox" id="Zero" disabled><label>Zero</label></div>
-                    <div class="checkbox-item"><input type="checkbox" id="Interrupt" checked disabled><label>Interrupt</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="Interrupt" checked
+                            disabled><label>Interrupt</label></div>
                     <div class="checkbox-item"><input type="checkbox" id="Decimal" disabled><label>Decimal</label></div>
-                    <div class="checkbox-item"><input type="checkbox" id="Overflow" disabled><label>Overflow</label></div>
-                    <div class="checkbox-item"><input type="checkbox" id="Negative" disabled><label>Negative</label></div>
+                    <div class="checkbox-item"><input type="checkbox" id="Overflow" disabled><label>Overflow</label>
+                    </div>
+                    <div class="checkbox-item"><input type="checkbox" id="Negative" disabled><label>Negative</label>
+                    </div>
                 </div>
             </fieldset>
 
@@ -51,38 +57,44 @@
                     <div class="data-field"><label>SL:</label><input type="text" value="240" readonly></div>
                 </div>
                 <div class="grid-row">
-                    <div class="data-field" style="grid-column: span 2;"><label>VRAM Addr:</label><input type="text" value="0802" readonly></div>
-                    <div class="data-field" style="grid-column: span 2;"><label>NT Addr:</label><input type="text" value="2802" readonly></div>
+                    <div class="data-field" style="grid-column: span 2;"><label>VRAM Addr:</label><input type="text"
+                            value="0802" readonly></div>
+                    <div class="data-field" style="grid-column: span 2;"><label>NT Addr:</label><input type="text"
+                            value="2802" readonly></div>
                 </div>
                 <div class="checkbox-group" style="grid-template-columns: 1fr;">
                     <div class="checkbox-item"><input type="checkbox" checked disabled><label>BG Enabled</label></div>
-                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>Sprites Enabled</label></div>
-                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>NMI on vBlank</label></div>
+                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>Sprites Enabled</label>
+                    </div>
+                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>NMI on vBlank</label>
+                    </div>
                 </div>
             </fieldset>
-             <fieldset>
-                <legend>Controls</legend>
-              <button class="btn-primary " id="start-debugger" >Start</button>
-               <button class="btn-primary " id="start-execution" >Begin</button>
-    
-              
+            <fieldset>
+                <legend>Execution Controls</legend>
+                <button class="btn-primary " id="start-debugger">Start</button>
+                <button class="btn-primary " id="start-execution" disabled>Begin</button>
+                <button class="btn-primary pause" id="control-execution" disabled>Pause</button>
+
+
             </fieldset>
-             <fieldset>
+            <fieldset>
                 <legend>Run</legend>
-              <button class="btn-primary " id="run-cycle" >cycle</button>
-               <button class="btn-primary " id="run-frame" >frame</button>
-               <button class="btn-primary " id="run-30" >30 frames</button>
-    
-              
+                <button class="btn-primary " id="run-cycle">cycle</button>
+                <button class="btn-primary " id="run-frame">frame</button>
+                <button class="btn-primary " id="run-30">30 frames</button>
+
+
             </fieldset>
 
-          
+
 
         </div>
     </div>
 
-    
+
 
 </body>
-<script src="static/scripts/index.js?v=2"></script>
+<script src="static/scripts/index.js?v=0"></script>
+
 </html>
