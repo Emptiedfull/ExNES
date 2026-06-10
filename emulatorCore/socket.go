@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"exnes/Core"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -14,8 +15,9 @@ import (
 var connectedClients []*client
 
 type client struct {
-	ID   string
-	conn *websocket.Conn
+	ID     string
+	Output chan Core.ScreenInfo
+	conn   *websocket.Conn
 }
 
 func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
@@ -36,8 +38,9 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 	ctx = conn.CloseRead(ctx)
 
 	c := &client{
-		ID:   genRandomID(),
-		conn: conn,
+		ID:     genRandomID(),
+		conn:   conn,
+		Output: make(chan Core.ScreenInfo, 60),
 	}
 
 	connectedClients = append(connectedClients, c)
@@ -50,13 +53,13 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *client) runReciever(ctx context.Context) {
-
+	fmt.Println("opening connection", c.ID)
 	for {
 		select {
 		case <-ctx.Done():
 			fmt.Println("closing connection", c.ID)
 			return
-		case info := <-debugConsole.Console.ScreenChannel:
+		case info := <-c.Output:
 			c.conn.Write(ctx, websocket.MessageBinary, info.Buffer)
 		}
 	}
@@ -65,7 +68,10 @@ func (c *client) runReciever(ctx context.Context) {
 
 func HandleScreenUpdates() {
 	for s := range debugConsole.Console.ScreenChannel {
-		fmt.Println(s)
+		for _, client := range connectedClients {
+			client.Output <- s
+		}
+
 	}
 }
 

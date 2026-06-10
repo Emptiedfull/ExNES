@@ -43,6 +43,9 @@ func run_server() {
 	mux.HandleFunc("/run/frame", runFrame)
 	mux.HandleFunc("/run/frame30", run30frame)
 
+	mux.HandleFunc("/snapshots/fetch", fetchSnapshots)
+	mux.HandleFunc("/snapshots/load", loadSnapshot)
+
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalf("error running server")
@@ -230,9 +233,10 @@ func startDebugger(w http.ResponseWriter, r *http.Request) {
 
 	debugConsole.Console = c
 	debugConsole.Disassembly = make(map[uint16]Core.AssemblyLine)
-	debugConsole.Console.ScreenChannel = make(chan Core.ScreenInfo, 100)
 
 	c.Ppu.DebugBuffer = make([]uint8, 512*64)
+
+	go HandleScreenUpdates()
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Success")

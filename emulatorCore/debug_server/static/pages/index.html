@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExNES</title>
-    <link rel="stylesheet" href="static/styles/index.css?v=0">
+    <link rel="stylesheet" href="static/styles/index.css?v=13">
 </head>
 
 <body>
@@ -48,28 +48,6 @@
                     </div>
                 </div>
             </fieldset>
-
-            <fieldset>
-                <legend>PPU Status</legend>
-                <div class="grid-row">
-                    <div class="data-field"><label>Cycle:</label><input type="text" value="16" readonly></div>
-                    <div class="data-field"><label>Fr#:</label><input type="text" value="1377" readonly></div>
-                    <div class="data-field"><label>SL:</label><input type="text" value="240" readonly></div>
-                </div>
-                <div class="grid-row">
-                    <div class="data-field" style="grid-column: span 2;"><label>VRAM Addr:</label><input type="text"
-                            value="0802" readonly></div>
-                    <div class="data-field" style="grid-column: span 2;"><label>NT Addr:</label><input type="text"
-                            value="2802" readonly></div>
-                </div>
-                <div class="checkbox-group" style="grid-template-columns: 1fr;">
-                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>BG Enabled</label></div>
-                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>Sprites Enabled</label>
-                    </div>
-                    <div class="checkbox-item"><input type="checkbox" checked disabled><label>NMI on vBlank</label>
-                    </div>
-                </div>
-            </fieldset>
             <fieldset>
                 <legend>Execution Controls</legend>
                 <button class="btn-primary " id="start-debugger">Start</button>
@@ -84,8 +62,23 @@
                 <button class="btn-primary " id="run-frame">frame</button>
                 <button class="btn-primary " id="run-30">30 frames</button>
 
+              
+                <div style="margin-top: 10px;">
+                    <input type="number" id="custom-cycles-input" value="1" min="1" style="width: 60px; ">
+                    <button class="btn-primary" id="run-custom-cycles">Run Cycles</button>
+                </div>
 
             </fieldset>
+
+            <fieldset>
+                <legend>Snapshots</legend>
+                <div id="snapshot-list" class="snapshot-container">
+
+                </div>
+            </fieldset>
+
+
+
 
 
 

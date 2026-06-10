@@ -31,11 +31,10 @@ type Debugger struct {
 }
 
 type SnapshotBuffer struct {
-	frame int
+	Frame int
 
-	data  [100]snapshot
-	index int
-	full  bool
+	Data  [200]snapshot
+	Index int
 }
 
 type ScreenInfo struct {

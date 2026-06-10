@@ -2,7 +2,7 @@
 var currentPC = 0
 
 document.addEventListener("DOMContentLoaded", async () => {
-    await fetchUpdate() 
+    await fetchUpdate()
     await setupButtons()
 
 })
@@ -60,6 +60,16 @@ const setupButtons = async () => {
                 throw new Error("unable to unpause console")
             }
         }
+    })
+
+    runCustom = document.getElementById("run-custom-cycles")
+    runCustom.addEventListener("click",async()=>{
+        customInput = document.getElementById("custom-cycles-input")
+
+        const response = await fetch(Base+`run/cycle?steps=${customInput.value}`)
+
+        await fetchUpdate()
+        
     })
 
     cyclebtn = document.getElementById("run-cycle")
@@ -242,10 +252,8 @@ const populateLines = (Lines) => {
             block: "center"
         })
     }
-    
 
-
-} 
+}
 
 const formatHex = (int) => {
     return parseInt(int).toString(16).toUpperCase()
@@ -256,21 +264,66 @@ const fetchUpdate = async () => {
         lines = await getLines()
         await getState()
         await populateLines(lines)
-      
+
         await updateButtonStatus()
-
-
+        await fetchSnapshots()
     } else {
         console.log("console not initilizaed")
     }
-
 }
 
+const loadSnapshot = async (index) => {
+    try {
+        const response = await fetch(`${Base}snapshots/load?index=${index}`)
 
-const updateButtonStatus = async ()=>{
+        console.log("loading snapshot", index)
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+const updateButtonStatus = async () => {
     await updatePauseBtn()
 
     beginbtn = document.getElementById("start-execution")
     beginbtn.disabled = false
 
+}
+
+const fetchSnapshots = async () => {
+    try {
+        const response = await fetch(Base + "snapshots/fetch")
+
+        if (!response.ok) {
+            throw new Error("I HATE THIS AHH")
+        }
+
+        const data = await response.json()
+
+        container = document.getElementById("snapshot-list")
+        console.log(container)
+
+        data.forEach(element => {
+            idx = element.Index
+            frameno = element.Frame_no
+
+            const itemDiv = document.createElement("div")
+
+            itemDiv.className = "snapshot-item"
+            itemDiv.innerHTML = `
+                <span>Idx: ${idx}</span>
+              <span>Frame: ${frameno}</span>
+            `
+
+            itemDiv.onclick = ()=>{loadSnapshot(element.Index)}
+
+            container.appendChild(itemDiv)
+
+
+        })
+
+
+    } catch (error) {
+        console.log(error)
+    }
 }

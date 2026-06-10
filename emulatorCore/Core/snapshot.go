@@ -4,6 +4,7 @@ package Core
 
 type snapshot struct {
 	Frame_no int
+	Cycles   int
 	CpuState CpuSnapshot
 	PpuState PpuSnapshot
 }
@@ -70,11 +71,9 @@ func (p *ppu) TakePpuSnapshot() PpuSnapshot {
 }
 
 func (b *SnapshotBuffer) AddSnapshot(shot snapshot) {
-	b.data[b.index] = shot
-	b.index = (b.index + 1) % 100
-	if b.index == 0 {
-		b.full = true
-	}
+	b.Data[b.Index] = shot
+	b.Index = (b.Index + 1) % len(b.Data)
+
 }
 
 func (c cpu) TakeCpuSnapshot() CpuSnapshot {
@@ -111,6 +110,7 @@ func (d *Debugger) TakeSnapshot() snapshot {
 	S := snapshot{
 		CpuState: d.Console.Cpu.TakeCpuSnapshot(),
 		PpuState: d.Console.Ppu.TakePpuSnapshot(),
+		Cycles:   d.Console.Cpu.totalCycles,
 	}
 
 	return S
@@ -118,12 +118,13 @@ func (d *Debugger) TakeSnapshot() snapshot {
 
 func (d *Debugger) AddSnapshot() {
 	s := d.TakeSnapshot()
-	s.Frame_no = d.RecentHistory.frame
-	d.RecentHistory.frame++
+	s.Frame_no = d.RecentHistory.Frame
+	d.RecentHistory.Frame++
 	d.RecentHistory.AddSnapshot(s)
 }
 
 func (d *Debugger) LoadSnapshot(snap snapshot) {
+	d.Console.Pause()
 	d.Console.Cpu.LoadCpuSnapshot(snap.CpuState)
 	d.Console.Ppu.LoadPpuSnapshot(snap.PpuState)
 }
@@ -144,8 +145,6 @@ func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
 }
 
 func (c *cpu) LoadCpuSnapshot(snap CpuSnapshot) {
-	c.console.Pause()
-	defer c.console.UnPause()
 	c.PC = snap.PC
 	c.S = snap.S
 	c.P = snap.P

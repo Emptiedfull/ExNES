@@ -128,9 +128,8 @@ func (c *cpu) tick() {
 	}
 
 	if c.currentstep == 0 {
-
 		c.currentOp = c.fetchone()
-		c.totalCycles++
+		return
 	}
 
 	opcode := FetchTable[c.currentOp]

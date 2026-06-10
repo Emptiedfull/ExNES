@@ -85,6 +85,7 @@ func InitializeConsole() *console {
 	c.Cpu.console = c
 	c.Ppu.console = c
 	c.OpenBusVal = 0
+	c.ScreenChannel = make(chan ScreenInfo, 100)
 
 	c.Cpu.mem = &bus{
 		cpu: c.Cpu,
@@ -132,7 +133,6 @@ func (c *console) StartConsoleCycle() {
 func (d *Debugger) StepCycles(cycles int) {
 	for range cycles {
 		d.Console.tick()
-
 		d.Disassembly[d.Console.Cpu.PC] = d.DisAssemble(d.Console.Cpu.PC)
 
 	}
