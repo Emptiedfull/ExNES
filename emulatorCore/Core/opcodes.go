@@ -4188,6 +4188,7 @@ var FetchTable = []opCode{
 		Size:           2,
 		Execute: func(c *cpu, step int) bool {
 			c.A = c.fetchone()
+
 			c.SetFlagNZ(c.A)
 			return true
 		},

@@ -1,9 +1,5 @@
 package Core
 
-import (
-	"log"
-)
-
 type flags = uint8
 
 const (
@@ -36,6 +32,7 @@ type cpu struct {
 
 	currentOp   uint8
 	currentstep int
+	fetchNew    bool
 	totalCycles int
 	Stall       int
 
@@ -127,20 +124,20 @@ func (c *cpu) tick() {
 		return
 	}
 
-	if c.currentstep == 0 {
+	if c.fetchNew {
 		c.currentOp = c.fetchone()
-		return
+
+		c.fetchNew = false
+		c.totalCycles++
+
 	}
 
 	opcode := FetchTable[c.currentOp]
-	if opcode.Execute == nil {
-		log.Fatalf("CRASH: Attempted to execute unmapped/nil opcode 0x%02X at PC: 0x%04X (Total Cycles: %d)",
-			c.currentOp, c.PC-1, c.totalCycles)
-	}
 	finished := opcode.Execute(c, c.currentstep)
 
 	if finished {
 		c.currentstep = 0
+		c.fetchNew = true
 		c.temp = temp{}
 	} else {
 		c.currentstep++

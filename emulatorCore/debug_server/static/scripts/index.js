@@ -313,6 +313,7 @@ const fetchSnapshots = async () => {
             itemDiv.innerHTML = `
                 <span>Idx: ${idx}</span>
               <span>Frame: ${frameno}</span>
+              <span>Cycles: ${element.Cycles}</span>
             `
 
             itemDiv.onclick = ()=>{loadSnapshot(element.Index)}
