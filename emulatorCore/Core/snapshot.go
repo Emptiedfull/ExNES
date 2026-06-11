@@ -98,7 +98,7 @@ func (c cpu) TakeCpuSnapshot() CpuSnapshot {
 
 	S.currentOp = c.currentOp
 	S.currentstep = c.currentstep
-	S.totalCycles = c.totalCycles
+	S.totalCycles = c.TotalCycles
 	S.Stall = c.Stall
 
 	S.isJamming = c.isJamming
@@ -110,7 +110,7 @@ func (d *Debugger) TakeSnapshot() snapshot {
 	S := snapshot{
 		CpuState: d.Console.Cpu.TakeCpuSnapshot(),
 		PpuState: d.Console.Ppu.TakePpuSnapshot(),
-		Cycles:   d.Console.Cpu.totalCycles,
+		Cycles:   d.Console.Cpu.TotalCycles,
 	}
 
 	return S
@@ -160,7 +160,7 @@ func (c *cpu) LoadCpuSnapshot(snap CpuSnapshot) {
 
 	c.currentOp = snap.currentOp
 	c.currentstep = snap.currentstep
-	c.totalCycles = snap.totalCycles
+	c.TotalCycles = snap.totalCycles
 	c.Stall = snap.Stall
 
 	c.temp = snap.t

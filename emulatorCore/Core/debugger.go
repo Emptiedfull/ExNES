@@ -85,8 +85,8 @@ func (d *Debugger) StartDebugConsole() {
 		now := time.Now()
 		for now.After(targetTime) {
 			framecount++
-
-			for range 29781 {
+			targetCycles := d.Console.Cpu.TotalCycles + 29781
+			for targetCycles > d.Console.Cpu.TotalCycles {
 				if d.Console.Paused {
 
 					continue
@@ -108,9 +108,11 @@ func (d *Debugger) StartDebugConsole() {
 }
 
 func (d *Debugger) DebugTick() {
-	d.Console.tick()
-	d.DisAssemble(d.Console.Cpu.PC)
 
+	d.Console.tick()
+	if d.Console.Cpu.currentstep == 0 {
+		d.DisAssemble(d.Console.Cpu.PC)
+	}
 }
 
 func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
@@ -225,7 +227,7 @@ func (c *cpu) GetSate() cpustate {
 	state.Y = c.Y
 	state.Pc = c.PC
 	state.P = c.P
-	state.Cycles = c.totalCycles
+	state.Cycles = c.TotalCycles
 
 	f := FlagState{
 		Zero:      getbitBool(state.P, 1),

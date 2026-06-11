@@ -33,7 +33,7 @@ type cpu struct {
 	currentOp   uint8
 	currentstep int
 	fetchNew    bool
-	totalCycles int
+	TotalCycles int
 	Stall       int
 
 	isJamming bool
@@ -111,7 +111,7 @@ func (c *cpu) tick() {
 		return
 	}
 
-	c.totalCycles++
+	c.TotalCycles++
 
 	if c.currentstep == 0 && c.nmiPending {
 		c.executingNmi = true
@@ -128,7 +128,7 @@ func (c *cpu) tick() {
 		c.currentOp = c.fetchone()
 
 		c.fetchNew = false
-		c.totalCycles++
+		c.TotalCycles++
 
 	}
 
@@ -233,7 +233,7 @@ func (c *cpu) Reset() {
 
 	c.currentstep = 0
 	c.currentOp = 0
-	c.totalCycles = 0
+	c.TotalCycles = 0
 	c.S = 0xFD
 	c.P = 0x24
 

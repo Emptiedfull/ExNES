@@ -1,93 +1,71 @@
-
-
 #include <Arduino.h>
-#include <WiFi.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
-#define BUTTON_B 15
-#define BUTTON_A 12
-#define LED 25
+#define WIDTH 128
+#define HEIGHT 32
 
-const char* ssid = "Bikash_Goyal";
-const char* password = "mishti12345";
-const char* host = "192.168.29.102";
-const int port = 8090;
+const int rowPin[2] = {13,25};
+const int colPins[3] = {12, 27, 26};
 
-struct Button {
-  const int PIN;
-  volatile bool Pressed;
-  const char* action;
+const char* buttonMap[2][3] = {
+    {"A","B","UP"},{"DOWN","LEFT","RIGHT"}
 };
 
-Button buttons[] = {
-  {BUTTON_B, false, "BUTTON_B"},
-  {BUTTON_A, false, "BUTTON_A"},
+Adafruit_SSD1306 display(WIDTH, HEIGHT, &Wire, -1);
+
+void setup()
+{
+    Serial.begin(115200);
+    Wire.begin(5, 4);
+
+    Serial.print("begginign display");
+
+    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+    {
+        Serial.print("something wrong");
+        for (;;)
+            ;
+    };
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.println("display on");
+    display.display();
+
+    for (int i = 0; i < 2; i++)
+    {
+        pinMode(rowPin[i], OUTPUT);
+        digitalWrite(rowPin[i], HIGH);
+    };
+
+    for (int i = 0; i < 3; i++)
+    {
+        pinMode(colPins[i], INPUT_PULLUP);
+    };
 };
 
-int pressCount = 0;
+void loop()
+{
+    for (int i = 0; i < 2; i++)
+    {
+        digitalWrite(rowPin[i], LOW);
 
+        for (int j = 0; j < 3; j++)
+        {
+            if (digitalRead(colPins[j]) == LOW)
+            {
+                display.clearDisplay();
+                display.setCursor(0, 0);
 
-void IRAM_ATTR handleButtonChange(Button &btn){
-  int state = digitalRead(btn.PIN);
+                display.print("button pressed:");
+                display.println(buttonMap[i][j]);
+                display.display();
+            };
+        };
 
-  if (state == LOW){
-    btn.Pressed = true;
-  }else{
-    btn.Pressed = false;
-  }
-}
-
-void IRAM_ATTR isrB() { handleButtonChange(buttons[0]); }
-void IRAM_ATTR isrA() { handleButtonChange(buttons[1]); }
-
-WiFiClient client;
-
-void setup() {
-  Serial.begin(115200);
-
-  pinMode(BUTTON_B, INPUT_PULLUP);
-  pinMode(BUTTON_A, INPUT_PULLUP);
-  pinMode(LED,OUTPUT);
-  attachInterrupt(digitalPinToInterrupt(BUTTON_B), isrB, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(BUTTON_A), isrA, CHANGE);
-
- 
-  WiFi.begin(ssid,password);
-
-  Serial.println("Connecting to wifi");
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.print(".");
-    delay(50);
-  };
-
-  Serial.println("wifi connected with local IP:");
-  Serial.print(WiFi.localIP());
-
-  if (client.connect(host,port)){
-    Serial.println("connected to emulator server");
-    digitalWrite(LED,HIGH);
-  };
-
-  client.println("Welcome to esp32 controller");
-
-
-}
-
-unsigned long lastSent = 0;
-const unsigned long interval = 5000;
-
-
-void loop() {
-
-  if (millis()-lastSent > interval){
-    lastSent = millis();
-    if (client.connected()){
-      client.println("ping");
-    }else{
-      Serial.println("no connection found");
-    }
-  }
-
-  
-}
+        digitalWrite(rowPin[i], HIGH);
+    };
+    delay(10);
+};

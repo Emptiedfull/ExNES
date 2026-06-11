@@ -280,7 +280,7 @@ func (console *console) ExecuteOAMDMA(page uint8) {
 
 	cycles := 513
 
-	if console.Cpu.totalCycles%2 == 1 {
+	if console.Cpu.TotalCycles%2 == 1 {
 		cycles += 1
 	}
 

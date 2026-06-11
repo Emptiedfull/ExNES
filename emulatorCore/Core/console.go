@@ -132,9 +132,12 @@ func (c *console) StartConsoleCycle() {
 }
 
 func (d *Debugger) StepCycles(cycles int) {
-	target := d.Console.Cpu.totalCycles + cycles
-	for d.Console.Cpu.totalCycles < target {
-		d.Disassembly[d.Console.Cpu.PC] = d.DisAssemble(d.Console.Cpu.PC)
+	target := d.Console.Cpu.TotalCycles + cycles
+
+	for d.Console.Cpu.TotalCycles < target {
+		if d.Console.Cpu.currentstep == 0 {
+			d.Disassembly[d.Console.Cpu.PC] = d.DisAssemble(d.Console.Cpu.PC)
+		}
 		d.Console.tick()
 
 	}
@@ -156,7 +159,7 @@ func (c *console) RunDisplayUpdates() {
 func (c *console) tick() {
 	if c.Cpu.Stall > 0 {
 		c.Cpu.Stall--
-		c.Cpu.totalCycles++
+		c.Cpu.TotalCycles++
 	} else {
 		c.Cpu.tick()
 	}

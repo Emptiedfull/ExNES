@@ -53,7 +53,8 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *client) runReciever(ctx context.Context) {
-	fmt.Println("opening connection", c.ID)
+
+	debugConsole.Console.RunDisplayUpdates()
 	for {
 		select {
 		case <-ctx.Done():
