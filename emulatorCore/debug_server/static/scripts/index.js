@@ -175,6 +175,7 @@ const getState = async () => {
         document.getElementById("Y").value = data.y
         document.getElementById("PC").value = formatHex(data.pc)
         document.getElementById("Cycles").value = data.cycles
+        document.getElementById("Frames").value = data.frames
 
         currentPC = formatHex(data.pc)
 

@@ -2,6 +2,7 @@ package Core
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -26,6 +27,7 @@ const (
 type Debugger struct {
 	Console     *console
 	Disassembly map[uint16]AssemblyLine
+	DMux        sync.Mutex
 
 	RecentHistory SnapshotBuffer
 }
@@ -55,6 +57,7 @@ type cpustate struct {
 	P      uint8     `json:"p"`
 	Flags  FlagState `json:"flags"`
 	Cycles int       `json:"cycles"`
+	Frames int       `json:"frames"`
 	Ram    [][]int   `json:"-"`
 }
 
@@ -70,7 +73,8 @@ type FlagState struct {
 func (d *Debugger) StartDebugConsole() {
 
 	targetTime := time.Now()
-
+	fmt.Println("console started")
+	defer fmt.Println("console stopped for some reason")
 	var framecount = 0
 
 	for {
@@ -85,14 +89,7 @@ func (d *Debugger) StartDebugConsole() {
 		now := time.Now()
 		for now.After(targetTime) {
 			framecount++
-			targetCycles := d.Console.Cpu.TotalCycles + 29781
-			for targetCycles > d.Console.Cpu.TotalCycles {
-				if d.Console.Paused {
-
-					continue
-				}
-				d.DebugTick()
-			}
+			d.RunDebugFrame()
 
 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
 
@@ -107,15 +104,25 @@ func (d *Debugger) StartDebugConsole() {
 	}
 }
 
+func (d *Debugger) RunDebugFrame() {
+	Tagretframe := d.Console.Ppu.Frame + 1
+	for d.Console.Ppu.Frame != Tagretframe {
+		d.DebugTick()
+	}
+	d.Console.RunDisplayUpdates()
+}
+
 func (d *Debugger) DebugTick() {
 
 	d.Console.tick()
-	if d.Console.Cpu.currentstep == 0 {
-		d.DisAssemble(d.Console.Cpu.PC)
-	}
+	// if d.Console.Cpu.currentstep == 0 {
+	// 	d.DisAssemble(d.Console.Cpu.PC)
+	// }
+
 }
 
 func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
+
 	mem := d.Console.Cpu.mem
 	if d.Console != nil {
 		if _, ok := d.Disassembly[addr]; ok {
@@ -228,6 +235,7 @@ func (c *cpu) GetSate() cpustate {
 	state.Pc = c.PC
 	state.P = c.P
 	state.Cycles = c.TotalCycles
+	state.Frames = c.console.Ppu.Frame
 
 	f := FlagState{
 		Zero:      getbitBool(state.P, 1),

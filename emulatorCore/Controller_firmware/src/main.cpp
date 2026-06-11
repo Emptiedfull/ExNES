@@ -15,6 +15,11 @@ const char* buttonMap[2][3] = {
 
 Adafruit_SSD1306 display(WIDTH, HEIGHT, &Wire, -1);
 
+struct Button {
+    char* action;
+    bool buttonPressed;
+};
+
 void setup()
 {
     Serial.begin(115200);

@@ -103,13 +103,7 @@ func run30frame(w http.ResponseWriter, r *http.Request) {
 func runFrame(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	target := debugConsole.Console.Cpu.TotalCycles + 29781
-	for target > debugConsole.Console.Cpu.TotalCycles {
-		debugConsole.DebugTick()
-	}
-
-	debugConsole.Console.RunDisplayUpdates()
-
+	debugConsole.RunDebugFrame()
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -227,7 +221,7 @@ func getDebugScreen(w http.ResponseWriter, r *http.Request) {
 func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	c := Core.InitializeConsole()
-	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/popeye.nes")
+	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/dk3.nes")
 	c.Cpu.Reset()
 
 	fmt.Println("console ready for debug")

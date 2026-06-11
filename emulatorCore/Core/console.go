@@ -95,11 +95,12 @@ func InitializeConsole() *console {
 	return c
 }
 
-var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 30.0988)
+var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988)
 
 func (c *console) StartConsoleCycle() {
 
 	targetTime := time.Now()
+	defer fmt.Println("console stopped for some reason")
 
 	var framecount = 0
 
@@ -129,6 +130,7 @@ func (c *console) StartConsoleCycle() {
 			time.Sleep(timeLeft)
 		}
 	}
+
 }
 
 func (d *Debugger) StepCycles(cycles int) {
@@ -150,13 +152,12 @@ func (c *console) RunDisplayUpdates() {
 		}
 		c.Ppu.screenChanged = false
 		c.ScreenChannel <- S
-	} else {
-		fmt.Println("skipping frame send")
 	}
 
 }
 
 func (c *console) tick() {
+	currentCycles := c.Cpu.TotalCycles
 	if c.Cpu.Stall > 0 {
 		c.Cpu.Stall--
 		c.Cpu.TotalCycles++
@@ -164,10 +165,20 @@ func (c *console) tick() {
 		c.Cpu.tick()
 	}
 
-	c.Ppu.Tick()
-	c.Ppu.Tick()
-	c.Ppu.Tick()
+	cyclesTicked := c.Cpu.TotalCycles - currentCycles
+	for range cyclesTicked {
+		c.Ppu.Tick()
+		c.Ppu.Tick()
+		c.Ppu.Tick()
+	}
 
+}
+
+func (c *console) runFrame() {
+	targetFrame := c.Ppu.Frame + 1
+	for targetFrame != c.Ppu.Frame {
+		c.tick()
+	}
 }
 
 func (b *bus) FillArr(addr uint16, data []byte) error {

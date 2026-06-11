@@ -303,7 +303,6 @@ func (p *ppu) Tick() {
 			p.renderScanline()
 			p.screenChanged = true
 		}
-
 		p.Scanline++
 		if p.Scanline > 261 {
 			p.Scanline = 0
@@ -316,12 +315,11 @@ func (p *ppu) Tick() {
 	if p.Scanline == 241 && p.Dot == 1 {
 
 		p.mem.Vblank = true
-		p.mem.nmiOcc = true
 
 	}
 
 	if p.Scanline == 261 && p.Dot == 1 {
-		p.mem.nmiOcc = false
+
 		p.mem.Vblank = false
 		p.mem.register.Sprite0Hit = false
 		p.mem.register.sprietOverflow = false
