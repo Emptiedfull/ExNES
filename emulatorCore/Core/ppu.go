@@ -28,6 +28,8 @@ type ppu_mem struct {
 	Addr    uint16
 
 	register registersFlags
+	internal PPUInternal
+	temp     TempPPU
 
 	Vblank_flag bool
 }
@@ -69,12 +71,13 @@ type registersFlags struct {
 
 	// $2007
 	bufferedData uint8
+}
 
-	// internal registers
-	VramAddr     uint16 // $2006 v
-	TramAddr     uint16 // t
-	AddressLatch bool   // w  0- high byte, 1-low byte
-	XAddr        uint8  // x [3 bits]
+type PPUInternal struct {
+	v uint16 // Vram addr
+	t uint16 // Temp Vram
+	x uint8  // 3 bit
+	w bool   // latch (0-first write,1-second write)
 }
 
 func (p *ppu) MirrorNameTable(addr uint16) uint16 {
@@ -159,7 +162,7 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 		}
 
 		p.mem.Vblank_flag = false
-		p.mem.register.AddressLatch = false
+		p.mem.internal.w = false
 
 		return result
 	case 4:
@@ -170,25 +173,26 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 		}
 
 		return data
-	case 7:
-		val := p.read(p.mem.register.VramAddr)
 
-		if p.mem.register.VramAddr%0x4000 < 0x3F00 {
+	case 7:
+		val := p.read(p.mem.internal.v)
+
+		if p.mem.internal.v%0x4000 < 0x3F00 {
 			buffered := p.mem.register.bufferedData
 			p.mem.register.bufferedData = val
 			val = buffered
 		} else {
-			p.mem.register.bufferedData = p.read(p.mem.register.VramAddr - 0x1000)
+			p.mem.register.bufferedData = p.read(p.mem.internal.v - 0x1000)
 
 			val = (val & 0x3F) | (openBusVal & 0xC0)
 		}
 
 		if p.mem.register.AddrIncrement {
-			p.mem.register.VramAddr += 32
+			p.mem.internal.v += 32
 		} else {
-			p.mem.register.VramAddr += 1
+			p.mem.internal.v += 1
 		}
-		p.mem.register.VramAddr &= 0x3FFF
+		p.mem.internal.v &= 0x3FFF
 
 		return val
 	default:
@@ -209,8 +213,7 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 
 		p.mem.register.BaseNameTable = val & 0x03
 
-		p.mem.register.TramAddr = p.mem.register.TramAddr & 0xF3FF
-		p.mem.register.TramAddr = p.mem.register.TramAddr | (uint16(val&0x03) << 10)
+		p.mem.internal.t = (p.mem.internal.t & 0xF3FF) | ((uint16(val) & 0x03) << 10)
 
 	case 1: //PPU MASK
 		p.mem.register.EmpBlue = getbitBool(val, 7)
@@ -227,37 +230,33 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 		p.mem.oamData[p.mem.Addr] = val
 		p.mem.Addr++
 	case 5:
-		p.mem.register.AddressLatch = !p.mem.register.AddressLatch
+		if p.mem.internal.w {
+			p.mem.internal.t = (p.mem.internal.t & 0xFFE0) | (uint16(val) >> 3)
+			p.mem.internal.x = val & 0x07
+
+		} else {
+			p.mem.internal.t = (p.mem.internal.t & 0x8FFF) | ((uint16(val) & 0x07) << 12)
+			p.mem.internal.t = (p.mem.internal.t & 0xFC1F) | ((uint16(val) & 0xF8) << 2)
+
+		}
+		p.mem.internal.w = !p.mem.internal.w
 	case 6:
-		if !p.mem.register.AddressLatch {
-			p.mem.register.TramAddr = (p.mem.register.TramAddr & 0x00FF) | (uint16(val&0x3F) << 8)
-			p.mem.register.AddressLatch = true
+		if !p.mem.internal.w {
+			p.mem.internal.t = (p.mem.internal.t & 0x00FF) | (uint16(val&0x3F) << 8)
+
 		} else {
-			p.mem.register.TramAddr = (p.mem.register.TramAddr & 0xFF00) | uint16(val)
-			p.mem.register.VramAddr = p.mem.register.TramAddr & 0x3FFF
-			p.mem.register.AddressLatch = false
+			p.mem.internal.t = (p.mem.internal.t & 0xFF00) | uint16(val)
+			p.mem.internal.v = p.mem.internal.t
 
 		}
+		p.mem.internal.w = !p.mem.internal.w
 	case 7:
-		targetAddrBeforeWrite := p.mem.register.VramAddr
-		isNametable0Grid := targetAddrBeforeWrite >= 0x2000 && targetAddrBeforeWrite <= 0x23BF
+		p.Write(p.mem.internal.v, val)
 
-		p.Write(p.mem.register.VramAddr, val)
 		if p.mem.register.AddrIncrement {
-			p.mem.register.VramAddr += 32
+			p.mem.internal.v += 32
 		} else {
-			p.mem.register.VramAddr += 1
-		}
-		p.mem.register.VramAddr &= 0x3FFF
-
-		if isNametable0Grid {
-
-			linearOffset := targetAddrBeforeWrite - 0x2000
-			_ = linearOffset % 32
-			_ = linearOffset / 32
-
-			// fmt.Printf("[NAMETABLE 0 GRID WRITE] Tile ID: 0x%02X -> Addr: 0x%04X (Row: %d, Col: %d)\n",
-			// 	val, targetAddrBeforeWrite, row, col)
+			p.mem.internal.v += 1
 		}
 	}
 }
@@ -308,6 +307,14 @@ func (p *ppu) Tick() {
 			p.console.Cpu.nmiPending = true
 		}
 
+	}
+
+	if p.Scanline < 240 && p.Dot == 257 {
+		p.mem.internal.v = (p.mem.internal.v & 0xFBE0) | (p.mem.internal.t & 0x041F)
+	}
+
+	if p.Scanline == 261 && p.Dot == 304 {
+		p.mem.internal.v = (p.mem.internal.v & 0x841F) | (p.mem.internal.t & 0x7BE0)
 	}
 
 	if p.Scanline == 261 && p.Dot == 1 {
