@@ -51,7 +51,6 @@ func (c *console) LoadROM(filepath string) error {
 	fmt.Println(mapper)
 
 	c.Ppu.verticalMirroring = (header[6] & 1) != 0
-	fmt.Println(c.Ppu.verticalMirroring)
 
 	magic := header[:4]
 	if !bytes.Equal(magic, []byte{'N', 'E', 'S', 0x1A}) {
@@ -203,20 +202,4 @@ func (b *bus) FillArr(addr uint16, data []byte) error {
 	copy(b.external[addr:], data)
 	return nil
 
-}
-
-func (b *bus) GetHistory() []cycleStep {
-	return nil
-}
-
-func (b *bus) ClearHistory() {
-
-}
-
-func (b *bus) Set(addr uint16, val uint8) {
-
-}
-
-func (b *bus) Get(addr uint16) uint8 {
-	return 0
 }

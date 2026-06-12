@@ -49,11 +49,9 @@ type cycleStep struct {
 type typebus interface {
 	Read(uint16) uint8
 	Write(uint16, uint8)
-	Set(uint16, uint8)
-	Get(uint16) uint8
-	GetHistory() []cycleStep
-	ClearHistory()
+
 	FillArr(uint16, []byte) error
+
 	returnInternal() [2048]byte
 	returnExternal() []byte
 	loadInternal([2048]byte)
