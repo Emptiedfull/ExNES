@@ -59,18 +59,21 @@ func (c *console) LoadROM(filepath string) error {
 
 	prgBanks := int(header[4])
 	prgSize := prgBanks * 16384
-
 	prgData := make([]byte, prgSize)
 	if _, err := io.ReadFull(file, prgData); err != nil {
 		return fmt.Errorf("error reading prgData: %w", err)
 	}
 
-	c.Cpu.mem.FillArr(0, prgData)
+	chrBanks := int(header[5])
+	chrSize := chrBanks * 8192
+	chrData := make([]byte, chrSize)
 
-	c.Ppu.mem.chrROM = make([]uint8, 8192)
-	if _, err := io.ReadFull(file, c.Ppu.mem.chrROM); err != nil {
+	// c.Ppu.mem.chrROM = make([]uint8, 8192)
+	if _, err := io.ReadFull(file, chrData); err != nil {
 		return fmt.Errorf("failed to read mem: %w", err)
 	}
+
+	c.assignMapper(mapper, prgData, chrData)
 
 	fmt.Println("rom has been loaded")
 	return nil
@@ -192,14 +195,4 @@ func (c *console) runFrame() {
 	for targetFrame != c.Ppu.Frame {
 		c.tick()
 	}
-}
-
-func (b *bus) FillArr(addr uint16, data []byte) error {
-
-	size := len(data)
-	b.external = make([]byte, size)
-
-	copy(b.external[addr:], data)
-	return nil
-
 }

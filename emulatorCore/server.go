@@ -25,8 +25,7 @@ func run_server() {
 	mux.HandleFunc("/cpu/lookAhead", getLookAhead)
 	mux.HandleFunc("/disassembly", getDissambly)
 	mux.HandleFunc("/screen/get/Debug", getDebugScreen)
-	mux.HandleFunc("/ppu/debugCHR", runChrViewer)
-	mux.HandleFunc("/ppu/debugNameTable", runNameTableViewer)
+
 	mux.HandleFunc("/screen", getScreenIMM)
 	mux.HandleFunc("/controls/update", updateControls)
 	mux.HandleFunc("/screen/socket", acceptScreenConn)
@@ -189,20 +188,6 @@ func getScreenIMM(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(debugConsole.Console.Ppu.GetScreenBuffer())
-
-}
-
-func runChrViewer(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	debugConsole.Console.DebugChrRom()
-	fmt.Fprint(w, "Success")
-}
-
-func runNameTableViewer(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	debugConsole.Console.DebugNameTable()
-	fmt.Fprintf(w, "Success")
 
 }
 

@@ -166,7 +166,7 @@ func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	return line
 }
 
-func formatOpcode(mnemonic string, mode addressingMode, operand uint16, Cpu *cpu, mem typebus) (string, uint8) {
+func formatOpcode(mnemonic string, mode addressingMode, operand uint16, Cpu *cpu, mem *bus) (string, uint8) {
 	switch mode {
 	case Immediate:
 		return fmt.Sprintf("%s #$%02X", mnemonic, operand), uint8(operand)

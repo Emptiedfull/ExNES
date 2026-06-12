@@ -55,8 +55,10 @@ func (p *ppu) TakePpuSnapshot() PpuSnapshot {
 
 	S.mem = p.mem
 
-	S.mem.chrROM = make([]uint8, len(p.mem.chrROM))
-	copy(S.mem.chrROM, p.mem.chrROM)
+	orignal_chrRom := p.mem.mapper.extractCHR()
+
+	S.mem.chrRom_WARNING = make([]uint8, len(orignal_chrRom))
+	copy(S.mem.chrRom_WARNING, orignal_chrRom)
 
 	S.Dot = p.Dot
 	S.Scanline = p.Scanline
@@ -132,7 +134,7 @@ func (d *Debugger) LoadSnapshot(snap snapshot) {
 func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
 	p.mem = snap.mem
 
-	copy(p.mem.chrROM, snap.mem.chrROM)
+	p.mem.mapper.loadCHR(snap.mem.chrRom_WARNING)
 
 	p.Dot = snap.Dot
 	p.Scanline = snap.Scanline

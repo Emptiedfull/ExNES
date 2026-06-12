@@ -23,7 +23,7 @@ type cpu struct {
 	X  uint8
 	Y  uint8
 
-	mem typebus
+	mem *bus
 	temp
 
 	nmiPending   bool
@@ -44,18 +44,6 @@ type cycleStep struct {
 	Addr uint16
 	Val  uint8
 	Mode string
-}
-
-type typebus interface {
-	Read(uint16) uint8
-	Write(uint16, uint8)
-
-	FillArr(uint16, []byte) error
-
-	returnInternal() [2048]byte
-	returnExternal() []byte
-	loadInternal([2048]byte)
-	loadExternal([]byte)
 }
 
 func (c *cpu) executeNmiCycle() int {
@@ -158,6 +146,8 @@ type bus struct {
 	cpu      *cpu
 	internal [2048]byte
 	external []byte
+
+	mapper Mapper
 }
 
 func (b *bus) returnInternal() [2048]byte {
@@ -192,12 +182,7 @@ func (b *bus) Read(addr uint16) uint8 {
 		RegIndex := (addr - 0x2000) % 8
 		val = b.cpu.console.Ppu.ReadReg(RegIndex, b.cpu.console.OpenBusVal)
 	case addr >= 0x8000:
-		romaddr := addr - 0x8000
-		if len(b.external) == 0x4000 {
-			val = b.external[romaddr%0x4000]
-		} else {
-			val = b.external[romaddr]
-		}
+		val = b.mapper.ReadPRG(addr)
 
 	}
 
