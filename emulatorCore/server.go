@@ -221,7 +221,7 @@ func getDebugScreen(w http.ResponseWriter, r *http.Request) {
 func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	c := Core.InitializeConsole()
-	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/popeye.nes")
+	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/dk3.nes")
 	c.Cpu.Reset()
 
 	fmt.Println("console ready for debug")

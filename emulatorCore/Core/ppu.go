@@ -309,14 +309,6 @@ func (p *ppu) Tick() {
 
 	}
 
-	if p.Scanline < 240 && p.Dot == 257 {
-		p.mem.internal.v = (p.mem.internal.v & 0xFBE0) | (p.mem.internal.t & 0x041F)
-	}
-
-	if p.Scanline == 261 && p.Dot == 304 {
-		p.mem.internal.v = (p.mem.internal.v & 0x841F) | (p.mem.internal.t & 0x7BE0)
-	}
-
 	if p.Scanline == 261 && p.Dot == 1 {
 		p.mem.Vblank_flag = false
 		p.mem.register.Sprite0Hit = false
