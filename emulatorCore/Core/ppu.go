@@ -82,23 +82,22 @@ type PPUInternal struct {
 
 func (p *ppu) MirrorNameTable(addr uint16) uint16 {
 
-	// addr = (addr - 0x2000) % 0x1000
+	addr = (addr - 0x2000) % 0x1000
 
-	// if p.verticalMirroring {
-	// 	return addr % 0x0800
-	// } else {
+	if p.verticalMirroring {
+		return addr % 0x0800
+	} else {
 
-	// 	if addr < 0x0400 {
-	// 		return addr
-	// 	} else if addr < 0x0800 {
-	// 		return addr - 0x0400
-	// 	} else if addr < 0x0C00 {
-	// 		return addr - 0x0400
-	// 	} else {
-	// 		return addr - 0x0800
-	// 	}
-	// }
-	return addr % 0x0800
+		if addr < 0x0400 {
+			return addr
+		} else if addr < 0x0800 {
+			return addr - 0x0400
+		} else if addr < 0x0C00 {
+			return addr - 0x0400
+		} else {
+			return addr - 0x0800
+		}
+	}
 }
 
 func (p *ppu) read(addr uint16) uint8 {

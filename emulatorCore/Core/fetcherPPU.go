@@ -94,7 +94,7 @@ func (p *ppu) step() {
 		}
 
 		if renderLine {
-			if fetchCycle && p.Dot%8 == 0 {
+			if fetchCycle && p.Dot%8 == 1 {
 				// x increment
 				if p.mem.internal.v&0x001F == 31 {
 					p.mem.internal.v &= 0xFFE0
@@ -103,7 +103,6 @@ func (p *ppu) step() {
 					p.mem.internal.v++
 				}
 			}
-
 			if p.Dot == 257 {
 				p.mem.internal.v = (p.mem.internal.v & 0xFBE0) | (p.mem.internal.t & 0x041F)
 			}
@@ -139,13 +138,14 @@ func (p *ppu) step() {
 		if p.Dot == 257 {
 			if visible {
 				p.evalSprites()
+
 			} else {
 				p.mem.temp.sprintCount = 0
 			}
 		}
 	}
 
-	if p.Scanline == 241 && p.Dot == 0 {
+	if p.Scanline == 241 && p.Dot == 1 {
 		p.mem.Vblank_flag = true
 		if p.mem.register.NmiEnable {
 			p.console.Cpu.nmiPending = true
@@ -206,7 +206,7 @@ func (p *ppu) fetchSpritePattern(i, row int) uint32 {
 	var addr uint16
 	if !p.mem.register.SpriteSize { //small(8)
 		if attr&0x80 == 0x80 {
-			row = 7 - row //flip
+			row = 7 - row
 		}
 
 		table := getTableAddr(p.mem.register.SpritePattern)
@@ -323,7 +323,8 @@ func (p *ppu) readPallete(addr uint16) uint8 {
 
 func (p *ppu) getBgPixel() uint8 {
 	if p.mem.register.ShowBG {
-		data := p.fetchTileData() >> ((7 - p.mem.internal.x) * 4)
+		// data := p.fetchTileData() >> ((7 - p.mem.internal.x) * 4)
+		data := p.fetchTileData()
 		return uint8(data & 0x0F)
 	} else {
 		return 0

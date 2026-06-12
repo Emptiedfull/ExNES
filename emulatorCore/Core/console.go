@@ -95,7 +95,7 @@ func InitializeConsole() *console {
 	return c
 }
 
-var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988)
+var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 120.0988)
 
 func (c *console) StartConsoleCycle() {
 
