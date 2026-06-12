@@ -29,6 +29,7 @@ type cpu struct {
 	nmiPending   bool
 	executingNmi bool
 	nmiStep      int
+	nmiS         int
 
 	currentOp   uint8
 	currentstep int
@@ -116,6 +117,7 @@ func (c *cpu) tick() {
 	if c.currentstep == 0 && c.nmiPending {
 		c.executingNmi = true
 		c.nmiPending = false
+		c.nmiS++
 	}
 
 	if c.executingNmi {

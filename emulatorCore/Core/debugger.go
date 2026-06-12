@@ -75,7 +75,11 @@ func (d *Debugger) StartDebugConsole() {
 	targetTime := time.Now()
 	fmt.Println("console started")
 	defer fmt.Println("console stopped for some reason")
-	var framecount = 0
+
+	go func() {
+		time.Sleep(5 * time.Second)
+		fmt.Println(d.Console.Cpu.nmiS)
+	}()
 
 	for {
 
@@ -88,7 +92,6 @@ func (d *Debugger) StartDebugConsole() {
 
 		now := time.Now()
 		for now.After(targetTime) {
-			framecount++
 			d.RunDebugFrame()
 
 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
@@ -108,7 +111,9 @@ func (d *Debugger) RunDebugFrame() {
 	Tagretframe := d.Console.Ppu.Frame + 1
 	for d.Console.Ppu.Frame != Tagretframe {
 		d.DebugTick()
+
 	}
+
 	d.Console.RunDisplayUpdates()
 }
 

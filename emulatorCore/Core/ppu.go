@@ -29,11 +29,7 @@ type ppu_mem struct {
 
 	register registersFlags
 
-	nmiDelay int
-	nmiPrev  bool
-	nmiOut   bool
-	nmiOcc   bool
-	Vblank   bool
+	Vblank_flag bool
 }
 
 type registersFlags struct {
@@ -150,7 +146,6 @@ func (p *ppu) Write(addr uint16, val uint8) {
 func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 	switch reg {
 	case 2:
-		p.mem.register.AddressLatch = false
 
 		var result uint8
 		result |= (openBusVal & 0x1F)
@@ -158,12 +153,13 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 		result = AssignBit(result, 6, p.mem.register.Sprite0Hit)
 		result = AssignBit(result, 5, p.mem.register.sprietOverflow)
 
-		if p.mem.Vblank {
+		if p.mem.Vblank_flag {
 			result = AssignBit(result, 7, true)
 
 		}
 
-		p.mem.Vblank = false
+		p.mem.Vblank_flag = false
+		p.mem.register.AddressLatch = false
 
 		return result
 	case 4:
@@ -205,7 +201,6 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 	case 0: //PPUCTRL
 
 		p.mem.register.NmiEnable = getbitBool(val, 7)
-		p.mem.nmiOut = p.mem.register.NmiEnable
 		p.mem.register.SpriteSize = getbitBool(val, 5)
 		p.mem.register.BgPattern = getbitBool(val, 4)
 		p.mem.register.SpritePattern = getbitBool(val, 3)
@@ -289,12 +284,6 @@ func (console *console) ExecuteOAMDMA(page uint8) {
 
 func (p *ppu) Tick() {
 
-	if p.mem.nmiOut {
-		p.console.Cpu.nmiPending = true
-		p.mem.nmiOut = false
-
-	}
-
 	p.Dot++
 	if p.Dot > 340 {
 		p.Dot = 0
@@ -314,13 +303,15 @@ func (p *ppu) Tick() {
 
 	if p.Scanline == 241 && p.Dot == 1 {
 
-		p.mem.Vblank = true
+		p.mem.Vblank_flag = true
+		if p.mem.register.NmiEnable {
+			p.console.Cpu.nmiPending = true
+		}
 
 	}
 
 	if p.Scanline == 261 && p.Dot == 1 {
-
-		p.mem.Vblank = false
+		p.mem.Vblank_flag = false
 		p.mem.register.Sprite0Hit = false
 		p.mem.register.sprietOverflow = false
 
