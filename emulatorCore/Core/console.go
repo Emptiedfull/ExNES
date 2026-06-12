@@ -167,9 +167,9 @@ func (c *console) tick() {
 
 	cyclesTicked := c.Cpu.TotalCycles - currentCycles
 	for range cyclesTicked {
-		c.Ppu.Tick()
-		c.Ppu.Tick()
-		c.Ppu.Tick()
+		c.Ppu.step()
+		c.Ppu.step()
+		c.Ppu.step()
 	}
 
 }

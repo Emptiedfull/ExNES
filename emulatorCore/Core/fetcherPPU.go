@@ -19,6 +19,7 @@ func (p *ppu) cycleTick() {
 	if p.Dot > 340 {
 		p.Dot = 0
 		p.Scanline++
+
 		if p.Scanline > 261 {
 			p.Scanline = 0
 			p.Frame++
@@ -35,7 +36,6 @@ func (p *ppu) step() {
 	rendering := p.mem.register.ShowBG || p.mem.register.ShowSprites
 	prefetch := p.Scanline == 261
 	visible := p.Scanline < 240 && p.Scanline >= 0
-	// vblankLine := p.Scanline >= 241 && p.Scanline <= 260
 
 	renderLine := prefetch || visible
 
@@ -64,7 +64,7 @@ func (p *ppu) step() {
 				}
 				p.mem.temp.tileData |= uint64(data)
 			case 1:
-				addr := 0x2000 | (p.mem.internal.v & 0x0FF)
+				addr := 0x2000 | (p.mem.internal.v & 0x0FFF)
 				p.mem.temp.nameTableByte = p.read(addr)
 			case 3:
 				v := p.mem.internal.v
@@ -83,14 +83,14 @@ func (p *ppu) step() {
 				table := getTableAddr(p.mem.register.BgPattern)
 				tile := p.mem.temp.nameTableByte
 				addr := 0x1000*uint16(table) + uint16(tile)*16 + fineY
-				p.mem.temp.lowTileByte = p.read(addr + 8)
+				p.mem.temp.highTileByte = p.read(addr + 8)
 
 			}
 		}
 
-		if prefetch && p.Dot >= 280 && p.Dot <= 204 {
+		if prefetch && p.Dot >= 280 && p.Dot <= 304 {
 			//copying y scroll
-			// p.mem.internal.v = (p.mem.internal.v & 0x841F) | (p.mem.internal.t & 0x7BE0)
+			p.mem.internal.v = (p.mem.internal.v & 0x841F) | (p.mem.internal.t & 0x7BE0)
 		}
 
 		if renderLine {
@@ -110,26 +110,26 @@ func (p *ppu) step() {
 
 			if p.Dot == 256 {
 				// y increment
-				// if p.mem.internal.v&0x7000 != 0x7000 {
-				// 	p.mem.internal.v += 0x1000
-				// } else {
-				// 	p.mem.internal.v &= 0x8FFF
+				if p.mem.internal.v&0x7000 != 0x7000 {
+					p.mem.internal.v += 0x1000
+				} else {
+					p.mem.internal.v &= 0x8FFF
 
-				// 	y := (p.mem.internal.v & 0x03E0) >> 5
+					y := (p.mem.internal.v & 0x03E0) >> 5
 
-				// 	switch y {
-				// 	case 29:
-				// 		y = 0
-				// 		p.mem.internal.v ^= 0x0800
+					switch y {
+					case 29:
+						y = 0
+						p.mem.internal.v ^= 0x0800
 
-				// 	case 31:
-				// 		y = 0
-				// 	default:
-				// 		y++
-				// 	}
+					case 31:
+						y = 0
+					default:
+						y++
+					}
 
-				// 	p.mem.internal.v = (p.mem.internal.v & 0xFC1F) | (y << 5)
-				// }
+					p.mem.internal.v = (p.mem.internal.v & 0xFC1F) | (y << 5)
+				}
 
 			}
 		}
