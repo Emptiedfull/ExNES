@@ -31,7 +31,6 @@ func (p *ppu) cycleTick() {
 }
 
 func (p *ppu) step() {
-	p.cycleTick()
 
 	rendering := p.mem.register.ShowBG || p.mem.register.ShowSprites
 	prefetch := p.Scanline == 261
@@ -40,7 +39,7 @@ func (p *ppu) step() {
 	renderLine := prefetch || visible
 
 	visibleCycle := p.Dot >= 1 && p.Dot <= 256
-	prefetchCycle := p.Dot >= 321 && p.Dot <= 326
+	prefetchCycle := p.Dot >= 321 && p.Dot <= 336
 	fetchCycle := visibleCycle || prefetchCycle
 
 	if rendering {
@@ -94,7 +93,7 @@ func (p *ppu) step() {
 		}
 
 		if renderLine {
-			if fetchCycle && p.Dot%8 == 1 {
+			if fetchCycle && p.Dot%8 == 0 {
 				// x increment
 				if p.mem.internal.v&0x001F == 31 {
 					p.mem.internal.v &= 0xFFE0
@@ -158,6 +157,7 @@ func (p *ppu) step() {
 		p.mem.register.sprietOverflow = false
 	}
 
+	p.cycleTick()
 }
 
 func (p *ppu) evalSprites() {
@@ -187,7 +187,6 @@ func (p *ppu) evalSprites() {
 			p.mem.temp.spritePriorities[count] = (a >> 5) & 1
 			p.mem.temp.spriteIdx[count] = uint8(i)
 		}
-
 		count++
 	}
 
@@ -212,7 +211,7 @@ func (p *ppu) fetchSpritePattern(i, row int) uint32 {
 		table := getTableAddr(p.mem.register.SpritePattern)
 		addr = 0x1000*uint16(table) + uint16(tile)*16 + uint16(row)
 	} else { //big (16)
-		if attr^0x80 == 0x80 {
+		if attr&0x80 == 0x80 {
 			row = 15 - row
 		}
 		table := tile & 1
@@ -233,7 +232,7 @@ func (p *ppu) fetchSpritePattern(i, row int) uint32 {
 
 	var data uint32
 
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		var p1, p2 byte
 		if attr&0x40 == 0x40 {
 			p1 = (low & 1) << 0
@@ -268,11 +267,11 @@ func (p *ppu) renderPixel() {
 	bg := p.getBgPixel()
 	i, sprite := p.getSpritePixel()
 
-	if x < 8 && !p.mem.register.ShowBG {
+	if x < 8 && !p.mem.register.ShowLeftBG {
 		bg = 0
 	}
 
-	if x < 8 && !p.mem.register.ShowSprites {
+	if x < 8 && !p.mem.register.ShowLeftSprite {
 		sprite = 0
 	}
 
@@ -289,6 +288,7 @@ func (p *ppu) renderPixel() {
 	} else {
 		if p.mem.temp.spriteIdx[i] == 0 && x < 255 {
 			p.mem.register.Sprite0Hit = true
+
 		}
 
 		if p.mem.temp.spritePriorities[i] == 0 {
@@ -323,8 +323,7 @@ func (p *ppu) readPallete(addr uint16) uint8 {
 
 func (p *ppu) getBgPixel() uint8 {
 	if p.mem.register.ShowBG {
-		// data := p.fetchTileData() >> ((7 - p.mem.internal.x) * 4)
-		data := p.fetchTileData()
+		data := p.fetchTileData() >> ((7 - p.mem.internal.x) * 4)
 		return uint8(data & 0x0F)
 	} else {
 		return 0

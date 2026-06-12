@@ -184,3 +184,40 @@ func pushcolor(color RGB, buffer []uint8, start int) {
 	buffer[start+2] = color.B
 	buffer[start+3] = 255
 }
+
+func (p *ppu) Tick() {
+
+	p.Dot++
+	if p.Dot > 340 {
+		p.Dot = 0
+
+		if p.Scanline < 240 {
+			p.renderScanline()
+			p.screenChanged = true
+		}
+		p.Scanline++
+		if p.Scanline > 261 {
+			p.Scanline = 0
+			p.Frame++
+
+			copy(p.frontBuffer, p.backBuffer)
+		}
+	}
+
+	if p.Scanline == 241 && p.Dot == 1 {
+
+		p.mem.Vblank_flag = true
+		if p.mem.register.NmiEnable {
+			p.console.Cpu.nmiPending = true
+		}
+
+	}
+
+	if p.Scanline == 261 && p.Dot == 1 {
+		p.mem.Vblank_flag = false
+		p.mem.register.Sprite0Hit = false
+		p.mem.register.sprietOverflow = false
+
+	}
+
+}

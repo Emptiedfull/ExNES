@@ -47,6 +47,12 @@ func (c *console) LoadROM(filepath string) error {
 		return fmt.Errorf("failed to read header: %w", err)
 	}
 
+	mapper := getMapper(header)
+	fmt.Println(mapper)
+
+	c.Ppu.verticalMirroring = (header[6] & 1) != 0
+	fmt.Println(c.Ppu.verticalMirroring)
+
 	magic := header[:4]
 	if !bytes.Equal(magic, []byte{'N', 'E', 'S', 0x1A}) {
 		return fmt.Errorf("invalid nes header")
@@ -67,8 +73,16 @@ func (c *console) LoadROM(filepath string) error {
 		return fmt.Errorf("failed to read mem: %w", err)
 	}
 
+	fmt.Println("rom has been loaded")
 	return nil
 
+}
+
+func getMapper(header []byte) int {
+	high := header[7] & 0xF0
+	low := (header[6] & 0xF0) >> 4
+
+	return int(high | low)
 }
 
 func InitializeConsole() *console {
@@ -95,7 +109,7 @@ func InitializeConsole() *console {
 	return c
 }
 
-var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 120.0988)
+var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988)
 
 func (c *console) StartConsoleCycle() {
 
@@ -167,9 +181,9 @@ func (c *console) tick() {
 
 	cyclesTicked := c.Cpu.TotalCycles - currentCycles
 	for range cyclesTicked {
-		c.Ppu.step()
-		c.Ppu.step()
-		c.Ppu.step()
+		for range 3 {
+			c.Ppu.step()
+		}
 	}
 
 }

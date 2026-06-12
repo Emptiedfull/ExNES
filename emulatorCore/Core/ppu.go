@@ -25,7 +25,6 @@ type ppu_mem struct {
 	Vram    [2048]uint8
 	Pallete [32]uint8
 	oamData [256]uint8
-	Addr    uint16
 
 	register registersFlags
 	internal PPUInternal
@@ -98,6 +97,7 @@ func (p *ppu) MirrorNameTable(addr uint16) uint16 {
 			return addr - 0x0800
 		}
 	}
+
 }
 
 func (p *ppu) read(addr uint16) uint8 {
@@ -225,12 +225,12 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 		p.mem.register.ShowLeftBG = getbitBool(val, 1)
 		p.mem.register.GreyScale = getbitBool(val, 0)
 	case 3: //PPU OAMADDR
-		p.mem.Addr = uint16(val)
+		p.mem.register.OAMADDR = val
 	case 4: //PPU OAMDATA
-		p.mem.oamData[p.mem.Addr] = val
-		p.mem.Addr++
+		p.mem.oamData[p.mem.register.OAMADDR] = val
+		p.mem.register.OAMADDR++
 	case 5:
-		if p.mem.internal.w {
+		if !p.mem.internal.w {
 			p.mem.internal.t = (p.mem.internal.t & 0xFFE0) | (uint16(val) >> 3)
 			p.mem.internal.x = val & 0x07
 
@@ -279,41 +279,4 @@ func (console *console) ExecuteOAMDMA(page uint8) {
 	}
 
 	console.Cpu.Stall = cycles
-}
-
-func (p *ppu) Tick() {
-
-	p.Dot++
-	if p.Dot > 340 {
-		p.Dot = 0
-
-		if p.Scanline < 240 {
-			p.renderScanline()
-			p.screenChanged = true
-		}
-		p.Scanline++
-		if p.Scanline > 261 {
-			p.Scanline = 0
-			p.Frame++
-
-			copy(p.frontBuffer, p.backBuffer)
-		}
-	}
-
-	if p.Scanline == 241 && p.Dot == 1 {
-
-		p.mem.Vblank_flag = true
-		if p.mem.register.NmiEnable {
-			p.console.Cpu.nmiPending = true
-		}
-
-	}
-
-	if p.Scanline == 261 && p.Dot == 1 {
-		p.mem.Vblank_flag = false
-		p.mem.register.Sprite0Hit = false
-		p.mem.register.sprietOverflow = false
-
-	}
-
 }

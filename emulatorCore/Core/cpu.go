@@ -189,7 +189,7 @@ func (b *bus) Read(addr uint16) uint8 {
 
 		return b.cpu.console.JoyPad.readState()
 	case addr == 0x4017:
-		return b.cpu.console.JoyPad.readState()
+		// return b.cpu.console.JoyPad.readState()
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		val = b.cpu.console.Ppu.ReadReg(RegIndex, b.cpu.console.OpenBusVal)
