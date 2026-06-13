@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 //for any readers, please stop here I barely understand what ive done
 
 type ppu struct {
@@ -121,7 +123,10 @@ func (p *ppu) MirrorNameTable(addr uint16) uint16 {
 	case 2:
 		return addr % 0x800
 	case 3:
-		return ((addr / 2) & 0x400) + (addr % 0x400)
+		if addr < 0x800 {
+			return addr & 0x3FF
+		}
+		return 0x400 + (addr & 0x3FF)
 	default:
 		return addr
 	}
@@ -162,6 +167,10 @@ func (p *ppu) Write(addr uint16, val uint8) {
 		p.mem.mapper.WriteCHR(addr, val)
 	case addr <= 0x3EFF:
 		mirroredaddr := p.MirrorNameTable(addr)
+		if val != 0x00 && val != 0xFF {
+			fmt.Printf("NT write: addr=%04X mirrored=%04X val=%02X cycle=%d\n",
+				addr, mirroredaddr, val, p.console.Cpu.TotalCycles) // or whatever your cycle counter is
+		}
 		p.mem.Vram[mirroredaddr] = val
 	case addr <= 0x3FFF:
 		palleteAddr := (addr - 0x3F00) % 32

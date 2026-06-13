@@ -67,7 +67,6 @@ func (c *console) LoadROM(filepath string) error {
 	}
 
 	prgBanks := int(header[4])
-	fmt.Println("PRG BANKS", prgBanks)
 	prgSize := prgBanks * 16384
 	prgData := make([]byte, prgSize)
 	if _, err := io.ReadFull(file, prgData); err != nil {
@@ -75,7 +74,6 @@ func (c *console) LoadROM(filepath string) error {
 	}
 
 	chrBanks := int(header[5])
-	fmt.Println("CHR BANKS", chrBanks)
 
 	var chrData []uint8
 	if chrBanks == 0 {

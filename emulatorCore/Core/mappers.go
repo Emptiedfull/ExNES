@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 type Mapper interface {
 	ReadPRG(addr uint16) uint8
 	WritePRG(addr uint16, val uint8)
@@ -32,9 +34,10 @@ func (c *console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 		}
 	case 1:
 		m = &Mapper1{
-			PRGROM:  prgData,
-			CHRROM:  chrData,
-			control: 0x0C,
+			PRGROM:        prgData,
+			CHRROM:        chrData,
+			control:       0x0F,
+			shiftRegister: 0x10,
 		}
 	}
 
@@ -132,7 +135,6 @@ type Mapper1 struct {
 	CHRROM []uint8
 
 	shiftRegister uint8
-	writecount    uint8
 
 	control  uint8
 	PrgBank  uint8
@@ -141,32 +143,36 @@ type Mapper1 struct {
 }
 
 func (m *Mapper1) WritePRG(addr uint16, val uint8) {
+
 	if val&0x80 != 0 {
-		m.shiftRegister = 0
-		m.writecount = 0
+		//reset
+		m.shiftRegister = 0x10
 		m.control |= 0x0C
 	} else {
-		m.shiftRegister |= (val & 0x01) << m.writecount
-		m.writecount++
 
-		if m.writecount == 5 {
+		complete := (m.shiftRegister & 1) == 1
+
+		m.shiftRegister >>= 1
+		m.shiftRegister |= (val & 1) << 4
+
+		if complete {
 			regId := (addr >> 13) & 0x03
+			data := m.shiftRegister & 0x1F
 
 			switch regId {
 			case 0:
-				m.control = m.shiftRegister
+				m.control = data
 			case 1:
-				m.ChrBank0 = m.shiftRegister
+				m.ChrBank0 = data
 			case 2:
-				m.ChrBank1 = m.shiftRegister
+				m.ChrBank1 = data
 			case 3:
-				m.PrgBank = m.shiftRegister
+				m.PrgBank = data
 			}
 
-			m.shiftRegister = 0
-			m.writecount = 0
-		}
+			m.shiftRegister = 0x10
 
+		}
 	}
 }
 
@@ -182,11 +188,13 @@ func (m *Mapper1) ReadPRG(addr uint16) uint8 {
 			return m.PRGROM[addr-0x8000]
 		}
 
-		bank := m.PrgBank & 0x0F
+		numBanks := uint8(len(m.PRGROM) / 0x4000)
+		bank := m.PrgBank & (numBanks - 1)
 		return m.PRGROM[uint32(bank)*0x4000+uint32(addr-0xC000)]
 	case 3:
 		if addr < 0xC000 {
-			bank := m.PrgBank & 0x0F
+			numBanks := uint8(len(m.PRGROM) / 0x4000)
+			bank := m.PrgBank & (numBanks - 1)
 			return m.PRGROM[uint32(bank)*0x4000+uint32(addr-0x8000)]
 		}
 
@@ -199,6 +207,7 @@ func (m *Mapper1) ReadPRG(addr uint16) uint8 {
 
 func (m *Mapper1) ReadCHR(addr uint16) uint8 {
 	if (m.control & 0x10) != 0 {
+
 		if addr < 0x1000 {
 			bank := uint32(m.ChrBank0)
 			return m.CHRROM[(bank*0x1000)+uint32(addr)]
@@ -207,8 +216,8 @@ func (m *Mapper1) ReadCHR(addr uint16) uint8 {
 			return m.CHRROM[(bank*0x1000)+uint32(addr-0x1000)]
 		}
 	} else {
-		bank := uint32(m.ChrBank0 & 0x1E)
-		return m.CHRROM[(bank*0x1000)+uint32(addr)]
+		bank := uint32(m.ChrBank0&0x1E) >> 1
+		return m.CHRROM[(bank*0x2000)+uint32(addr)]
 	}
 }
 
@@ -222,8 +231,9 @@ func (m *Mapper1) WriteCHR(addr uint16, val uint8) {
 			m.CHRROM[(bank*0x1000)+uint32(addr-0x1000)] = val
 		}
 	} else {
-		bank := uint32(m.ChrBank0 & 0x1E)
-		m.CHRROM[(bank*0x1000)+uint32(addr)] = val
+
+		bank := uint32(m.ChrBank0&0x1E) >> 1
+		m.CHRROM[(bank*0x2000)+uint32(addr)] = val
 	}
 }
 
@@ -247,6 +257,6 @@ func (m *Mapper1) getMirroring() uint8 {
 	case 3:
 		return 3
 	}
-
+	fmt.Println("defaulting to mirror 2")
 	return 2
 }

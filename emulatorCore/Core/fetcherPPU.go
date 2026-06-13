@@ -310,7 +310,7 @@ func (p *ppu) pushRGB(c RGB, x, y int) {
 	p.backBuffer[idx] = c.R
 	p.backBuffer[idx+1] = c.G
 	p.backBuffer[idx+2] = c.B
-	p.backBuffer[idx+3] = 255
+	p.backBuffer[idx+3] = 254
 }
 
 func (p *ppu) readPallete(addr uint16) uint8 {
