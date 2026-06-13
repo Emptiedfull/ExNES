@@ -134,6 +134,7 @@ func (m *Mapper2) getMirroring() uint8 {
 type Mapper1 struct {
 	PRGROM []uint8
 	CHRROM []uint8
+	PRGRAM [0x2000]uint8
 
 	shiftRegister uint8
 
@@ -146,6 +147,17 @@ type Mapper1 struct {
 }
 
 func (m *Mapper1) WritePRG(addr uint16, val uint8) {
+
+	if addr < 0x8000 {
+		fmt.Println("using the prgram")
+		if addr >= 0x6000 {
+
+			if m.PrgBank&0x10 == 0 {
+				m.PRGRAM[addr-0x6000] = val
+			}
+		}
+		return
+	}
 
 	if val&0x80 != 0 {
 		//reset
@@ -180,24 +192,35 @@ func (m *Mapper1) WritePRG(addr uint16, val uint8) {
 }
 
 func (m *Mapper1) ReadPRG(addr uint16) uint8 {
+
+	if addr < 0x8000 {
+		if addr >= 0x6000 {
+			fmt.Println("using prgram")
+			if m.PrgBank&0x10 == 0 {
+				return m.PRGRAM[addr-0x6000]
+			}
+		}
+		return 0
+	}
 	mode := (m.control >> 2) & 0x03
 
 	switch mode {
 	case 0, 1:
-		bank := (m.PrgBank & 0x0E) >> 1
-		return m.PRGROM[uint32(bank)*0x8000+uint32(addr-0x8000)]
+		numBanks := uint32(len(m.PRGROM) / 0x8000)
+		bank := uint32((m.PrgBank&0x0E)>>1) % numBanks
+		return m.PRGROM[bank*0x8000+uint32(addr-0x8000)]
 	case 2:
 		if addr < 0xC000 {
 			return m.PRGROM[addr-0x8000]
 		}
 
 		numBanks := uint8(len(m.PRGROM) / 0x4000)
-		bank := m.PrgBank & (numBanks - 1)
+		bank := (m.PrgBank & 0x0F) % numBanks
 		return m.PRGROM[uint32(bank)*0x4000+uint32(addr-0xC000)]
 	case 3:
 		if addr < 0xC000 {
 			numBanks := uint8(len(m.PRGROM) / 0x4000)
-			bank := m.PrgBank & (numBanks - 1)
+			bank := (m.PrgBank & 0x0F) % numBanks
 			return m.PRGROM[uint32(bank)*0x4000+uint32(addr-0x8000)]
 		}
 
@@ -209,7 +232,7 @@ func (m *Mapper1) ReadPRG(addr uint16) uint8 {
 }
 
 func (m *Mapper1) ReadCHR(addr uint16) uint8 {
-	if len(m.CHRROM) == 0x2000 && m.isRam {
+	if m.isRam {
 
 		return m.CHRROM[addr]
 	}
@@ -230,7 +253,7 @@ func (m *Mapper1) ReadCHR(addr uint16) uint8 {
 }
 
 func (m *Mapper1) WriteCHR(addr uint16, val uint8) {
-	if len(m.CHRROM) == 0x2000 && m.isRam {
+	if m.isRam {
 		m.CHRROM[addr] = val
 		// if val != 0 {
 		// 	fmt.Printf("First CHR RAM write: addr=%04X val=%02X\n", addr, val)
@@ -264,16 +287,6 @@ func (m *Mapper1) loadCHR(data []uint8) {
 
 func (m *Mapper1) getMirroring() uint8 {
 	mode := m.control & 0x03
-	switch mode {
-	case 0:
-		return 0
-	case 1:
-		return 1
-	case 2:
-		return 2
-	case 3:
-		return 3
-	}
-	fmt.Println("defaulting to mirror 2")
-	return 2
+
+	return mode
 }

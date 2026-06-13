@@ -45,6 +45,9 @@ func run_server() {
 	mux.HandleFunc("/snapshots/fetch", fetchSnapshots)
 	mux.HandleFunc("/snapshots/load", loadSnapshot)
 
+	mux.HandleFunc("/ppu/debugCHR", runChrViewer)
+	mux.HandleFunc("/ppu/debugNameTable", runNameTableViewer)
+
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalf("error running server")
@@ -59,6 +62,20 @@ func getConsoleStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error getting console status", http.StatusInternalServerError)
 		return
 	}
+}
+
+func runChrViewer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	debugConsole.Console.DebugChrRom()
+	fmt.Fprint(w, "Success")
+}
+
+func runNameTableViewer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	debugConsole.Console.DebugNameTable()
+	fmt.Fprintf(w, "Success")
+
 }
 
 func getExecStatus(w http.ResponseWriter, r *http.Request) {
@@ -207,7 +224,7 @@ func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	c := Core.InitializeConsole()
 	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper2/contra.nes")
-	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/NROM/mario.nes")
+	//c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/NROM/mario.nes")
 	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper1/metroid.nes")
 	c.Cpu.Reset()
 

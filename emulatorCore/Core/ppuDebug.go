@@ -4,7 +4,7 @@ import "fmt"
 
 func (c *console) DebugChrRom() {
 
-	Rom := c.Ppu.mem.chrROM
+	Rom := c.Ppu.mem.mapper.extractCHR()
 
 	tiles := min(len(Rom)/16, 512)
 
@@ -32,7 +32,7 @@ func (c *console) DebugChrRom() {
 
 func (c *console) DebugNameTable() {
 	fmt.Println("debugging namtable")
-	Rom := c.Ppu.mem.chrROM
+	Rom := c.Ppu.mem.mapper.extractCHR()
 	c.Ppu.DebugBuffer = make([]uint8, 512*480)
 
 	var PatternOffset uint16 = 0

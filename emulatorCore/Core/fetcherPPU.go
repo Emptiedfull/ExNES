@@ -1,7 +1,5 @@
 package Core
 
-import "fmt"
-
 type TempPPU struct {
 	nameTableByte uint8
 	attrTableByte uint8
@@ -93,8 +91,6 @@ func (p *ppu) step() {
 
 		if prefetch && p.Dot >= 280 && p.Dot <= 304 {
 			//copying y scroll
-			fmt.Printf("Y copy: scanline=%d dot=%d t=%04X v_before=%04X\n",
-				p.Scanline, p.Dot, p.mem.internal.t, p.mem.internal.v)
 
 			p.mem.internal.v = (p.mem.internal.v & 0x841F) | (p.mem.internal.t & 0x7BE0)
 		}

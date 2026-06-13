@@ -13,9 +13,9 @@ def root():
 def viewer():
     return FileResponse("C:/Users/user/ExNES/emulatorCore/debug_server/static/pages/viewer.html")
 
-@app.get("/nametable")
+@app.get("/table")
 def nametable():
-    return FileResponse("C:/Users/user/ExNES/debug_server/static/pages/table.html")
+    return FileResponse("C:/Users/user/ExNES/emulatorCore/debug_server/static/pages/table.html")
 
 @app.get("/main")
 def main():

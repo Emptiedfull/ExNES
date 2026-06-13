@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 //for any readers, please stop here I barely understand what ive done
 
 type ppu struct {
@@ -110,27 +112,34 @@ type PPUInternal struct {
 }
 
 func (p *ppu) MirrorNameTable(addr uint16) uint16 {
-
 	addr = (addr - 0x2000) % 0x1000
+	table := addr / 0x400
+	offset := addr % 0x400
 
-	mirroring := p.mem.mapper.getMirroring()
+	m := p.mem.mapper.getMirroring()
 
-	switch mirroring {
+	if m == 3 {
+
+		fmt.Printf("horizontal mirroring set at frame=%d scanline=%d dot=%d\n",
+			p.Frame, p.Scanline, p.Dot)
+	}
+
+	switch m {
+
 	case 0:
-		return addr % 0x400
+		return offset
 	case 1:
-		return 0x400 + (addr % 0x400)
+		return 0x400 + offset
 	case 2:
-		return addr % 0x800
+		return (table%2)*0x400 + offset
 	case 3:
-		if addr < 0x800 {
-			return addr & 0x3FF
+		if table < 2 {
+			return offset
 		}
-		return 0x400 + (addr & 0x3FF)
+		return 0x400 + offset
 	default:
 		return addr
 	}
-
 }
 
 func (p *ppu) read(addr uint16) uint8 {
