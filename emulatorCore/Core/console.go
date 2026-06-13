@@ -52,12 +52,19 @@ func (c *console) LoadROM(filepath string) error {
 
 	c.Ppu.verticalMirroring = (header[6] & 1) != 0
 
+	trainerByte := header[6] & 0x04
+	if trainerByte != 0 {
+		tainer := make([]byte, 512)
+		io.ReadFull(file, tainer)
+	}
+
 	magic := header[:4]
 	if !bytes.Equal(magic, []byte{'N', 'E', 'S', 0x1A}) {
 		return fmt.Errorf("invalid nes header")
 	}
 
 	prgBanks := int(header[4])
+	fmt.Println("PRG BANKS", prgBanks)
 	prgSize := prgBanks * 16384
 	prgData := make([]byte, prgSize)
 	if _, err := io.ReadFull(file, prgData); err != nil {
@@ -65,19 +72,22 @@ func (c *console) LoadROM(filepath string) error {
 	}
 
 	chrBanks := int(header[5])
-	chrSize := chrBanks * 8192
-	chrData := make([]byte, chrSize)
+	fmt.Println("CHR BANKS", chrBanks)
 
-	// c.Ppu.mem.chrROM = make([]uint8, 8192)
-	if _, err := io.ReadFull(file, chrData); err != nil {
-		return fmt.Errorf("failed to read mem: %w", err)
+	var chrData []uint8
+	if chrBanks == 0 {
+		chrData = make([]byte, 8192)
+	} else {
+		chrSize := chrBanks * 8192
+		chrData = make([]byte, chrSize)
+		if _, err := io.ReadFull(file, chrData); err != nil {
+			return fmt.Errorf("failed to read mem: %w", err)
+		}
 	}
 
 	c.assignMapper(mapper, prgData, chrData)
 
-	fmt.Println("rom has been loaded")
 	return nil
-
 }
 
 func getMapper(header []byte) int {

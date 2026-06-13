@@ -183,7 +183,6 @@ func (b *bus) Read(addr uint16) uint8 {
 		val = b.cpu.console.Ppu.ReadReg(RegIndex, b.cpu.console.OpenBusVal)
 	case addr >= 0x8000:
 		val = b.mapper.ReadPRG(addr)
-
 	}
 
 	b.cpu.console.OpenBusVal = val
@@ -203,8 +202,9 @@ func (b *bus) Write(addr uint16, val uint8) {
 		b.cpu.console.Ppu.WriteReg(RegIndex, val)
 	case addr == 0x4014:
 		b.cpu.console.ExecuteOAMDMA(val)
+	case addr >= 0x8000:
+		b.mapper.WritePRG(addr, val)
 	case addr <= 0x7FFF:
-
 	default:
 
 	}
