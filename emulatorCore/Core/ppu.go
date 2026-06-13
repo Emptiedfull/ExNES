@@ -1,7 +1,5 @@
 package Core
 
-import "fmt"
-
 //for any readers, please stop here I barely understand what ive done
 
 type ppu struct {
@@ -117,12 +115,6 @@ func (p *ppu) MirrorNameTable(addr uint16) uint16 {
 	offset := addr % 0x400
 
 	m := p.mem.mapper.getMirroring()
-
-	if m == 3 {
-
-		fmt.Printf("horizontal mirroring set at frame=%d scanline=%d dot=%d\n",
-			p.Frame, p.Scanline, p.Dot)
-	}
 
 	switch m {
 
