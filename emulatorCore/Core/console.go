@@ -50,7 +50,10 @@ func (c *console) LoadROM(filepath string) error {
 	mapper := getMapper(header)
 	fmt.Println(mapper)
 
-	c.Ppu.verticalMirroring = (header[6] & 1) != 0
+	mirroring := 2
+	if (header[6] & 0x01) == 0 {
+		mirroring = 3
+	}
 
 	trainerByte := header[6] & 0x04
 	if trainerByte != 0 {
@@ -85,7 +88,7 @@ func (c *console) LoadROM(filepath string) error {
 		}
 	}
 
-	c.assignMapper(mapper, prgData, chrData)
+	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
 
 	return nil
 }

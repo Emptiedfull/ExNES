@@ -16,8 +16,6 @@ type ppu struct {
 	screenChanged bool
 
 	DebugBuffer []uint8
-
-	verticalMirroring bool
 }
 
 type Pallete [][4]byte
@@ -113,19 +111,19 @@ func (p *ppu) MirrorNameTable(addr uint16) uint16 {
 
 	addr = (addr - 0x2000) % 0x1000
 
-	if p.verticalMirroring {
-		return addr % 0x0800
-	} else {
+	mirroring := p.mem.mapper.getMirroring()
 
-		if addr < 0x0400 {
-			return addr
-		} else if addr < 0x0800 {
-			return addr - 0x0400
-		} else if addr < 0x0C00 {
-			return addr - 0x0400
-		} else {
-			return addr - 0x0800
-		}
+	switch mirroring {
+	case 0:
+		return addr % 0x400
+	case 1:
+		return 0x400 + (addr % 0x400)
+	case 2:
+		return addr % 0x800
+	case 3:
+		return ((addr / 2) & 0x400) + (addr % 0x400)
+	default:
+		return addr
 	}
 
 }

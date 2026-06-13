@@ -206,8 +206,9 @@ func getDebugScreen(w http.ResponseWriter, r *http.Request) {
 func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	c := Core.InitializeConsole()
-	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper2/contra.nes")
-	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/NROM/bomber.nes")
+	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper2/contra.nes")
+	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/NROM/mario.nes")
+	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper1/zelda.nes")
 	c.Cpu.Reset()
 
 	fmt.Println("console ready for debug")
