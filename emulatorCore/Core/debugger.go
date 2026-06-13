@@ -79,11 +79,11 @@ func (d *Debugger) StartDebugConsole() {
 	go func() {
 		time.Sleep(5 * time.Second)
 		fmt.Println(d.Console.Cpu.nmiS)
-		for i := 0; i < 0x400; i++ {
-			if d.Console.Ppu.mem.Vram[i] != 0 {
-				fmt.Printf("NT0[%03X] = %02X\n", i, d.Console.Ppu.mem.Vram[i])
-			}
-		}
+		// for i := 0; i < 0x400; i++ {
+		// 	if d.Console.Ppu.mem.Vram[i] != 0 {
+		// 		fmt.Printf("NT0[%03X] = %02X\n", i, d.Console.Ppu.mem.Vram[i])
+		// 	}
+		// }
 	}()
 
 	for {

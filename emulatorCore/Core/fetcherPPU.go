@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 type TempPPU struct {
 	nameTableByte uint8
 	attrTableByte uint8
@@ -64,6 +66,7 @@ func (p *ppu) step() {
 				p.mem.temp.tileData |= uint64(data)
 			case 1:
 				addr := 0x2000 | (p.mem.internal.v & 0x0FFF)
+
 				p.mem.temp.nameTableByte = p.read(addr)
 			case 3:
 				v := p.mem.internal.v
@@ -75,6 +78,7 @@ func (p *ppu) step() {
 				table := getTableAddr(p.mem.register.BgPattern)
 				tile := p.mem.temp.nameTableByte
 				addr := 0x1000*uint16(table) + uint16(tile)*16 + fineY
+
 				p.mem.temp.lowTileByte = p.read(addr)
 			case 7:
 
@@ -89,6 +93,9 @@ func (p *ppu) step() {
 
 		if prefetch && p.Dot >= 280 && p.Dot <= 304 {
 			//copying y scroll
+			fmt.Printf("Y copy: scanline=%d dot=%d t=%04X v_before=%04X\n",
+				p.Scanline, p.Dot, p.mem.internal.t, p.mem.internal.v)
+
 			p.mem.internal.v = (p.mem.internal.v & 0x841F) | (p.mem.internal.t & 0x7BE0)
 		}
 

@@ -78,6 +78,7 @@ func (c *console) LoadROM(filepath string) error {
 	var chrData []uint8
 	if chrBanks == 0 {
 		chrData = make([]byte, 8192)
+		c.Ppu.mem.CHR_isRam = true
 	} else {
 		chrSize := chrBanks * 8192
 		chrData = make([]byte, chrSize)
@@ -85,6 +86,7 @@ func (c *console) LoadROM(filepath string) error {
 			return fmt.Errorf("failed to read mem: %w", err)
 		}
 	}
+	fmt.Println("banks", chrBanks)
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
 

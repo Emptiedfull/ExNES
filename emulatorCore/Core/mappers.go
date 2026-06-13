@@ -38,6 +38,7 @@ func (c *console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			CHRROM:        chrData,
 			control:       0x0F,
 			shiftRegister: 0x10,
+			isRam:         c.Ppu.mem.CHR_isRam,
 		}
 	}
 
@@ -140,6 +141,8 @@ type Mapper1 struct {
 	PrgBank  uint8
 	ChrBank0 uint8
 	ChrBank1 uint8
+
+	isRam bool
 }
 
 func (m *Mapper1) WritePRG(addr uint16, val uint8) {
@@ -206,6 +209,11 @@ func (m *Mapper1) ReadPRG(addr uint16) uint8 {
 }
 
 func (m *Mapper1) ReadCHR(addr uint16) uint8 {
+	if len(m.CHRROM) == 0x2000 && m.isRam {
+
+		return m.CHRROM[addr]
+	}
+
 	if (m.control & 0x10) != 0 {
 
 		if addr < 0x1000 {
@@ -222,6 +230,15 @@ func (m *Mapper1) ReadCHR(addr uint16) uint8 {
 }
 
 func (m *Mapper1) WriteCHR(addr uint16, val uint8) {
+	if len(m.CHRROM) == 0x2000 && m.isRam {
+		m.CHRROM[addr] = val
+		// if val != 0 {
+		// 	fmt.Printf("First CHR RAM write: addr=%04X val=%02X\n", addr, val)
+
+		// }
+		return
+	}
+
 	if (m.control & 0x10) != 0 {
 		if addr < 0x1000 {
 			bank := uint32(m.ChrBank0)
