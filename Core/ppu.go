@@ -18,23 +18,6 @@ type ppu struct {
 	DebugBuffer []uint8
 }
 
-func (p *ppu) cycleTick() {
-	p.Dot++
-	if p.Dot > 340 {
-		p.Dot = 0
-		p.Scanline++
-
-		if p.Scanline > 261 {
-			p.Scanline = 0
-			p.Frame++
-
-			p.screenChanged = true
-			copy(p.frontBuffer, p.backBuffer)
-		}
-	}
-
-}
-
 var NesPaletteLUT = [64]RGB{
 	{0x7C, 0x7C, 0x7C}, {0x00, 0x00, 0xFC}, {0x00, 0x00, 0xBC}, {0x44, 0x28, 0xBC},
 	{0x94, 0x00, 0x84}, {0xA8, 0x00, 0x20}, {0xA8, 0x10, 0x00}, {0x88, 0x14, 0x00},
@@ -115,13 +98,6 @@ type registersFlags struct {
 
 	// $2007
 	bufferedData uint8
-}
-
-type PPUInternal struct {
-	v uint16 // Vram addr
-	t uint16 // Temp Vram
-	x uint8  // 3 bit
-	w bool   // latch (0-first write,1-second write)
 }
 
 func (p *ppu) MirrorNameTable(addr uint16) uint16 {

@@ -14,6 +14,13 @@ type TempPPU struct {
 	spriteIdx        [8]uint8
 }
 
+type PPUInternal struct {
+	v uint16 // Vram addr
+	t uint16 // Temp Vram
+	x uint8  // 3 bit
+	w bool   // latch (0-first write,1-second write)
+}
+
 func (p *ppu) cycleTick() {
 	p.Dot++
 	if p.Dot > 340 {

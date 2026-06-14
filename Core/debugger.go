@@ -32,22 +32,10 @@ type Debugger struct {
 	RecentHistory SnapshotBuffer
 }
 
-type SnapshotBuffer struct {
-	Frame int
-
-	Data  [200]snapshot
-	Index int
-}
-
 type ScreenInfo struct {
 	Buffer []uint8
 }
 
-type AssemblyLine struct {
-	Opcode      opCode `json:"Opcode"`
-	Disassembly string `json:"disassembly"`
-	Val         uint8  `json:"val,omitempty"`
-}
 type cpustate struct {
 	Pc     uint16    `json:"pc"`
 	S      uint8     `json:"s"`

@@ -74,11 +74,3 @@ func (J *joyPad) UpdateState(c ControlState) {
 func (J *joyPad) UpdateBtnState(btn int, state uint8) {
 	J.current[btn] = state
 }
-
-func convertBoolToInt(b bool) int {
-	var val int = 0
-	if b {
-		val = 1
-	}
-	return val
-}
