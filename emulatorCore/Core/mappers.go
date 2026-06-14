@@ -15,6 +15,13 @@ type Mapper interface {
 	getMirroring() uint8
 }
 
+func getMapper(header []byte) int {
+	high := header[7] & 0xF0
+	low := (header[6] & 0xF0) >> 4
+
+	return int(high | low)
+}
+
 func (c *console) assignMapper(id int, prgData []byte, chrData []byte, mirroring uint8) {
 	var m Mapper
 	switch id {
@@ -42,9 +49,11 @@ func (c *console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 		}
 	case 4:
 		m = &Mapper4{
-			PRGROM: prgData,
-			CHRROM: chrData,
+			PRGROM:    prgData,
+			CHRROM:    chrData,
+			Mirroring: mirroring,
 		}
+
 	}
 
 	c.Cpu.mem.mapper = m
@@ -301,10 +310,11 @@ func (m *Mapper1) getMirroring() uint8 {
 type Mapper4 struct {
 	PRGROM []uint8
 	CHRROM []uint8
+	PRGRAM [0x2000]uint8
 
 	BankSelect uint8
 	BankData   [8]uint8
-	Mirroring  int
+	Mirroring  uint8
 
 	PRGMode uint8
 	CHRMode uint8
@@ -317,6 +327,11 @@ type Mapper4 struct {
 }
 
 func (m *Mapper4) WritePRG(addr uint16, val uint8) {
+
+	if addr < 0x8000 {
+		m.PRGRAM[addr-0x6000] = val
+	}
+
 	if addr >= 0x8000 && addr <= 0x9FFF {
 		if addr&1 == 0 { //even
 			m.BankSelect = val
@@ -330,7 +345,7 @@ func (m *Mapper4) WritePRG(addr uint16, val uint8) {
 
 	if addr >= 0xA000 && addr <= 0xBFFE {
 		if addr&1 == 0 {
-			m.Mirroring = int(val & 1)
+			m.Mirroring = val & 1
 		} else {
 			//intetionally left
 
@@ -358,6 +373,9 @@ func (m *Mapper4) WritePRG(addr uint16, val uint8) {
 }
 
 func (m *Mapper4) ReadPRG(addr uint16) uint8 {
+	if addr < 0x8000 {
+		return m.PRGRAM[addr-0x6000]
+	}
 	var bank uint8
 	var offset uint32
 
@@ -368,7 +386,6 @@ func (m *Mapper4) ReadPRG(addr uint16) uint8 {
 		} else {
 			bank = uint8((len(m.PRGROM) / 0x2000) - 2) //second last
 		}
-
 		offset = uint32(addr - 0x8000)
 	case addr < 0xC000:
 		bank = m.BankData[7] //R7
@@ -383,6 +400,12 @@ func (m *Mapper4) ReadPRG(addr uint16) uint8 {
 	default: // $E000 - $FFFF
 		bank = uint8((len(m.PRGROM) / 0x2000) - 1) //last
 		offset = uint32(addr - 0xE000)
+	}
+
+	newaddr := uint32(bank)*0x2000 + offset
+
+	if int(newaddr) > len(m.PRGROM) {
+		fmt.Println(bank, offset, addr)
 	}
 
 	return m.PRGROM[uint32(bank)*0x2000+offset]

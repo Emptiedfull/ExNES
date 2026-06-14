@@ -86,18 +86,14 @@ func (c *console) LoadROM(filepath string) error {
 			return fmt.Errorf("failed to read mem: %w", err)
 		}
 	}
-	fmt.Println("banks", chrBanks)
+	fmt.Println("prg banks:", prgBanks)
+	fmt.Println("prg size:", len(prgData))
+	fmt.Println("chr banks:", chrBanks)
+	fmt.Println("chr size:", len(chrData))
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
 
 	return nil
-}
-
-func getMapper(header []byte) int {
-	high := header[7] & 0xF0
-	low := (header[6] & 0xF0) >> 4
-
-	return int(high | low)
 }
 
 func InitializeConsole() *console {
@@ -162,22 +158,10 @@ func (c *console) StartConsoleCycle() {
 
 }
 
-func (d *Debugger) StepCycles(cycles int) {
-	target := d.Console.Cpu.TotalCycles + cycles
-
-	for d.Console.Cpu.TotalCycles < target {
-		if d.Console.Cpu.currentstep == 0 {
-			d.Disassembly[d.Console.Cpu.PC] = d.DisAssemble(d.Console.Cpu.PC)
-		}
-		d.Console.tick()
-
-	}
-}
-
 func (c *console) RunDisplayUpdates() {
 	if c.Ppu.screenChanged {
 		S := ScreenInfo{
-			Buffer: c.Ppu.backBuffer,
+			Buffer: c.Ppu.frontBuffer,
 		}
 		c.Ppu.screenChanged = false
 		c.ScreenChannel <- S
@@ -192,6 +176,7 @@ func (c *console) tick() {
 	} else {
 		c.Cpu.tick()
 	}
+
 	for range 3 {
 		c.Ppu.step()
 	}

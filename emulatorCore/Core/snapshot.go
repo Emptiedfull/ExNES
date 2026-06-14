@@ -9,6 +9,13 @@ type snapshot struct {
 	PpuState PpuSnapshot
 }
 
+type SnapshotBuffer struct {
+	Frame int
+
+	Data  [200]snapshot
+	Index int
+}
+
 type CpuSnapshot struct {
 	PC uint16
 	S  uint8

@@ -18,7 +18,22 @@ type ppu struct {
 	DebugBuffer []uint8
 }
 
-type Pallete [][4]byte
+func (p *ppu) cycleTick() {
+	p.Dot++
+	if p.Dot > 340 {
+		p.Dot = 0
+		p.Scanline++
+
+		if p.Scanline > 261 {
+			p.Scanline = 0
+			p.Frame++
+
+			p.screenChanged = true
+			copy(p.frontBuffer, p.backBuffer)
+		}
+	}
+
+}
 
 var NesPaletteLUT = [64]RGB{
 	{0x7C, 0x7C, 0x7C}, {0x00, 0x00, 0xFC}, {0x00, 0x00, 0xBC}, {0x44, 0x28, 0xBC},

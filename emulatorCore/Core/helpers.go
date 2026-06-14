@@ -187,3 +187,11 @@ func AssignBit(val uint8, pos uint8, state bool) uint8 {
 	}
 	return val &^ (1 << pos)
 }
+
+func convertBoolToInt(b bool) int {
+	var val int = 0
+	if b {
+		val = 1
+	}
+	return val
+}
