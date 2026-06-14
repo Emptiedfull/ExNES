@@ -6,7 +6,6 @@ import (
 	"exnes/Core"
 	"fmt"
 	"syscall/js"
-	"time"
 )
 
 var emu *Core.Console
@@ -44,14 +43,9 @@ func main() {
 	var loop js.Func
 
 	js.Global().Set("runFrame", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		start := time.Now()
-		for range 60 {
-			emu.RunFrame()
-		}
 
-		duration := time.Since(start)
-
-		return duration.Seconds()
+		emu.RunFrame()
+		return nil
 
 	}))
 

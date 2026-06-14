@@ -26,3 +26,7 @@ def main():
 @app.get("/socket")
 def socket():
     return FileResponse("./static/pages/socket.html")
+
+@app.get("/wasm")
+def wasm():
+    return FileResponse("./static/pages/wasm.html")

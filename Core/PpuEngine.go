@@ -32,7 +32,8 @@ func (p *ppu) cycleTick() {
 			p.Frame++
 
 			p.screenChanged = true
-			copy(p.frontBuffer, p.backBuffer)
+			// copy(p.FrontBuffer, p.backBuffer)
+			p.FrontBuffer = p.backBuffer
 		}
 	}
 

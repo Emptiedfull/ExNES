@@ -20,7 +20,6 @@ func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	line := AssemblyLine{}
 	opcode := mem.Read(addr)
 	if opcode == 255 {
-		d.Console.Pause()
 		fmt.Println("Invalid opcode recieved pausing state")
 		return line
 	}

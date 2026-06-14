@@ -55,13 +55,14 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 func (c *client) runReciever(ctx context.Context) {
 
 	debugConsole.Console.RunDisplayUpdates()
+	c.conn.Write(ctx, websocket.MessageBinary, debugConsole.Console.Ppu.FrontBuffer[:])
 	for {
 		select {
 		case <-ctx.Done():
 			fmt.Println("closing connection", c.ID)
 			return
 		case info := <-c.Output:
-			c.conn.Write(ctx, websocket.MessageBinary, info.Buffer)
+			c.conn.Write(ctx, websocket.MessageBinary, (*info.Buffer)[:])
 		}
 	}
 

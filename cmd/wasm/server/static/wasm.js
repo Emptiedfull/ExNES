@@ -1,5 +1,5 @@
 const go = new Go()
-WebAssembly.instantiateStreaming(fetch("/static/emulator.wasm"),go.importObject).then((result)=>{
+WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=2"),go.importObject).then((result)=>{
     go.run(result.instance)
   
 })

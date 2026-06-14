@@ -6,10 +6,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"strconv"
 )
 
 func main() {
+
+	go func() {
+		log.Println("pprof listening on :6060")
+		log.Fatal(http.ListenAndServe(":6060", nil))
+	}()
+
 	fmt.Println("running")
 
 	run_server()
@@ -26,7 +33,6 @@ func run_server() {
 	mux.HandleFunc("/disassembly", getDissambly)
 	mux.HandleFunc("/screen/get/Debug", getDebugScreen)
 
-	mux.HandleFunc("/screen", getScreenIMM)
 	mux.HandleFunc("/controls/update", updateControls)
 	mux.HandleFunc("/screen/socket", acceptScreenConn)
 
@@ -194,20 +200,6 @@ func updateControls(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getScreenIMM(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Content-type", "application/octet-stream")
-
-	if debugConsole.Console == nil {
-		http.Error(w, "unable to get screen buffer", http.StatusBadRequest)
-		return
-	}
-
-	w.Write(debugConsole.Console.Ppu.GetScreenBuffer())
-
-}
-
 func getDebugScreen(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/octet-stream")
@@ -232,26 +224,16 @@ func quickStart(w http.ResponseWriter, r *http.Request) {
 
 func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	c := Core.InitializeConsole()
+	debugConsole.Console = Core.Quickstart("C:/Users/user/ExNES/games/NROM/mario.nes")
 	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper2/contra.nes")
-	err := c.LoadROM("C:/Users/user/ExNES/games/NROM/mario.nes")
-	if err != nil {
-		fmt.Println("error loading rom", err)
-		http.Error(w, "unable to load", http.StatusInternalServerError)
-		return
-	}
+
 	//c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper1/ff.nes")
 	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/test_roms/ppu/vbl.nes")
 	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper4/mario3.nes")
 
-	c.Cpu.Reset()
-
-	fmt.Println("console ready for debug")
-
-	debugConsole.Console = c
 	debugConsole.Disassembly = make(map[uint16]Core.AssemblyLine)
 
-	c.Ppu.DebugBuffer = make([]uint8, 512*64)
+	debugConsole.Console.Ppu.DebugBuffer = make([]uint8, 512*64)
 
 	go HandleScreenUpdates()
 

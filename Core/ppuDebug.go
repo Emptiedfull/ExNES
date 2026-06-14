@@ -2,7 +2,7 @@ package Core
 
 import "fmt"
 
-func (c *console) DebugChrRom() {
+func (c *Console) DebugChrRom() {
 
 	Rom := c.Ppu.mem.mapper.extractCHR()
 
@@ -30,7 +30,7 @@ func (c *console) DebugChrRom() {
 
 }
 
-func (c *console) DebugNameTable() {
+func (c *Console) DebugNameTable() {
 	fmt.Println("debugging namtable")
 	Rom := c.Ppu.mem.mapper.extractCHR()
 	c.Ppu.DebugBuffer = make([]uint8, 512*480)

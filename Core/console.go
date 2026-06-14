@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type console struct {
+type Console struct {
 	Cpu        *cpu
 	Ppu        *ppu
 	JoyPad     *joyPad
@@ -17,38 +17,44 @@ type console struct {
 
 	ScreenChannel chan ScreenInfo
 
+	RecentHistory SnapshotBuffer
+
 	ready bool
 
 	Paused   bool
 	pausedMu sync.Mutex
 }
 
-func (c *console) Pause() {
+func (c *Console) Pause() {
 	c.pausedMu.Lock()
 	defer c.pausedMu.Unlock()
 	c.Paused = true
 }
 
-func (c *console) UnPause() {
+func (c *Console) UnPause() {
 	c.pausedMu.Lock()
 	defer c.pausedMu.Unlock()
 	c.Paused = false
 }
 
-func (c *console) LoadROM(filepath string) error {
+func (c *Console) OpenRomFile(filepath string) (io.Reader, error) {
 	file, err := os.Open(filepath)
-	if err != nil {
-		return fmt.Errorf("could not open file: %w", err)
-	}
-	defer file.Close()
+	return file, err
+}
+
+func LoadRomData(data []uint8) (io.Reader, error) {
+	reader := bytes.NewReader(data)
+	return reader, nil
+}
+
+func (c *Console) InitRom(data io.Reader) error {
 
 	header := make([]byte, 16)
-	if _, err := io.ReadFull(file, header); err != nil {
+	if _, err := io.ReadFull(data, header); err != nil {
 		return fmt.Errorf("failed to read header: %w", err)
 	}
 
 	mapper := getMapper(header)
-	fmt.Println(mapper)
 
 	mirroring := 2
 	if (header[6] & 0x01) == 0 {
@@ -58,7 +64,7 @@ func (c *console) LoadROM(filepath string) error {
 	trainerByte := header[6] & 0x04
 	if trainerByte != 0 {
 		tainer := make([]byte, 512)
-		io.ReadFull(file, tainer)
+		io.ReadFull(data, tainer)
 	}
 
 	magic := header[:4]
@@ -69,7 +75,7 @@ func (c *console) LoadROM(filepath string) error {
 	prgBanks := int(header[4])
 	prgSize := prgBanks * 16384
 	prgData := make([]byte, prgSize)
-	if _, err := io.ReadFull(file, prgData); err != nil {
+	if _, err := io.ReadFull(data, prgData); err != nil {
 		return fmt.Errorf("error reading prgData: %w", err)
 	}
 
@@ -82,7 +88,7 @@ func (c *console) LoadROM(filepath string) error {
 	} else {
 		chrSize := chrBanks * 8192
 		chrData = make([]byte, chrSize)
-		if _, err := io.ReadFull(file, chrData); err != nil {
+		if _, err := io.ReadFull(data, chrData); err != nil {
 			return fmt.Errorf("failed to read mem: %w", err)
 		}
 	}
@@ -90,19 +96,17 @@ func (c *console) LoadROM(filepath string) error {
 	fmt.Println("prg size:", len(prgData))
 	fmt.Println("chr banks:", chrBanks)
 	fmt.Println("chr size:", len(chrData))
+	fmt.Println("Mapper id:", mapper)
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
 
 	return nil
 }
 
-func InitializeConsole() *console {
-	c := &console{
+func InitializeConsole() *Console {
+	c := &Console{
 
-		Ppu: &ppu{
-			backBuffer:  make([]byte, 256*240*4),
-			frontBuffer: make([]byte, 256*240*4),
-		},
+		Ppu:        &ppu{},
 		Cpu:        &cpu{},
 		OpenBusVal: 0,
 	}
@@ -113,6 +117,8 @@ func InitializeConsole() *console {
 	c.Cpu.fetchNew = true
 	c.ScreenChannel = make(chan ScreenInfo, 100)
 
+	fmt.Println(len(c.Ppu.backBuffer))
+
 	c.Cpu.mem = &bus{
 		cpu: c.Cpu,
 	}
@@ -122,12 +128,13 @@ func InitializeConsole() *console {
 
 var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988)
 
-func (c *console) StartConsoleCycle() {
+func (c *Console) StartConsoleCycle() {
 
 	targetTime := time.Now()
 	defer fmt.Println("console stopped for some reason")
 
 	var framecount = 0
+	start := time.Now()
 
 	for {
 
@@ -141,27 +148,27 @@ func (c *console) StartConsoleCycle() {
 		for now.After(targetTime) {
 			framecount++
 
-			for range 29781 {
-				c.tick()
-			}
+			c.RunFrame()
 
 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
-
-			c.RunDisplayUpdates()
 		}
 
 		timeLeft := time.Until(targetTime)
 		if timeLeft > 0 {
 			time.Sleep(timeLeft)
 		}
+
+		if framecount == 60 {
+			fmt.Println(time.Since(start))
+		}
 	}
 
 }
 
-func (c *console) RunDisplayUpdates() {
+func (c *Console) RunDisplayUpdates() {
 	if c.Ppu.screenChanged {
 		S := ScreenInfo{
-			Buffer: c.Ppu.frontBuffer,
+			Buffer: &c.Ppu.FrontBuffer,
 		}
 		c.Ppu.screenChanged = false
 		c.ScreenChannel <- S
@@ -169,7 +176,7 @@ func (c *console) RunDisplayUpdates() {
 
 }
 
-func (c *console) tick() {
+func (c *Console) tick() {
 	if c.Cpu.Stall > 0 {
 		c.Cpu.Stall--
 		c.Cpu.TotalCycles++
@@ -183,9 +190,23 @@ func (c *console) tick() {
 
 }
 
-func (c *console) runFrame() {
+func (c *Console) RunFrame() {
+
 	targetFrame := c.Ppu.Frame + 1
 	for targetFrame != c.Ppu.Frame {
 		c.tick()
 	}
+
+}
+
+func Quickstart(filepath string) *Console {
+	c := InitializeConsole()
+	file, err := c.OpenRomFile(filepath)
+	if err != nil {
+		fmt.Println("error reading file data")
+	}
+	c.InitRom(file)
+	c.Cpu.Reset()
+
+	return c
 }

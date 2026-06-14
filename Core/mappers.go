@@ -22,7 +22,7 @@ func getMapper(header []byte) int {
 	return int(high | low)
 }
 
-func (c *console) assignMapper(id int, prgData []byte, chrData []byte, mirroring uint8) {
+func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring uint8) {
 	var m Mapper
 	switch id {
 	case 0:

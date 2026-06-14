@@ -4,14 +4,14 @@ package Core
 
 type ppu struct {
 	mem     ppu_mem
-	console *console
+	console *Console
 
 	Dot      int
 	Scanline int
 	Frame    int
 
-	backBuffer  []uint8
-	frontBuffer []uint8
+	backBuffer  [245760]uint8
+	FrontBuffer [245760]uint8
 
 	screenChanged bool
 
@@ -147,7 +147,7 @@ func (p *ppu) read(addr uint16) uint8 {
 	return 0
 }
 
-func (p *ppu) GetScreenBuffer() []uint8 {
+func (p *ppu) GetScreenBuffer() [245760]uint8 {
 	return p.backBuffer
 }
 
@@ -295,7 +295,7 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 	}
 }
 
-func (console *console) ExecuteOAMDMA(page uint8) {
+func (console *Console) ExecuteOAMDMA(page uint8) {
 
 	cpuSrc := uint(page) << 8
 

@@ -14,7 +14,7 @@ const (
 )
 
 type cpu struct {
-	console *console
+	console *Console
 
 	PC uint16 //program counter
 	S  uint8  //stack pointer

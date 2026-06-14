@@ -1,6 +1,11 @@
-package Main
+package main
 
+type ppu struct {
+}
 
+type RGB struct {
+	R, G, B uint8
+}
 
 func (p *ppu) getColor(colorindex uint8) RGB {
 	switch colorindex {

@@ -25,15 +25,13 @@ const (
 )
 
 type Debugger struct {
-	Console     *console
+	Console     *Console
 	Disassembly map[uint16]AssemblyLine
 	DMux        sync.Mutex
-
-	RecentHistory SnapshotBuffer
 }
 
 type ScreenInfo struct {
-	Buffer []uint8
+	Buffer *[245760]uint8
 }
 
 type cpustate struct {
@@ -61,7 +59,6 @@ type FlagState struct {
 func (d *Debugger) StartDebugConsole() {
 
 	targetTime := time.Now()
-	fmt.Println("console started")
 	defer fmt.Println("console stopped for some reason")
 
 	for {
@@ -75,18 +72,18 @@ func (d *Debugger) StartDebugConsole() {
 
 		now := time.Now()
 		for now.After(targetTime) {
-			d.RunDebugFrame()
 
+			d.Console.RunFrame()
+			d.Console.RunDisplayUpdates()
 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
 
-			d.Console.RunDisplayUpdates()
-			d.AddSnapshot()
 		}
 
 		timeLeft := time.Until(targetTime)
 		if timeLeft > 0 {
 			time.Sleep(timeLeft)
 		}
+
 	}
 }
 

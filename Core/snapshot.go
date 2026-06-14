@@ -71,8 +71,8 @@ func (p *ppu) TakePpuSnapshot() PpuSnapshot {
 	S.Scanline = p.Scanline
 	S.Frame = p.Frame
 
-	copy(S.backBuffer, p.backBuffer)
-	copy(S.frontBuffer, p.frontBuffer)
+	// copy(S.backBuffer, p.backBuffer)
+	// copy(S.frontBuffer, p.FrontBuffer)
 
 	S.screenChanged = p.screenChanged
 
@@ -115,27 +115,27 @@ func (c cpu) TakeCpuSnapshot() CpuSnapshot {
 	return S
 }
 
-func (d *Debugger) TakeSnapshot() snapshot {
+func (c *Console) TakeSnapshot() snapshot {
 	S := snapshot{
-		CpuState: d.Console.Cpu.TakeCpuSnapshot(),
-		PpuState: d.Console.Ppu.TakePpuSnapshot(),
-		Cycles:   d.Console.Cpu.TotalCycles,
+		CpuState: c.Cpu.TakeCpuSnapshot(),
+		PpuState: c.Ppu.TakePpuSnapshot(),
+		Cycles:   c.Cpu.TotalCycles,
 	}
 
 	return S
 }
 
-func (d *Debugger) AddSnapshot() {
-	s := d.TakeSnapshot()
-	s.Frame_no = d.RecentHistory.Frame
-	d.RecentHistory.Frame++
-	d.RecentHistory.AddSnapshot(s)
+func (c *Console) AddSnapshot() {
+	s := c.TakeSnapshot()
+	s.Frame_no = c.RecentHistory.Frame
+	c.RecentHistory.Frame++
+	c.RecentHistory.AddSnapshot(s)
 }
 
-func (d *Debugger) LoadSnapshot(snap snapshot) {
-	d.Console.Pause()
-	d.Console.Cpu.LoadCpuSnapshot(snap.CpuState)
-	d.Console.Ppu.LoadPpuSnapshot(snap.PpuState)
+func (c *Console) LoadSnapshot(snap snapshot) {
+	c.Pause()
+	c.Cpu.LoadCpuSnapshot(snap.CpuState)
+	c.Ppu.LoadPpuSnapshot(snap.PpuState)
 }
 
 func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
@@ -147,8 +147,8 @@ func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
 	p.Scanline = snap.Scanline
 	p.Frame = snap.Frame
 
-	copy(p.backBuffer, snap.backBuffer)
-	copy(p.frontBuffer, snap.frontBuffer)
+	// copy(p.backBuffer, snap.backBuffer)
+	// copy(p.FrontBuffer, snap.frontBuffer)
 
 	p.screenChanged = snap.screenChanged
 }
