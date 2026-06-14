@@ -9,17 +9,21 @@ import (
 )
 
 var emu *Core.Console
+var jsScreen js.Value
 
 func main() {
 
 	stallChan := make(chan bool)
 
-	fmt.Println("core initialized 4")
+	fmt.Println("core initialized 8")
 	js.Global().Set("startEmulator", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		emu = Core.InitializeConsole()
 		fmt.Println("console initialized")
 
-		return "x"
+		jsScreen = js.Global().Get("Uint8ClampedArray").New(256 * 240 * 4)
+		js.Global().Set("frameBuffer", jsScreen)
+
+		return nil
 	}))
 
 	js.Global().Set("initRom", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -40,23 +44,38 @@ func main() {
 
 		return nil
 	}))
-	var loop js.Func
 
-	js.Global().Set("runFrame", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	var framesRun int
+	var lasttime float64
 
+	loop := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		emu.RunFrame()
-		return nil
+		fmt.Println("frame running")
+		framesRun++
 
-	}))
+		if framesRun%60 == 0 {
+			now := js.Global().Get("performance").Call("now").Float()
+			elapsed := now - lasttime
+			fmt.Printf("FPS: %.1f\n", 60000/elapsed)
+			lasttime = now
+		}
+		js.CopyBytesToJS(jsScreen, emu.Ppu.FrontBuffer[:])
 
-	loop = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		emu.RunFrame()
-
-		js.Global().Call("requestAnimationFrame", loop)
 		return nil
 	})
 
-	// js.Global().Call("requestAnimationFrame", loop)
+	js.Global().Set("nesFrame", loop)
 
 	<-stallChan
+}
+
+func initCanvas() {
+	canvas := js.Global().Get("document").Call("getElementById", "screen")
+	ctx := canvas.Call("getContext", "2d")
+
+	imageData := ctx.Call("createImageData", 256, 240)
+	jsScreen = imageData.Get("Data")
+
+	js.Global().Set("ctx", ctx)
+	js.Global().Set("imageData", imageData)
 }
