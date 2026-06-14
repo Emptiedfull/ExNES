@@ -1,7 +1,5 @@
 package Core
 
-import "fmt"
-
 //for any readers, please stop here I barely understand what ive done
 
 type ppu struct {
@@ -188,10 +186,10 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 	switch reg {
 	case 2:
 
-		if p.mem.Vblank_flag {
-			fmt.Printf("$2002 read CAUGHT VBLANK at CPU cycle %d PC=%04X\n",
-				p.console.Cpu.TotalCycles, p.console.Cpu.PC)
-		}
+		// if p.mem.Vblank_flag {
+		// 	fmt.Printf("$2002 read CAUGHT VBLANK at CPU cycle %d PC=%04X\n",
+		// 		p.console.Cpu.TotalCycles, p.console.Cpu.PC)
+		// }
 
 		var result uint8
 		result |= (openBusVal & 0x1F)

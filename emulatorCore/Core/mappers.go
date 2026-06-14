@@ -1,7 +1,5 @@
 package Core
 
-import "fmt"
-
 type Mapper interface {
 	ReadPRG(addr uint16) uint8
 	WritePRG(addr uint16, val uint8)
@@ -149,7 +147,7 @@ type Mapper1 struct {
 func (m *Mapper1) WritePRG(addr uint16, val uint8) {
 
 	if addr < 0x8000 {
-		fmt.Println("using the prgram")
+
 		if addr >= 0x6000 {
 
 			if m.PrgBank&0x10 == 0 {
@@ -195,7 +193,7 @@ func (m *Mapper1) ReadPRG(addr uint16) uint8 {
 
 	if addr < 0x8000 {
 		if addr >= 0x6000 {
-			fmt.Println("using prgram")
+
 			if m.PrgBank&0x10 == 0 {
 				return m.PRGRAM[addr-0x6000]
 			}
