@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 type Mapper interface {
 	ReadPRG(addr uint16) uint8
 	WritePRG(addr uint16, val uint8)
@@ -37,6 +39,11 @@ func (c *console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			control:       0x0F,
 			shiftRegister: 0x10,
 			isRam:         c.Ppu.mem.CHR_isRam,
+		}
+	case 4:
+		m = &Mapper4{
+			PRGROM: prgData,
+			CHRROM: chrData,
 		}
 	}
 
@@ -287,4 +294,169 @@ func (m *Mapper1) getMirroring() uint8 {
 	mode := m.control & 0x03
 
 	return mode
+}
+
+//Mapper 4
+
+type Mapper4 struct {
+	PRGROM []uint8
+	CHRROM []uint8
+
+	BankSelect uint8
+	BankData   [8]uint8
+	Mirroring  int
+
+	PRGMode uint8
+	CHRMode uint8
+
+	IRQLatch   uint8
+	IRQCounter uint8
+	IRQReload  bool
+	IRQEnabled bool
+	IRQPending bool
+}
+
+func (m *Mapper4) WritePRG(addr uint16, val uint8) {
+	if addr >= 0x8000 && addr <= 0x9FFF {
+		if addr&1 == 0 { //even
+			m.BankSelect = val
+			m.PRGMode = getbit(val, 6)
+			m.CHRMode = getbit(val, 7)
+		} else { // odd
+			slot := m.BankSelect & 0x07
+			m.BankData[slot] = val
+		}
+	}
+
+	if addr >= 0xA000 && addr <= 0xBFFE {
+		if addr&1 == 0 {
+			m.Mirroring = int(val & 1)
+		} else {
+			//intetionally left
+
+			fmt.Println("hitting prg ram protectg")
+		}
+	}
+
+	if addr >= 0xC000 && addr <= 0xDFFE {
+		if addr&1 == 0 { //even
+			m.IRQLatch = val
+		} else {
+			m.IRQCounter = 0
+			m.IRQReload = true
+		}
+	}
+
+	if addr >= 0xE000 && addr <= 0xFFFE {
+		if addr&1 == 0 {
+			m.IRQEnabled = false
+			m.IRQPending = false
+		} else {
+			m.IRQEnabled = true
+		}
+	}
+}
+
+func (m *Mapper4) ReadPRG(addr uint16) uint8 {
+	var bank uint8
+	var offset uint32
+
+	switch {
+	case addr < 0xA000:
+		if m.PRGMode == 0 {
+			bank = m.BankData[6] //r6
+		} else {
+			bank = uint8((len(m.PRGROM) / 0x2000) - 2) //second last
+		}
+
+		offset = uint32(addr - 0x8000)
+	case addr < 0xC000:
+		bank = m.BankData[7] //R7
+		offset = uint32(addr - 0xA000)
+	case addr < 0xE000:
+		if m.PRGMode == 0 {
+			bank = uint8((len(m.PRGROM) / 0x2000) - 2) // secon last
+		} else {
+			bank = m.BankData[6] //r6
+		}
+		offset = uint32(addr - 0xC000)
+	default: // $E000 - $FFFF
+		bank = uint8((len(m.PRGROM) / 0x2000) - 1) //last
+		offset = uint32(addr - 0xE000)
+	}
+
+	return m.PRGROM[uint32(bank)*0x2000+offset]
+
+}
+
+func (m *Mapper4) ReadCHR(addr uint16) uint8 {
+	var bank uint8
+	offset := addr % 0x400
+
+	if addr <= 0x07FF {
+		if m.CHRMode == 0 {
+			bank = m.BankData[0] //R0
+		} else {
+			if addr <= 0x03FF {
+				bank = m.BankData[2] //R2
+			} else {
+				bank = m.BankData[3] //R3
+			}
+		}
+	}
+
+	if addr >= 0x0800 && addr <= 0x0FFF {
+		if m.CHRMode == 0 {
+			bank = m.BankData[1] // R1
+		} else {
+			if addr <= 0x0BFF {
+				bank = m.BankData[4] //R4
+			} else {
+				bank = m.BankData[5] //R5
+			}
+		}
+	}
+
+	if addr >= 0x1000 && addr <= 0x17FF {
+		if m.CHRMode == 0 {
+			if addr <= 0x13FF {
+				bank = m.BankData[2] //R2
+			} else {
+				bank = m.BankData[3] //R3
+			}
+		} else {
+			bank = m.BankData[0] //R0
+		}
+	}
+
+	if addr >= 0x1800 && addr <= 0x1FFF {
+		if m.CHRMode == 0 {
+			if addr <= 0x1BFF {
+				bank = m.BankData[4] //R4
+			} else {
+				bank = m.BankData[5] // R5
+			}
+		} else {
+			bank = m.BankData[1]
+		}
+	}
+
+	return m.CHRROM[uint32(bank)*0x400+uint32(offset)]
+
+}
+
+func (m *Mapper4) WriteCHR(addr uint16, val uint8) {
+
+}
+
+func (m *Mapper4) extractCHR() []uint8 {
+	return m.CHRROM
+}
+
+func (m *Mapper4) loadCHR(data []uint8) {
+	m.CHRROM = data
+}
+
+func (m *Mapper4) getMirroring() uint8 {
+	return uint8(m.Mirroring)
 }

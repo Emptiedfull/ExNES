@@ -224,8 +224,8 @@ func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	c := Core.InitializeConsole()
 	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper2/contra.nes")
-	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/NROM/mario.nes")
-	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper1/metroid.nes")
+	c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/NROM/mario.nes")
+	//c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper1/ff.nes")
 	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/test_roms/ppu/vbl.nes")
 	c.Cpu.Reset()
 
