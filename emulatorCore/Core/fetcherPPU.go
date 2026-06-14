@@ -147,14 +147,14 @@ func (p *ppu) step() {
 		}
 	}
 
-	if p.Scanline == 241 && p.Dot == 1 {
+	if p.Scanline == 241 && p.Dot == 0 {
 		p.mem.Vblank_flag = true
 		if p.mem.register.NmiEnable {
 			p.console.Cpu.nmiPending = true
 		}
 	}
 
-	if prefetch && p.Dot == 1 {
+	if prefetch && p.Dot == 0 {
 		p.mem.Vblank_flag = false
 		p.mem.register.Sprite0Hit = false
 		p.mem.register.sprietOverflow = false

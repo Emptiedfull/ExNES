@@ -112,21 +112,30 @@ func (c *cpu) tick() {
 		return
 	}
 
-	if c.fetchNew {
+	// if c.fetchNew {
+	// 	c.currentOp = c.fetchone()
+
+	// 	c.fetchNew = false
+	// 	// c.TotalCycles++
+	// 	c.temp = temp{}
+	// 	return
+
+	// }
+
+	if c.currentstep == 0 {
+		c.temp = temp{}
 		c.currentOp = c.fetchone()
-
-		c.fetchNew = false
-		c.TotalCycles++
-
+		c.currentstep = 1
+		return
 	}
 
 	opcode := FetchTable[c.currentOp]
-	finished := opcode.Execute(c, c.currentstep)
+	finished := opcode.Execute(c, c.currentstep-1)
 
 	if finished {
 		c.currentstep = 0
 		c.fetchNew = true
-		c.temp = temp{}
+
 	} else {
 		c.currentstep++
 	}
