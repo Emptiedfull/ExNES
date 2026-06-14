@@ -1,7 +1,23 @@
+//go:build js && wasm
+
 package main
 
-import "fmt"
+import (
+	"exnes/Core"
+	"fmt"
+	"syscall/js"
+)
+
+var emu *Core.Console
 
 func main() {
-	fmt.Println("wasm package")
+	emu = Core.InitializeConsole()
+
+	js.Global().Set("startEmulator", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		fmt.Println(this, args)
+		emu = Core.InitializeConsole()
+		return nil
+	}))
+
+	select {}
 }
