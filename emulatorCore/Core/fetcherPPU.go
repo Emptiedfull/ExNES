@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 type TempPPU struct {
 	nameTableByte uint8
 	attrTableByte uint8
@@ -31,6 +33,7 @@ func (p *ppu) cycleTick() {
 }
 
 func (p *ppu) step() {
+	p.cycleTick()
 
 	rendering := p.mem.register.ShowBG || p.mem.register.ShowSprites
 	prefetch := p.Scanline == 261
@@ -147,20 +150,21 @@ func (p *ppu) step() {
 		}
 	}
 
-	if p.Scanline == 241 && p.Dot == 0 {
+	if p.Scanline == 241 && p.Dot == 1 {
 		p.mem.Vblank_flag = true
 		if p.mem.register.NmiEnable {
 			p.console.Cpu.nmiPending = true
+			fmt.Println("requesting nmi", p.console.Cpu.TotalCycles)
 		}
 	}
 
-	if prefetch && p.Dot == 0 {
+	if prefetch && p.Dot == 1 {
 		p.mem.Vblank_flag = false
 		p.mem.register.Sprite0Hit = false
 		p.mem.register.sprietOverflow = false
 	}
 
-	p.cycleTick()
+	// p.cycleTick()
 }
 
 func (p *ppu) evalSprites() {

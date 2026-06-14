@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 type flags = uint8
 
 const (
@@ -92,6 +94,9 @@ func (c *cpu) executeNmiCycle() int {
 }
 
 func (c *cpu) tick() {
+	if c.TotalCycles%100000 == 0 {
+		fmt.Printf("PC=%04X cycle=%d\n", c.PC, c.TotalCycles)
+	}
 
 	if c.isJamming {
 		c.mem.Read(c.PC)
@@ -103,6 +108,7 @@ func (c *cpu) tick() {
 	if c.currentstep == 0 && c.nmiPending {
 		c.executingNmi = true
 		c.nmiPending = false
+		fmt.Println("nmi started", c.console.Ppu.Dot, c.console.Ppu.Scanline)
 		c.nmiS++
 	}
 

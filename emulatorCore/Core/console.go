@@ -186,15 +186,16 @@ func (c *console) RunDisplayUpdates() {
 }
 
 func (c *console) tick() {
+
+	for range 3 {
+		c.Ppu.step()
+	}
+
 	if c.Cpu.Stall > 0 {
 		c.Cpu.Stall--
 		c.Cpu.TotalCycles++
 	} else {
 		c.Cpu.tick()
-	}
-
-	for range 3 {
-		c.Ppu.step()
 	}
 
 }

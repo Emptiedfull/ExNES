@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 //for any readers, please stop here I barely understand what ive done
 
 type ppu struct {
@@ -161,6 +163,7 @@ func (p *ppu) GetScreenBuffer() []uint8 {
 }
 
 func (p *ppu) Write(addr uint16, val uint8) {
+
 	addr &= 0x3FFF
 
 	switch {
@@ -184,6 +187,11 @@ func (p *ppu) Write(addr uint16, val uint8) {
 func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 	switch reg {
 	case 2:
+
+		if p.mem.Vblank_flag {
+			fmt.Printf("$2002 read CAUGHT VBLANK at CPU cycle %d PC=%04X\n",
+				p.console.Cpu.TotalCycles, p.console.Cpu.PC)
+		}
 
 		var result uint8
 		result |= (openBusVal & 0x1F)
@@ -238,7 +246,7 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 func (p *ppu) WriteReg(reg uint16, val uint8) {
 	switch reg {
 	case 0: //PPUCTRL
-
+		// fmt.Printf("PPUCTRL write: %02X at CPU cycle %d\n", val, p.console.Cpu.TotalCycles)
 		p.mem.register.NmiEnable = getbitBool(val, 7)
 		p.mem.register.SpriteSize = getbitBool(val, 5)
 		p.mem.register.BgPattern = getbitBool(val, 4)
