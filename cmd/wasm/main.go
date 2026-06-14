@@ -12,7 +12,7 @@ var emu *Core.Console
 
 func main() {
 	emu = Core.InitializeConsole()
-
+	fmt.Println("core initialized")
 	js.Global().Set("startEmulator", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		fmt.Println(this, args)
 		emu = Core.InitializeConsole()
