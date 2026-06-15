@@ -1,30 +1,187 @@
+:root{
+    --bottom :  #8a8878;
+    --top : rgb(251, 230, 230);
+}
+
+
 .nes{
     display: flex;
-    background-color: red;
+    
     width: 40%;
-    height: 180px;
+    height: 160px;
     position: relative;
     flex-direction: column;
 }
 
 .rom{
     position: absolute;
-    height: 150px;
-    width: 120px;
-    background-color: aqua;
-    top: -15%;
+    height: 133px;
+    width: 22%;
+    background-color: transparent;
+    top: -20%;
     left: 50%;
     transform: translate(-50%,-50%);
 }
 
-.top-cap{
-    width: 100%;
-    height: 50%;
-    background-color: green;
+.strip{
+    position:absolute;
+    height: 100%;
+    width: 22%;
+    background-color: black;
+    left: 68%;
+    z-index: 1;
+    display: flex;
+    
 }
 
-.bottom-cap{
+.controllers{
+    background-color: #ff0000;
+    display: flex;
+    flex-direction: row;
     width: 100%;
     height: 50%;
-    background-color: black;
+    align-self: flex-end;
+}
+
+.top-cap{
+    width: 100%;
+    flex: 1;
+    position: relative;
+    background-color: var(--top);
+    clip-path: polygon(
+    0%   0%,  
+    100% 0%,  
+    100% 100%,  
+    0%   100%   
+  );
+}
+
+.cartridge{
+    position: absolute;
+    
+    right: 20%;
+    z-index: 2;
+    width: 70%;
+    height: 65%;
+
+    border: 4px solid #000;    /* Thick, sharp border */
+  
+  /* Creates the "depth" effect */
+  box-shadow: 
+    inset 4px 4px 0px rgba(255, 255, 255, 0.3), /* Top-left highlight */
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3);    /* Bottom-right shadow */
+  
+  /* Remove blur for pixel perfection */
+  image-rendering: pixelated;
+  padding-left: 0.5rem;
+  font-weight: bold;
+  font-size: 20px;
+
+}
+
+.mid-line{
+    height: 3%;
+    width: 100%;
+    background-color: rgb(96, 96, 93);
+    z-index: 2;
+}
+.bottom-cap{
+    width: 100%;
+    height: 53%;
+    background-color: var(--bottom);
+
+    display: flex;
+    flex-direction: row;
+
+    clip-path: polygon(
+    0px   0px,      
+    100%  0px,      
+    100%  calc(100% - 60px), 
+    calc(100% - 40px) 100%,  
+    40px   100%,             
+    0px   calc(100% - 60px)  
+  );
+}
+
+.bottom-1{
+    width: 70%;
+    display: flex;
+    flex-direction: row;
+  
+
+    padding-left: 60px;
+    z-index: 2;
+    gap: 1rem;
+   
+    
+    padding-bottom: 0.5rem;
+}
+
+.buttons{
+     display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 1.5rem;
+    width: 50%;
+    height: 100%;
+
+   
+
+
+}
+
+.button {
+     font-family: 'Pixelify Sans', monospace;
+     font-weight: bold;
+    height: 46%;
+    width: 40%;
+    background-color: bisque;
+    
+    border: 3px solid #000;
+    
+    box-shadow: 
+        inset 4px 4px 0px rgba(255, 255, 255, 0.4),
+        inset -4px -4px 0px rgba(0, 0, 0, 0.3);
+    
+    image-rendering: pixelated;
+    cursor: pointer;
+}
+
+
+.button:active {
+    box-shadow: 
+        inset 4px 4px 0px rgba(0, 0, 0, 0.3),
+        inset -4px -4px 0px rgba(255, 255, 255, 0.4);
+}
+
+
+.led-grid {
+    height: 100%;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem; 
+    padding: 8px;
+    width: fit-content;
+}
+
+
+.pixel-led {
+    width: 24px;
+    height: 24px;
+    background-color: #ff0000; 
+    border: 2px solid #000;
+    
+    
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.5), 
+        0px 0px 4px 1px rgba(255, 0, 0, 0.6);      
+    
+    image-rendering: pixelated;
+}
+
+
+.pixel-led.off {
+    background-color: #330000;
+    box-shadow: none;
 }

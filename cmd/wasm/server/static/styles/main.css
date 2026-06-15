@@ -6,6 +6,11 @@
 
 
 body{
+
+  font-family: 'Pixelify Sans', monospace;
+  -webkit-font-smoothing:none;
+  font-smooth: never;
+
     background-color:rgb(18, 15, 43);
     padding: 4%;
    
@@ -66,7 +71,7 @@ body{
     padding: 15px;
     display: flex;
     flex-direction: row;
-    gap: 1.2rem;
+    gap: 1.5rem;
   
     width: fit-content;
 }

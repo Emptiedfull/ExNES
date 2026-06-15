@@ -5,59 +5,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wasm build</title>
-    <link rel="stylesheet" href="static/styles/main.css?v=11">
-    <link rel="stylesheet" href="static/styles/nes.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="static/styles/main.css?v=101">
+    <link rel="stylesheet" href="static/styles/nes.css?v=2">
     <script src="static/wasm_exec.js?v=20"></script>
 </head>
 
 <body>
     <div class="main">
-    <div class="tv">
-        <div class="tv-body pixel-corners">
-            <div class="tv-corners--wrapper">
-                <canvas class="tv-corners tv-corners" id="screen" width="256" height="240"
-                    style="height: 432px; width: 460px;image-rendering: pixelated; ;"></canvas>
-            </div>
-            <div class="control-bar control-corners">
-                <div class="knob-wrap">
-                    <canvas id="sound" width="17" height="17"
-                        style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
-                    <label>Sound</label>
+        <div class="tv">
+            <div class="tv-body pixel-corners">
+                <div class="tv-corners--wrapper">
+                    <canvas class="tv-corners tv-corners" id="screen" width="256" height="240"
+                        style="height: 432px; width: 460px;image-rendering: pixelated; ;"></canvas>
                 </div>
-                <div class="knob-wrap">
-                    <canvas id="brightness" width="17" height="17"
-                        style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
-                    <label>Bright</label>
-                </div>
+                <div class="control-bar control-corners">
+                    <div class="knob-wrap">
+                        <canvas id="sound" width="17" height="17"
+                            style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
+                        <label>Sound</label>
+                    </div>
+                    <div class="knob-wrap">
+                        <canvas id="brightness" width="17" height="17"
+                            style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
+                        <label>Bright</label>
+                    </div>
 
-                <div class="grill">
-                </div>
+                    <div class="grill">
+                    </div>
 
+                </div>
             </div>
+            <div class="legRow">
+                <div class="leg">
+
+                </div>
+                <div class="leg">
+
+                </div>
+            </div>
+
+
         </div>
-        <div class="legRow">
-            <div class="leg">
 
-            </div>
-            <div class="leg">
-
-            </div>
-        </div>
-
-
-    </div>
-
-    <div class="nes">
+        <div class="nes">
             <div class="top-cap">
+                <div class="cartridge">
+                    NONTENDO 2026
+                </div>
+
+
+            </div>
+            <div class="mid-line">
 
             </div>
             <div class="bottom-cap">
-
+                <div class="bottom-1">
+                    <div class="buttons">
+                        <button class="button startBtn">
+                            START
+                        </button>
+                        <button class="button resetBtn">
+                            RESET
+                        </button>
+                    </div>
+                    <div class="led-grid">
+                        
+                        <div class="pixel-led"></div>
+                        <div class="pixel-led off"></div>
+                        
+                    </div>
+                </div>
+                
             </div>
             <div class="rom">
 
             </div>
-    </div>
+            <div class="strip">
+                <div class="controllers">
+
+                </div>
+            </div>
+        </div>
     </div>
 
 
