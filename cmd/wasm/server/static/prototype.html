@@ -5,24 +5,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wasm build</title>
-    <link rel="stylesheet" href="static/main.css?v=13">
-    
+    <link rel="stylesheet" href="static/styles/main.css?v=11">
+    <link rel="stylesheet" href="static/styles/nes.css">
+    <script src="static/wasm_exec.js?v=20"></script>
 </head>
 
 <body>
-    <div class="tv-body pixel-corners">
-        <div class="tv-corners--wrapper">
-            <canvas class="tv-corners tv-corners" id="screen" width="256" height="240" style="height: 360px; width: 384px;image-rendering: pixelated; ;" ></canvas>
+    <div class="main">
+    <div class="tv">
+        <div class="tv-body pixel-corners">
+            <div class="tv-corners--wrapper">
+                <canvas class="tv-corners tv-corners" id="screen" width="256" height="240"
+                    style="height: 432px; width: 460px;image-rendering: pixelated; ;"></canvas>
+            </div>
+            <div class="control-bar control-corners">
+                <div class="knob-wrap">
+                    <canvas id="sound" width="17" height="17"
+                        style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
+                    <label>Sound</label>
+                </div>
+                <div class="knob-wrap">
+                    <canvas id="brightness" width="17" height="17"
+                        style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
+                    <label>Bright</label>
+                </div>
+
+                <div class="grill">
+                </div>
+
+            </div>
         </div>
-        
-        <div class="control-bar control-corners">
-            <input type="radio">
-            <input type="radio">
-        
+        <div class="legRow">
+            <div class="leg">
+
+            </div>
+            <div class="leg">
+
+            </div>
         </div>
+
+
+    </div>
+
+    <div class="nes">
+            <div class="top-cap">
+
+            </div>
+            <div class="bottom-cap">
+
+            </div>
+            <div class="rom">
+
+            </div>
+    </div>
+    </div>
+
+
+
+    <button id="start">Initialize</button>
+    <button id="frame">Start Emulator</button>
+    <button id="rom">loadRom</button>
     </div>
 
 </body>
+
+<script src="static/knob.js"></script>
+<script src="static/wasm.js?v=10"></script>
 
 
 </html>

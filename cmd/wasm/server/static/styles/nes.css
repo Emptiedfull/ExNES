@@ -1,0 +1,30 @@
+.nes{
+    display: flex;
+    background-color: red;
+    width: 40%;
+    height: 180px;
+    position: relative;
+    flex-direction: column;
+}
+
+.rom{
+    position: absolute;
+    height: 150px;
+    width: 120px;
+    background-color: aqua;
+    top: -15%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+}
+
+.top-cap{
+    width: 100%;
+    height: 50%;
+    background-color: green;
+}
+
+.bottom-cap{
+    width: 100%;
+    height: 50%;
+    background-color: black;
+}

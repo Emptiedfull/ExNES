@@ -1,6 +1,14 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
 body{
     background-color:rgb(18, 15, 43);
     padding: 4%;
+   
     background-image: repeating-linear-gradient(
     0deg,
     transparent,
@@ -11,7 +19,15 @@ body{
 );
 }
 
+.main{
+   display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: end;
+}
+
 .tv-body{
+  z-index: 2;
       background: #c8b89a;
     box-shadow:
     
@@ -43,12 +59,15 @@ body{
     -8px 8px 0 #a07b32,
     8px -8px 0 #160e06,
     -8px -8px 0 #a59a83;
+
+    
+
     image-rendering: pixelated;
-    padding: 2%;
+    padding: 15px;
     display: flex;
     flex-direction: row;
-    gap: 2rem;
-
+    gap: 1.2rem;
+  
     width: fit-content;
 }
 
@@ -57,6 +76,14 @@ body{
     flex: 1;
     
 }
+.knob-wrap {
+    image-rendering: pixelated;
+     image-rendering: crisp-edges; 
+    display: flex;
+   
+    flex-direction: column;
+    align-items: center;
+  }
 
 .control-bar{
     flex: 1;
@@ -65,7 +92,54 @@ body{
     border-style: solid;
     border-radius: 5px;
     border-width: 5px;
-    width: 100px;
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+     gap: 0.5rem;
+    width: 110px;
+}
+
+.grill{
+  background-color: #2a2010;
+  flex: 1;
+      background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 10px,
+    rgb(1,1,1,0.2) 12px,
+  
+ 
+    rgb(1, 1, 4) 14px)
+}
+
+.tv {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+}
+
+.legRow{
+  margin-top: -0.5rem;
+  
+  height: 2rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 80%;
+  align-self: center;
+  
+}
+
+.leg {
+  height: 100%;
+  width: 18%;
+  background-color: #8a8070;
+  image-rendering: pixelated;
+  box-shadow:
+    inset 3px 0px 0px #1a150d,   
+    inset -2px 0px 0px #3a3428,  
+    inset 0px -3px 0px #2a2418;  
+ 
 }
 .pixel-corners {
   clip-path: polygon(

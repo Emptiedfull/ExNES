@@ -43,11 +43,6 @@ const setUpButtons = async ()=>{
     rombtn.addEventListener("click",async ()=>{
         await loadRom()
     })
-
-    getbtn = document.getElementById("get")
-    getbtn.addEventListener("click",async()=>{
-        console.log(getFrame())
-    })
 }
 
 const loadRom = async()=>{
