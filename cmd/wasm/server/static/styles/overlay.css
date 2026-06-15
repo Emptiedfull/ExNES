@@ -1,0 +1,147 @@
+.rom-overlay{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.735);
+    z-index: 1000;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.romItem{
+   
+    height: 40%;
+    width: 240px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+   
+}
+
+.active{
+    scale: 1.4;
+    
+}
+
+.rom-filter{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+      background-image: 
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+        
+        repeating-linear-gradient(
+            0deg,
+            rgba(0,0,0,0.1) 0px,
+            rgba(0,0,0,0.1) 1px,
+            transparent 1px,
+            transparent 8px
+        );
+    background-color: #2a2a2a;
+    opacity: 0.08;
+}
+
+
+.romImg{
+    position: absolute;
+    width: 52%;
+    height: 70%;
+    background-color: aqua;
+    right:10%;
+}
+
+
+
+.romImg img{
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+.rom-top{
+    height: 80%;
+    width: 100%;
+    background-color: rgb(29, 35, 40);
+   
+    
+}
+
+.rom-top::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80%;
+    
+   
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    
+   
+    opacity: 0.15; 
+    
+    
+    pointer-events: none;
+}
+
+.rom-bottom{
+    width: 80%;
+    background-color: rgb(29, 35, 40);
+    flex: 1;
+
+}
+
+.rom-bottom::before {
+    content: "";
+    position: absolute;
+    top: 80%;
+    left: 10%;
+    width: 80%;
+    height: 20%;
+    
+    
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.15; 
+    
+    
+    pointer-events: none;
+}
+.rom-grain{
+    position: absolute;
+    height: 100%;
+    width: 22%;
+    background-color: grey;
+    background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 6px,
+    rgba(0,0,0,0.1) 7px,
+    rgba(0,0,0,0.4) 9px
+  );
+    left:15%;
+}
+
+.rom-grain-offset{
+    position: absolute;
+    width: 22%;
+    left: 15%;
+    height: 24%;
+    background-color: #121111;
+    opacity: 0.35;
+}
+
+.rom-arrow {
+  width: 20px; 
+  height: 20px; 
+  top: 75%;
+  border-left: 8px solid transparent; 
+  border-right: 8px solid transparent;
+  border-top: 15px solid #121111;       
+  
+    
+  position:absolute
+}
