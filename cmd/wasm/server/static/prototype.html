@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wasm build</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="static/styles/main.css?v=1">
     <link rel="stylesheet" href="static/styles/nes.css?v=200">
     <link rel="stylesheet" href="static/styles/table.css?v=12">
-    <link rel="stylesheet" href="static/styles/overlay.css">
+    <link rel="stylesheet" href="static/styles/overlay.css?v=10">
     <script src="static/wasm_exec.js?v=20"></script>
 </head>
 
@@ -79,15 +79,15 @@
             <div class="strip">
                 <div class="controllers">
                     <div class="port">
-                         <span class="controllerLabel">1</span>
+                        <span class="controllerLabel">1</span>
                         <div class="controller controller-corners">
-                           
+
                         </div>
                     </div>
                     <div class="port">
-                         <span class="controllerLabel">2</span>
+                        <span class="controllerLabel">2</span>
                         <div class="controller controller-corners">
-                           
+
                         </div>
                     </div>
 
@@ -100,78 +100,172 @@
         <div class="table-top"></div>
         <div class="table-legs">
             <div class="table-leg"></div>
-             <div class="table-leg"></div>
+            <div class="table-leg"></div>
         </div>
 
     </div>
 
 
-<!-- 
+    <!-- 
     <button id="start">Initialize</button>
     <button id="frame">Start Emulator</button>
     <button id="rom">loadRom</button> -->
     </div>
 
     <div class="rom-overlay">
-        <div class="romItem ">
-            <div class="romImg">
-                <img src="static/rom_images/image.png">
-            </div>
-            <div class="rom-top">
+        <div class="nav-panel">
+            <div class="nav-btn back" onclick="move(-1)">
 
             </div>
-            <div class="rom-bottom">
+            <div class="nav-btn next" onclick="move(1)">
 
             </div>
-            <div class="rom-grain">
-            </div>
-            <div class="rom-grain-offset">
-
-            </div>
-            <div class="rom-arrow">
-
-            </div>
-            
         </div>
-        <div class="romItem active">
-            <div class="romImg">
-                <img src="static/rom_images/image.png">
+
+        <div class="romCarousel">
+
+            <div class="romItem ">
+                <div class="romImg">
+                    <img src="static/rom_images/image.png">
+                </div>
+                <div class="rom-top">
+
+                </div>
+                <div class="rom-bottom">
+
+                </div>
+                <div class="rom-grain">
+                </div>
+                <div class="rom-grain-offset">
+
+                </div>
+                <div class="rom-arrow">
+
+                </div>
             </div>
-            <div class="rom-top">
+            <div class="romItem active">
+                   <span>Mario</span>
+                <div class="romImg">
+                    <img src="static/rom_images/image.png">
+                </div>
+                <div class="rom-top">
+
+                </div>
+                <div class="rom-bottom">
+
+                </div>
+                <div class="rom-grain">
+                </div>
+                <div class="rom-grain-offset">
+
+                </div>
+                <div class="rom-arrow">
+
+                </div>
 
             </div>
-            <div class="rom-bottom">
+            <div class="romItem">
+                <div class="romImg">
+                    <img src="static/rom_images/image.png">
+                </div>
+                <div class="rom-top">
+
+                </div>
+                <div class="rom-bottom">
+
+                </div>
+                <div class="rom-grain">
+                </div>
+                <div class="rom-grain-offset">
+
+                </div>
+                <div class="rom-arrow">
+
+                </div>
 
             </div>
-            <div class="rom-grain">
-            </div>
-            <div class="rom-grain-offset">
+
+            <div class="romItem">
+                <div class="romImg">
+                    <img src="static/rom_images/image.png">
+                </div>
+                <div class="rom-top">
+
+                </div>
+                <div class="rom-bottom">
+
+                </div>
+                <div class="rom-grain">
+                </div>
+                <div class="rom-grain-offset">
+
+                </div>
+                <div class="rom-arrow">
+
+                </div>
 
             </div>
-            <div class="rom-arrow">
+            <div class="romItem">
+                <div class="romImg">
+                    <img src="static/rom_images/image.png">
+                </div>
+                <div class="rom-top">
+
+                </div>
+                <div class="rom-bottom">
+
+                </div>
+                <div class="rom-grain">
+                </div>
+                <div class="rom-grain-offset">
+
+                </div>
+                <div class="rom-arrow">
+
+                </div>
 
             </div>
-            
-        </div>
-        <div class="romItem">
-            <div class="romImg">
-                <img src="static/rom_images/image.png">
-            </div>
-            <div class="rom-top">
+            <div class="romItem">
+                <div class="romImg">
+                    <img src="static/rom_images/image.png">
+                </div>
+                <div class="rom-top">
+
+                </div>
+                <div class="rom-bottom">
+
+                </div>
+                <div class="rom-grain">
+                </div>
+                <div class="rom-grain-offset">
+
+                </div>
+                <div class="rom-arrow">
+
+                </div>
 
             </div>
-            <div class="rom-bottom">
+            <div class="romItem">
+                <div class="romImg">
+                    <img src="static/rom_images/image.png">
+                </div>
+                <div class="rom-top">
+
+                </div>
+                <div class="rom-bottom">
+
+                </div>
+                <div class="rom-grain">
+                </div>
+                <div class="rom-grain-offset">
+
+                </div>
+                <div class="rom-arrow">
+
+                </div>
 
             </div>
-            <div class="rom-grain">
-            </div>
-            <div class="rom-grain-offset">
 
-            </div>
-            <div class="rom-arrow">
-
-            </div>
-            
         </div>
 
     </div>
@@ -180,6 +274,7 @@
 
 <script src="static/knob.js"></script>
 <script src="static/wasm.js?v=101"></script>
+<script src="static/scripts/carousel.js"></script>
 
 
 </html>
