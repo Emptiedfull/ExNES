@@ -29,20 +29,22 @@ function renderLoop() {
 
 const setUpButtons = async ()=>{
     btn = document.getElementById("start")
-    btn.addEventListener("click",()=>{
+    btn.addEventListener("click",async()=>{
 
-        console.log(startEmulator())
-    })
-
-    framebtn = document.getElementById("frame")
-    framebtn.addEventListener("click",()=>{
+        startEmulator()
+        await loadRom()
         renderLoop()
     })
 
-    rombtn = document.getElementById("rom")
-    rombtn.addEventListener("click",async ()=>{
-        await loadRom()
-    })
+    // framebtn = document.getElementById("frame")
+    // framebtn.addEventListener("click",()=>{
+    //     renderLoop()
+    // })
+
+    // rombtn = document.getElementById("rom")
+    // rombtn.addEventListener("click",async ()=>{
+    //     await loadRom()
+    // })
 }
 
 const loadRom = async()=>{

@@ -1,16 +1,28 @@
 :root{
     --bottom :  #8a8878;
     --top : rgb(251, 230, 230);
+    --rim :  #2a2818;
+    --port: #4a4838;
+    --holes: #1a1808;
+    --goodred: #c83018;
 }
+
+* { font-family: 'Press Start 2P', monospace; font-size: 6px; }
 
 
 .nes{
+   
     display: flex;
     
     width: 40%;
     height: 160px;
     position: relative;
     flex-direction: column;
+
+     filter:
+    drop-shadow(10px 10px 0 #84794e)
+    drop-shadow(-3px -3px 0 #0e0c04)
+    drop-shadow(0 0 0 2px #0e0c04);
 }
 
 .rom{
@@ -19,8 +31,15 @@
     width: 22%;
     background-color: transparent;
     top: -20%;
-    left: 50%;
+    left: 20%;
     transform: translate(-50%,-50%);
+
+}
+
+.rom img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .strip{
@@ -35,15 +54,123 @@
 }
 
 .controllers{
-    background-color: #ff0000;
     display: flex;
     flex-direction: row;
     width: 100%;
     height: 50%;
     align-self: flex-end;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.port{
+    width: 30%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+     align-items: center;
+  justify-content: center;
+}
+
+.controller:hover{
+    border-color: white;
+    border-radius: 2px;
+    border-width: 2px;
+}
+
+.controller{
+    width: 100%;
+    height: 65%;
+    position: relative;
+    background-color: var(--port);
+   background-image: 
+
+    radial-gradient(#000 20%, transparent 20%), 
+    radial-gradient(var(--holes) 25%, transparent 15%);
+    
+  background-size: 15px 15px;
+  background-position: -2px -2px, -2px -2px;
+ 
+}
+
+.controllerLabel{
+    font-size: 8px;
+    color: red;
+    width: 100%;
+    text-align: center;
+}
+
+
+
+.controller-corners,
+.controller-corners--wrapper {
+  clip-path: polygon(0px calc(100% - 5px),
+    5px calc(100% - 5px),
+    5px 100%,
+    calc(100% - 5px) 100%,
+    calc(100% - 5px) calc(100% - 5px),
+    100% calc(100% - 5px),
+    100% 5px,
+    calc(100% - 5px) 5px,
+    calc(100% - 5px) 0px,
+    5px 0px,
+    5px 5px,
+    0px 5px);
+  position: relative;
+}
+.controller-corners {
+  border: 5px solid transparent;
+}
+.controller-corners--wrapper {
+  width: fit-content;
+  height: fit-content;
+}
+.controller-corners--wrapper .pixel-corners {
+  display: block;
+  clip-path: polygon(5px 5px,
+    calc(100% - 5px) 5px,
+    calc(100% - 5px) calc(100% - 5px),
+    5px calc(100% - 5px));
+}
+.controller-corners::after,
+.controller-corners--wrapper::after {
+  content: "";
+  position: absolute;
+  clip-path: polygon(0px calc(100% - 5px),
+    5px calc(100% - 5px),
+    5px 100%,
+    calc(100% - 5px) 100%,
+    calc(100% - 5px) calc(100% - 5px),
+    100% calc(100% - 5px),
+    100% 5px,
+    calc(100% - 5px) 5px,
+    calc(100% - 5px) 0px,
+    5px 0px,
+    5px 5px,
+    0px 5px,
+    0px 50%,
+    5px 50%,
+    5px 5px,
+    calc(100% - 5px) 5px,
+    calc(100% - 5px) calc(100% - 5px),
+    5px calc(100% - 5px),
+    5px 50%,
+    0px 50%);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bottom);
+  display: block;
+  pointer-events: none;
+}
+.controller-corners::after {
+  margin: -5px;
 }
 
 .top-cap{
+
+    
     width: 100%;
     flex: 1;
     position: relative;
@@ -56,6 +183,20 @@
   );
 }
 
+.top-cap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.15) 4px,
+    rgba(0,0,0,0.15) 5px
+  );
+  pointer-events: none;
+}
+
 .cartridge{
     position: absolute;
     
@@ -64,30 +205,39 @@
     width: 70%;
     height: 65%;
 
-    border: 4px solid #000;    /* Thick, sharp border */
+    border: 4px solid #000;    
+    color: var(--goodred);
   
-  /* Creates the "depth" effect */
+  
   box-shadow: 
-    inset 4px 4px 0px rgba(255, 255, 255, 0.3), /* Top-left highlight */
-    inset -4px -4px 0px rgba(0, 0, 0, 0.3);    /* Bottom-right shadow */
+    inset 4px 4px 0px rgba(255, 255, 255, 0.3), 
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3);    
   
-  /* Remove blur for pixel perfection */
+  
   image-rendering: pixelated;
   padding-left: 0.5rem;
   font-weight: bold;
-  font-size: 20px;
+  font-size: 12px;
+  padding: 4px;
 
+  cursor: pointer;
+
+}
+
+.cartridge:hover{
+    border-color: rgb(231, 231, 77);
+    border-width: 5px;
 }
 
 .mid-line{
     height: 3%;
     width: 100%;
-    background-color: rgb(96, 96, 93);
+    background-color: var(--rim);
     z-index: 2;
 }
 .bottom-cap{
     width: 100%;
-    height: 53%;
+    height: 50%;
     background-color: var(--bottom);
 
     display: flex;
@@ -130,11 +280,22 @@
 
 }
 
+.button:hover {
+   
+   border-color: rgb(155, 155, 67);
+        
+  
+    cursor: pointer;
+}
+
+.button { padding: calc(4px*2) calc(4px*3); }
+
 .button {
-     font-family: 'Pixelify Sans', monospace;
+     font-family: 'Press Start 2P', monospace;
      font-weight: bold;
     height: 46%;
     width: 40%;
+    font-size: 7px;
     background-color: bisque;
     
     border: 3px solid #000;
@@ -146,6 +307,7 @@
     image-rendering: pixelated;
     cursor: pointer;
 }
+
 
 
 .button:active {
@@ -160,15 +322,15 @@
     align-items: center;
     display: flex;
     flex-direction: row;
-    gap: 1rem; 
+    gap: 2rem; 
     padding: 8px;
     width: fit-content;
 }
 
 
 .pixel-led {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     background-color: #ff0000; 
     border: 2px solid #000;
     
@@ -185,3 +347,4 @@
     background-color: #330000;
     box-shadow: none;
 }
+
