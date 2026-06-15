@@ -9,7 +9,4 @@ Base = ""
 
 @app.get("/")
 def root():
-    return FileResponse("./static/index.html")
-
-
-
+    return FileResponse("./static/prototype.html")
