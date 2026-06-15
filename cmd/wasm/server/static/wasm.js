@@ -1,7 +1,7 @@
 const go = new Go()
 var loaded = false
 
-WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=11"),go.importObject).then((result)=>{
+WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=505"),go.importObject).then((result)=>{
     go.run(result.instance)
     loaded = true
 })
@@ -45,7 +45,7 @@ const setUpButtons = async ()=>{
     // rombtn.addEventListener("click",async ()=>{
     //     await loadRom()
     // })
-    
+
 }
 
 const loadRom = async()=>{

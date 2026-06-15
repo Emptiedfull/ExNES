@@ -15,7 +15,7 @@ func main() {
 
 	stallChan := make(chan bool)
 
-	fmt.Println("core initialized 51")
+	fmt.Println("core initialized 1")
 	js.Global().Set("startEmulator", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		emu = Core.InitializeConsole()
 		fmt.Println("console initialized")
@@ -24,6 +24,14 @@ func main() {
 		js.Global().Set("frameBuffer", jsScreen)
 
 		return "x"
+	}))
+
+	js.Global().Set("update", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+
+		emu.Player1.UpdateBtnBool(args[0].Int(), args[1].Bool())
+		emu.Player2.UpdateBtnBool(args[0].Int(), args[1].Bool())
+
+		return nil
 	}))
 
 	js.Global().Set("initRom", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -37,6 +45,7 @@ func main() {
 		err := emu.InitRom(reader)
 		if err != nil {
 			fmt.Println("error:", err)
+			return nil
 		}
 
 		emu.Cpu.Reset()
@@ -45,13 +54,10 @@ func main() {
 		return nil
 	}))
 
-	var framesRun int
-
 	loop := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 
 		emu.RunFrame()
 		js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
-		framesRun++
 
 		return nil
 	})
@@ -76,18 +82,4 @@ func main() {
 	// })
 
 	<-stallChan
-}
-
-func initCanvas() {
-	canvas := js.Global().Get("document").Call("getElementById", "screen")
-	ctx := canvas.Call("getContext", "2d")
-
-	imageData := ctx.Call("createImageData", 256, 240)
-	jsScreen = imageData.Get("Data")
-}
-
-func updateDisplay(this js.Value, args []js.Value) interface{} {
-	fmt.Println("somethign bad happened")
-
-	return nil
 }
