@@ -1,5 +1,5 @@
 const go = new Go()
-WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=9990"),go.importObject).then((result)=>{
+WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=101"),go.importObject).then((result)=>{
     go.run(result.instance)
 })
 
@@ -9,15 +9,13 @@ const imageData = ctx.createImageData(256,240)
 
 
 window.addEventListener("DOMContentLoaded",async ()=>{
-    console.log("loading")
     await setUpButtons()
-
-    
     
 })
 
 function renderLoop() {
     nesFrame()
+
     
     imageData.data.set(frameBuffer)
     ctx.putImageData(imageData,0,0)
@@ -34,7 +32,6 @@ const setUpButtons = async ()=>{
 
     framebtn = document.getElementById("frame")
     framebtn.addEventListener("click",()=>{
-        console.log("starting rendering")
         renderLoop()
     })
 
