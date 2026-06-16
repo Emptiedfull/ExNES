@@ -27,17 +27,7 @@ function renderLoop() {
     requestAnimationFrame(renderLoop)
 }
 
-const setUpButtons = async ()=>{
-    btn = document.getElementById("start")
-    btn.addEventListener("click",async()=>{
 
-        startEmulator()
-        console.log("console started")
-        await loadRom()
-        renderLoop()
-    })
-
-}
 
 const loadRom = async()=>{
     const response = await fetch("static/mario.nes")

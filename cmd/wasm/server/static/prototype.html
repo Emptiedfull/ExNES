@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="static/styles/main.css?v=1">
     <link rel="stylesheet" href="static/styles/nes.css?v=60">
     <link rel="stylesheet" href="static/styles/table.css?v=12">
-    <link rel="stylesheet" href="static/styles/overlay.css?v=2">
+    <link rel="stylesheet" href="static/styles/overlay.css?v=22">
     <script src="static/wasm_exec.js?v=20"></script>
 </head>
 
@@ -41,32 +41,24 @@
                 </div>
             </div>
             <div class="legRow">
-                <div class="leg">
-
-                </div>
-                <div class="leg">
-
-                </div>
+                <div class="leg"></div>
+                <div class="leg"></div>
             </div>
-
-
         </div>
 
         <div class="nes">
-            <div class="cartridge open" id="cartridge">
+            <div class="cartridge" id="cartridge">
                 NONTENDO <br> <span style="color: black;">entertainment system</span>
             </div>
             <div class="top-cap"></div>
             <div class="mid-line">
-                <div class="slot" id="slot">
-
-                </div>
+                <div class="slot" id="slot"></div>
             </div>
             <div class="bottom-cap">
                 <div class="bottom-1">
                     <div class="buttons">
                         <button class="button startBtn" id="start">
-                            START
+                            POWER
                         </button>
                         <button class="button resetBtn">
                             RESET
@@ -79,7 +71,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
             <div class="strip" id="strip">
                 <div class="controllers">
@@ -92,7 +83,6 @@
                         <div class="controller controller-corners"></div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -105,23 +95,20 @@
 
     </div>
 
-    <div class="rom-overlay" id="overlay">
+    <div class="rom-overlay" id="overlay" style="display: none;">
         <div class="nav-panel">
-            <div class="nav-btn back" onclick="move(-1)">
+            <div class="nav-btn back" onclick="move(-1); pushbtn('canvas-back')">
                 <canvas id="canvas-back" width="224" height="224" style="image-rendering:pixelated"></canvas>
             </div>
-            <div class="nav-btn next" onclick="move(1)">
+            <div class="nav-btn next" onclick="move(1); pushbtn('canvas-next')">
                 <canvas id="canvas-next" width="224" height="224" style="image-rendering:pixelated"></canvas>
             </div>
         </div>
-
         <div class="romCarousel">
 
-            <div class="romItem" id="left">
+            <div class="romItem side" id="left">
                 <span>Mario</span>
-                <div class="romImg">
-                    <img src="static/rom_images/image.png">
-                </div>
+                <div class="romImg"><img></div>
                 <div class="rom-top"></div>
                 <div class="rom-bottom"></div>
                 <div class="rom-grain"></div>
@@ -131,9 +118,7 @@
             </div>
             <div class="romItem active" id="middle">
                 <span>Mario</span>
-                <div class="romImg">
-                    <img src="static/rom_images/image.png">
-                </div>
+                <div class="romImg"><img></div>
                 <div class="rom-top"></div>
                 <div class="rom-bottom"></div>
                 <div class="rom-grain"></div>
@@ -142,11 +127,9 @@
                 <div class="rom-spine">MARIO BROS</div>
 
             </div>
-            <div class="romItem" id="right">
+            <div class="romItem side" id="right">
                 <span>Mario</span>
-                <div class="romImg">
-                    <img src="static/rom_images/image.png">
-                </div>
+                <div class="romImg"><img></div>
                 <div class="rom-top"></div>
                 <div class="rom-bottom"></div>
                 <div class="rom-grain"></div>
@@ -154,8 +137,6 @@
                 <div class="rom-arrow"></div>
                 <div class="rom-spine">MARIO BROS</div>
             </div>
-
-
         </div>
 
     </div>
@@ -163,8 +144,8 @@
 </body>
 
 <script src="static/knob.js"></script>
-<script src="static/wasm.js?v=1"></script>
-<script src="static/scripts/carousel.js?v=100"></script>
+<script src="static/wasm.js?v=10"></script>
+<script src="static/scripts/carousel.js?v=12"></script>
 
 
 </html>
