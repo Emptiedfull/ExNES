@@ -8,15 +8,18 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="static/styles/main.css?v=1">
-    <link rel="stylesheet" href="static/styles/nes.css?v=60">
-    <link rel="stylesheet" href="static/styles/table.css?v=12">
-    <link rel="stylesheet" href="static/styles/overlay.css?v=22">
+    <link rel="stylesheet" href="static/styles/main.css?v=2">
+    <link rel="stylesheet" href="static/styles/nes.css?v=61">
+    <link rel="stylesheet" href="static/styles/table.css?v=122">
+    <link rel="stylesheet" href="static/styles/overlay.css?v=2">
     <script src="static/wasm_exec.js?v=20"></script>
 </head>
 
 <body>
     <div class="main">
+        <div class="main-title">
+            <span style="color: rgb(70, 123, 215);">Ex</span><span style="color: #E60012;">NES</span>
+        </div>
         <div class="tv">
             <div class="tv-body pixel-corners">
                 <div class="tv-corners--wrapper">
@@ -37,7 +40,6 @@
 
                     <div class="grill">
                     </div>
-
                 </div>
             </div>
             <div class="legRow">
@@ -62,6 +64,9 @@
                         </button>
                         <button class="button resetBtn">
                             RESET
+                        </button>
+                         <button class="button playbtn" disabled style="width: 20%;">
+                            RE
                         </button>
                     </div>
                     <div class="led-grid">
@@ -105,7 +110,6 @@
             </div>
         </div>
         <div class="romCarousel">
-
             <div class="romItem side" id="left">
                 <span>Mario</span>
                 <div class="romImg"><img></div>
@@ -125,7 +129,6 @@
                 <div class="rom-grain-offset"></div>
                 <div class="rom-arrow"></div>
                 <div class="rom-spine">MARIO BROS</div>
-
             </div>
             <div class="romItem side" id="right">
                 <span>Mario</span>
@@ -138,14 +141,9 @@
                 <div class="rom-spine">MARIO BROS</div>
             </div>
         </div>
-
     </div>
-
 </body>
-
-<script src="static/knob.js"></script>
-<script src="static/wasm.js?v=10"></script>
-<script src="static/scripts/carousel.js?v=12"></script>
-
-
+    <script src="static/knob.js"></script>
+    <script src="static/wasm.js?v=12"></script>
+    <script src="static/scripts/carousel.js?v=2"></script>
 </html>

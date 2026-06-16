@@ -4,7 +4,7 @@
     --rim :  #2a2818;
     --port: #4a4838;
     --holes: #1a1808;
-    --goodred: #c83018;
+    --goodred: #E60012;
 }
 
 * { font-family: 'Press Start 2P', monospace; font-size: 6px; }
@@ -349,8 +349,8 @@
      display: flex;
     align-items: center;
     flex-direction: row;
-    gap: 1.5rem;
-    width: 50%;
+    gap: 1.2rem;
+    width: 60%;
     height: 100%;
 
    
@@ -360,9 +360,8 @@
 
 .button:hover {
    
-   border-color: rgb(155, 155, 67);
-        
-  
+   
+    scale: 1.03;
     cursor: pointer;
 }
 
@@ -424,5 +423,23 @@
 .pixel-led.off {
     background-color: #330000;
     box-shadow: none;
+}
+
+.main-title{
+  
+  height: 40%;
+  width: 45%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  text-align: center;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  font-size: 18rem;
+}
+
+.main-title span{
+  font-size: 18rem;
 }
 

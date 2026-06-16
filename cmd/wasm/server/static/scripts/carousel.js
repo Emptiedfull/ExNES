@@ -1,7 +1,6 @@
 let currentIndex = 3
 
-const romArray = [{ "name": "Zelda", "id": "zelda", "img": "zelda" }, { "name": "donkey kong", "id": "donkey", "img": "donkey" },{ "name": "super mario", "id": "mario", "img": "mario" }, { "name": "Ballon Fight", "id": "balloon", "img": "balloon" }, { "name": "Contra", "id": "contra", "img": "contra" }, { "name": "sb3", "id": "sb3", "img": "mario" }]
-
+const romArray = [{ "name": "Zelda", "id": "zelda", "img": "zelda" },{ "name": "Zelda", "id": "zelda", "img": "zelda" }, { "name": "donkey kong", "id": "donkey", "img": "donkey" }, { "name": "super mario", "id": "mario", "img": "mario" }, { "name": "Ballon Fight", "id": "balloon", "img": "balloon" }, { "name": "Contra", "id": "contra", "img": "contra" }, { "name": "sb3", "id": "sb3", "img": "mario" }]
 const middle = document.getElementById("middle")
 const left = document.getElementById("left")
 const right = document.getElementById("right")
@@ -40,23 +39,23 @@ function updateRom() {
 const setUpButtons = async () => {
     btn = document.getElementById("start")
     btn.addEventListener("click", async () => {
-           powerLed = document.getElementById("power")
-       powerLed.classList.remove("off")
+
+        powerLed = document.getElementById("power")
+        powerLed.classList.remove("off")
         await openCap()
-        await wait(800)
-       overlay.style.display = "flex"
-
-
-    
+        await wait(200)
+        overlay.style.display = "flex"
+        overlay.style.transition= "all ease 1"
+        overlay.style.opacity = 1
     })
 
 }
 
 
-async function begin() {
+async function begin(game) {
     startEmulator()
     console.log("console started")
-    await loadRom()
+    await loadRom(game)
     renderLoop()
 }
 
@@ -223,16 +222,16 @@ const closeCap = async () => {
     cap.classList.remove("open")
 
     await wait(200)
-     await begin()
+    await begin(middle.id)
 
 
 }
 
-const openCap = async()=>{
+const openCap = async () => {
     cap.style.transition = "all ease 1s"
     cap.classList.add("open")
 
-    await await(200)
+    await await (200)
 }
 
 

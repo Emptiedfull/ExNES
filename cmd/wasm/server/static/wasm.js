@@ -29,8 +29,9 @@ function renderLoop() {
 
 
 
-const loadRom = async()=>{
-    const response = await fetch("static/mario.nes")
+const loadRom = async(game)=>{
+    const response = await fetch("static/supported/"+game+".nes")
+    console.log(game)
     const buffer = await response.arrayBuffer()
 
     const uint8view = new Uint8Array(buffer)

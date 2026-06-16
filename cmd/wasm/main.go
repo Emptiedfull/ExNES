@@ -34,6 +34,25 @@ func main() {
 		return nil
 	}))
 
+	js.Global().Set("pause", js.FuncOf(func(this js.Value, args []js.Value) any {
+		if emu != nil {
+			emu.Pause()
+		}
+		return nil
+	}))
+
+	js.Global().Set("unpause", js.FuncOf(func(this js.Value, args []js.Value) any {
+		if emu != nil {
+			emu.UnPause()
+		}
+		return nil
+	}))
+
+	js.Global().Set("takeSnapshot", js.FuncOf(func(this js.Value, args []js.Value) any {
+		emu.AddSnapshot()
+		return nil
+	}))
+
 	js.Global().Set("initRom", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 
 		Arr := args[0]
