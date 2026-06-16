@@ -50,7 +50,7 @@
     width: 22%;
     background-color: black;
     left: 68%;
-    z-index: 1;
+    z-index: 0;
     display: flex;
     
 }
@@ -101,6 +101,8 @@
     width: 100%;
     text-align: center;
 }
+
+
 
 
 
@@ -198,21 +200,85 @@
   );
   pointer-events: none;
 }
+.slot {
+  position: absolute;
+  width: 60%;
+  height: 26%;
+  left: 8%;
+  top: 0;
 
+  background-color: #1a1a0a;
+
+  border-left: 4px solid #555540;
+  border-right: 4px solid #555540;
+  border-bottom: 4px solid #555540;
+  border-top: none;
+
+  box-shadow:
+    inset 4px 0px 0px #333320,
+    inset -4px 0px 0px #333320,
+    inset 0px 6px 0px #0a0a04,
+    inset 6px 6px 0px #222210,
+    inset -6px 6px 0px #222210;
+
+  background-image: repeating-linear-gradient(
+    to right,
+    #2a2a18 0px,
+    #2a2a18 5px,
+    #606050 5px,
+    #606050 6px,
+    #2a2a18 6px,
+    #2a2a18 11px
+  );
+
+  image-rendering: pixelated;
+}
+
+.slot::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -4px;
+  right: -4px;
+  height: 8px;
+  background-color: #6a6850;
+  border-left: 4px solid #888870;
+  border-right: 4px solid #888870;
+  border-top: 3px solid #888870;
+}
+
+.slot::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background-image: repeating-linear-gradient(
+    to right,
+    #3a3a28 0px,
+    #3a3a28 4px,
+    #888870 4px,
+    #888870 5px,
+    #3a3a28 5px,
+    #3a3a28 9px
+  );
+}
 .cartridge{
     position: absolute;
     
-    right: 20%;
-    z-index: 2;
-    width: 70%;
-    height: 65%;
+    left: 8%;
+    z-index: 100;
+    width: 60%;
+    height: 30%;
 
     border: 4px solid #000;    
     color: var(--goodred);
+      background-color: var(--top);
   
   
   box-shadow: 
-    inset 4px 4px 0px rgba(255, 255, 255, 0.3), 
+    
     inset -4px -4px 0px rgba(0, 0, 0, 0.3);    
   
   
@@ -223,13 +289,23 @@
   padding: 4px;
 
   cursor: pointer;
+  transition: transform 1s all;
 
 }
 
-.cartridge:hover{
+.cartridge.open{
+  transform: translateY(-100%);
+  border-bottom: none;
+  border-right:none ;
+  border-left: none;
+}
+
+/* .cartridge:hover{
     border-color: rgb(231, 231, 77);
     border-width: 5px;
-}
+} */
+
+
 
 .mid-line{
     height: 3%;

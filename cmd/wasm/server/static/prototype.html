@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="static/styles/main.css?v=1">
-    <link rel="stylesheet" href="static/styles/nes.css?v=200">
+    <link rel="stylesheet" href="static/styles/nes.css?v=60">
     <link rel="stylesheet" href="static/styles/table.css?v=12">
     <link rel="stylesheet" href="static/styles/overlay.css?v=2">
     <script src="static/wasm_exec.js?v=20"></script>
@@ -53,15 +53,14 @@
         </div>
 
         <div class="nes">
-            <div class="top-cap">
-                <div class="cartridge">
-                    NONTENDO <br> <span style="color: black;">entertainment system</span>
-                </div>
-
-
+            <div class="cartridge open" id="cartridge">
+                NONTENDO <br> <span style="color: black;">entertainment system</span>
             </div>
+            <div class="top-cap"></div>
             <div class="mid-line">
+                <div class="slot" id="slot">
 
+                </div>
             </div>
             <div class="bottom-cap">
                 <div class="bottom-1">
@@ -73,9 +72,16 @@
                             RESET
                         </button>
                     </div>
+                    <div class="led-grid">
+                        <div class="pixel-led off" id="power">
+                        </div>
+                        <div class="pixel-led off" id="rom">
+                        </div>
+                    </div>
                 </div>
+
             </div>
-            <div class="strip">
+            <div class="strip" id="strip">
                 <div class="controllers">
                     <div class="port">
                         <span class="controllerLabel">1</span>
@@ -86,6 +92,7 @@
                         <div class="controller controller-corners"></div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -98,15 +105,13 @@
 
     </div>
 
-    <div class="rom-overlay">
+    <div class="rom-overlay" id="overlay">
         <div class="nav-panel">
-            <div class="nav-btn back"  onclick="move(-1)">
+            <div class="nav-btn back" onclick="move(-1)">
                 <canvas id="canvas-back" width="224" height="224" style="image-rendering:pixelated"></canvas>
             </div>
             <div class="nav-btn next" onclick="move(1)">
                 <canvas id="canvas-next" width="224" height="224" style="image-rendering:pixelated"></canvas>
-
-
             </div>
         </div>
 
@@ -122,7 +127,7 @@
                 <div class="rom-grain"></div>
                 <div class="rom-grain-offset"></div>
                 <div class="rom-arrow"></div>
-                 <div class="rom-spine">MARIO BROS</div>
+                <div class="rom-spine">MARIO BROS</div>
             </div>
             <div class="romItem active" id="middle">
                 <span>Mario</span>
@@ -134,7 +139,7 @@
                 <div class="rom-grain"></div>
                 <div class="rom-grain-offset"></div>
                 <div class="rom-arrow"></div>
-                 <div class="rom-spine">MARIO BROS</div>
+                <div class="rom-spine">MARIO BROS</div>
 
             </div>
             <div class="romItem" id="right">
@@ -147,7 +152,7 @@
                 <div class="rom-grain"></div>
                 <div class="rom-grain-offset"></div>
                 <div class="rom-arrow"></div>
-                 <div class="rom-spine">MARIO BROS</div>
+                <div class="rom-spine">MARIO BROS</div>
             </div>
 
 
@@ -159,7 +164,7 @@
 
 <script src="static/knob.js"></script>
 <script src="static/wasm.js?v=1"></script>
-<script src="static/scripts/carousel.js?v=8"></script>
+<script src="static/scripts/carousel.js?v=100"></script>
 
 
 </html>
