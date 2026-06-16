@@ -1,7 +1,7 @@
 const go = new Go()
 var loaded = false
 
-WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=505"),go.importObject).then((result)=>{
+WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=8"),go.importObject).then((result)=>{
     go.run(result.instance)
     loaded = true
 })
@@ -32,19 +32,10 @@ const setUpButtons = async ()=>{
     btn.addEventListener("click",async()=>{
 
         startEmulator()
+        console.log("console started")
         await loadRom()
         renderLoop()
     })
-
-    // framebtn = document.getElementById("frame")
-    // framebtn.addEventListener("click",()=>{
-    //     renderLoop()
-    // })
-
-    // rombtn = document.getElementById("rom")
-    // rombtn.addEventListener("click",async ()=>{
-    //     await loadRom()
-    // })
 
 }
 
@@ -56,7 +47,6 @@ const loadRom = async()=>{
 
     initRom(uint8view)
 }
-
 
 const controlState = {
     'a': false,
