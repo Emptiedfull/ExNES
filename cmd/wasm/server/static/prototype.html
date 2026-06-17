@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="static/styles/nes.css?v=1">
     <link rel="stylesheet" href="static/styles/table.css?v=122">
     <link rel="stylesheet" href="static/styles/overlay.css?v=22">
-    <link rel="stylesheet" href="static/styles/joypad.css?v=2">
+    <link rel="stylesheet" href="static/styles/joypad.css?v=0">
     <script src="static/wasm_exec.js?v=20"></script>
 </head>
 
@@ -171,20 +171,20 @@
 
                         <div class="main-vertical">
                             <div class="main-vertical-line">
-                                <button>
+                                <button class="dpad-up" id="dpad-up">
 
                                 </button>
-                                <button>
+                                <button id="dpad-down">
 
                                 </button>
                             </div>
                         </div>
                         <div class="main-horizontal">
                             <div class="main-horizontal-line">
-                                <button>
+                                <button id="dpad-left">
 
                                 </button>
-                                <button>
+                                <button id="dpad-right">
 
                                 </button>
                             </div>
@@ -201,7 +201,14 @@
                 <div class="decoration">
                     <div class="decobox"></div>
                     <div class="decobox"></div>
-                    <div class="decobox"></div>
+                    <div class="decobox" id="control-label">
+                        <span>
+                             START
+                        </span>
+                        <span>
+                            SELECT
+                        </span>
+                    </div>
                 </div>
                 <div class="control-buttons">
                     <div class="control-buttons-inner">
@@ -225,7 +232,7 @@
 
                 </div>
                 <div class="main-text">
-
+                    NONTENDO
                 </div>
 
             </div>
@@ -234,7 +241,7 @@
     </div>
 </body>
 <script src="static/scripts/knob.js?V=2"></script>
-<script src="static/wasm.js?v=2"></script>
+<script src="static/wasm.js?v=22"></script>
 <script src="static/scripts/carousel.js?v=26"></script>
 
 </html>
