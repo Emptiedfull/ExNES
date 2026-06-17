@@ -1,0 +1,140 @@
+.Joypad{
+    position: absolute;
+    width: 45%;
+    aspect-ratio: 4.8/2;
+    bottom: 30%;
+    left:25%;
+    z-index: 100;
+    background-color: #B5AFA0;
+
+    padding: 4rem;
+    padding-top: 3rem;
+     box-shadow: 
+        inset 4px 4px 0px rgba(255, 255, 255, 0.7),
+        inset -4px -4px 0px rgba(0, 0, 0, 0.35),
+        4px 4px 0px #000,   
+        6px 6px 0px #555;
+
+}
+
+.Joypad-inner{
+    height: 100%;
+    width: 100%;
+    background-color: #4A4845;
+
+    display: flex;
+    flex-direction: row;
+}
+
+.movement-section{
+    height: 100%;
+    width: 35%;
+}
+
+.control-section{
+    height: 100%;
+    width: 30%;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.decoration{
+    width: 100%;
+    height: 70%;
+       display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: center;
+    justify-content: space-evenly;
+}
+
+.decobox{
+    width: 100%;
+    height: 22%;
+    background-color: #7C726A;
+    border-radius: 7px;
+}
+
+
+.control-buttons{
+    height: 25%;
+    background-color: #bab7b0;
+    border-radius: 10px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.control-buttons-inner{
+    width: 95%;
+    height: 82%;
+    border-radius: 10px;
+    background-color: #c8c3b8a3;
+    border: 5px rgb(92, 91, 90) solid;
+    display: flex;
+    flex-direction: row;
+    padding: 1.2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+
+    
+    justify-content: space-between;
+}
+
+.control-button{
+    width: 40%;
+    
+    height: 100%;
+    background-color: #3B3835;
+    border-radius: 20px;
+}
+
+
+.main-section{
+    height: 100%;
+    width: 35%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2%;
+   
+}
+
+
+
+.main-text{
+    height: 40%;
+    width: 100%;
+    background-color: yellow;
+}
+
+.main-buttons{
+    height: 40%;
+    
+    width: 100%;
+    background-color: chocolate;
+    display: flex;
+    flex-direction: row;
+    padding: 1.6rem;
+    justify-content: space-between;
+}
+
+.main-button-cont{
+    height: 100%;
+    width: 40%;
+    border-radius: 10px;
+    background-color: chartreuse;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-button-cont button{
+    height: 80%;
+    width: 80%;
+    border-radius: 50%;
+    background-color: red;
+}

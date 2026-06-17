@@ -283,3 +283,22 @@ const cleapUpOverlay = ()=>{
     middle.classList.remove("rotated")
     middle.classList.add("active")
 }
+
+document.addEventListener("DOMContentLoaded",async ()=>{
+  speedKnob = document.getElementById("speed")
+
+  speedKnob.addEventListener("click",async()=>{
+    // angle = knobSettings['speed'].angle
+
+   
+    // drawKnob('speed', angle+60);
+
+    // await turnKnob('speed',60,100,10)
+
+    
+    // await wiggleKnob('speed',20)
+
+    await spinKnob('speed',2)
+    await wiggleKnob('speed',20)
+  })
+})

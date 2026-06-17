@@ -99,17 +99,7 @@ function drawKnob(id, angleDeg) {
 drawKnob("sound", 0)
 drawKnob("speed", 0)
 
-document.addEventListener("DOMContentLoaded",async ()=>{
-  speedKnob = document.getElementById("speed")
 
-  speedKnob.addEventListener("click",async()=>{
-    // angle = knobSettings['speed'].angle
-    // drawKnob('speed', angle+60);
-
-    // await turnKnob('speed',60,100,10)
-    await wiggleKnob('speed')
-  })
-})
 
 async function turnKnob(id, targetAngle, durationMs = 400, steps = 20) {
     const startAngle = knobSettings[id].angle
@@ -160,5 +150,9 @@ async function bootKnob(id, targetAngle = 60) {
     drawKnob(id, -150)
     await wait(100)
     await turnKnob(id, targetAngle, 500, 30)
+}
+
+async function resetKnob(id,targetAngle = 0) {
+  await turnKnob(id,360)
 }
 
