@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="static/styles/nes.css?v=1">
     <link rel="stylesheet" href="static/styles/table.css?v=122">
     <link rel="stylesheet" href="static/styles/overlay.css?v=22">
-    <link rel="stylesheet" href="static/styles/joypad.css?v=21">
+    <link rel="stylesheet" href="static/styles/joypad.css?v=2">
     <script src="static/wasm_exec.js?v=20"></script>
 </head>
 
@@ -34,7 +34,7 @@
                         <label>Sound</label>
                     </div>
                     <div class="knob-wrap">
-                        <canvas id="speed" width="17" height="17" 
+                        <canvas id="speed" width="17" height="17"
                             style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
                         <label>Speed</label>
                     </div>
@@ -158,6 +158,43 @@
     <div class="Joypad Joypad-corners">
         <div class="Joypad-inner">
             <div class="movement-section">
+                <div class="dpad">
+                    <div class="dpad-cross">
+                        <div class="cross-vertical">
+                            <div class="cross-vertical-line"></div>
+                        </div>
+                        <div class="cross-horizontal">
+                            <div class="cross-horizontal-line"></div>
+                        </div>
+                    </div>
+                    <div class="dpad-main">
+
+                        <div class="main-vertical">
+                            <div class="main-vertical-line">
+                                <button>
+
+                                </button>
+                                <button>
+
+                                </button>
+                            </div>
+                        </div>
+                        <div class="main-horizontal">
+                            <div class="main-horizontal-line">
+                                <button>
+
+                                </button>
+                                <button>
+
+                                </button>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+                </div>
 
             </div>
             <div class="control-section">
@@ -169,7 +206,6 @@
                 <div class="control-buttons">
                     <div class="control-buttons-inner">
                         <button class="select control-button">
-
                         <button class="start control-button">
                     </div>
                 </div>
@@ -177,17 +213,21 @@
             <div class="main-section">
                 <div class="main-buttons">
                     <div class="main-button-cont">
-                        <button></button>
+                        <button>
+                            A
+                        </button>
                     </div>
                     <div class="main-button-cont">
-                        <button></button>
+                        <button>
+                            B
+                        </button>
                     </div>
 
                 </div>
                 <div class="main-text">
 
                 </div>
-                
+
             </div>
 
         </div>

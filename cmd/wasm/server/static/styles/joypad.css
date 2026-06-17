@@ -26,10 +26,7 @@
     flex-direction: row;
 }
 
-.movement-section{
-    height: 100%;
-    width: 35%;
-}
+
 
 .control-section{
     height: 100%;
@@ -123,8 +120,9 @@
 }
 
 .main-button-cont{
-    height: 100%;
+    
     width: 40%;
+    aspect-ratio: 1/1;
     border-radius: 10px;
     background-color: chartreuse;
     display: flex;
@@ -137,4 +135,150 @@
     width: 80%;
     border-radius: 50%;
     background-color: red;
+    font-size: 15px;
 }
+
+.movement-section{
+    height: 100%;
+    width: 35%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-items: center;
+    background-color: yellow;
+    padding: 6rem;
+}
+
+
+.dpad {
+    position: relative;
+   width: 100%;
+   aspect-ratio: 1/1;
+
+    
+}
+
+.cross-vertical {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.cross-vertical-line{
+    height: 100%;
+    width: 40%;
+    background-color: #4A4845;
+    border: 5px #D6D0C4 solid;
+}
+
+.cross-horizontal{
+    top: 0;
+    left: 0;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.cross-horizontal-line{
+    
+    width: 100%;
+    height: 36%;
+    background-color: #4A4845;
+
+     border: 5px #D6D0C4 solid;
+}
+.cross-horizontal-line{
+    
+    width: 100%;
+    height: 36%;
+    background-color: #4A4845;
+
+     border: 5px #D6D0C4 solid;
+}
+
+.dpad-cross{
+    width: 100%;
+    height: 100%;
+}
+
+.dpad-btn {
+    position: absolute;
+    background: #1E1D1B;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: background 80ms, transform 80ms;
+    outline: none;
+  }
+
+.dpad-main{
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+}
+
+.main-vertical{
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    display: flex;
+    justify-content:center;
+    flex-direction: row;
+    align-items: center;
+}
+
+.main-vertical-line{
+    background-color: #000;
+    width: calc(40% - 8px);
+    height: calc(100% - 8px);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.main-vertical-line button{
+    height: 34%;
+    width: 100%;
+    background-color: purple;
+    border: none;
+}
+
+.main-horizontal{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main-horizontal-line{
+    background-color: #000;
+    height: calc(36% - 15px);
+    width: calc(100% - 15px);
+
+    display: flex;
+    justify-content: space-between;
+}
+
+.main-horizontal-line button{
+    height: 100%;
+    background-color: rebeccapurple;
+    border: none;
+    width: 31%;
+}
+
