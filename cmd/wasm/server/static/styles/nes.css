@@ -43,16 +43,75 @@
     height: 100%;
     object-fit: cover;
 }
+.strip {
 
-.strip{
-    position:absolute;
+  
+
+    position: absolute;
     height: 100%;
-    width: 22%;
-    background-color: black;
+    width: 20%;
+    top: -3px;
+    background-color: #111;
     left: 68%;
-    z-index: 0;
+    z-index: 1;
     display: flex;
+
+   
+    border-top:    5px solid #555;
+    border-left:   5px solid #444;
+    border-bottom: 1px solid #000;
+    border-right:  1px solid #000;
+
     
+    box-shadow:
+        1px 1px 0px #000,
+        2px 2px 0px #000,
+        3px 3px 0px rgba(0,0,0,0.4);
+}
+
+.strip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 12px;
+    background:
+       
+        linear-gradient(
+            to bottom right,
+            #444 0%,
+            #444 40%,
+            transparent 50%
+        ),
+        
+        linear-gradient(
+            to bottom left,
+            #444 0%,
+            #444 40%,
+            transparent 50%
+        ),
+       
+        linear-gradient(#333, #222);
+    pointer-events: none;
+    z-index: 3;
+}
+
+
+.strip::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.6),
+        transparent
+    );
+    pointer-events: none;
+    z-index: 3;
 }
 
 .controllers{
@@ -289,8 +348,12 @@
   padding: 4px;
 
   cursor: pointer;
-  transition: transform 1s all;
+  transition: transform 1s ease;
 
+}
+
+.cartridge:hover{
+  transform: translateY(-50%);
 }
 
 .cartridge.open{
@@ -329,8 +392,45 @@
     40px   100%,             
     0px   calc(100% - 60px)  
   );
+
+  background-image:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='15' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 4px,
+            rgba(0,0,0,0.08) 4px,
+            rgba(0,0,0,0.08) 5px
+        ),
+        repeating-linear-gradient(
+            to right,
+            transparent 0px,
+            transparent 8px,
+            rgba(0,0,0,0.04) 8px,
+            rgba(0,0,0,0.04) 9px
+        );
+
+    background-blend-mode: soft-light, normal, normal;
 }
 
+.bottom-cap::before {
+    content: '';
+    position: absolute;
+    top:50%;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(
+        to top,
+        transparent,
+        rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0.25) 60%,
+        rgba(255,255,255,0.15) 90%,
+        transparent
+    );
+    pointer-events: none;
+    z-index: 3;
+}
 .bottom-1{
     width: 70%;
     display: flex;
@@ -349,49 +449,97 @@
      display: flex;
     align-items: center;
     flex-direction: row;
-    gap: 1.2rem;
+    justify-content: space-around;
     width: 60%;
     height: 100%;
 
-   
+}
 
 
+.button {
+    font-family: 'Press Start 2P', monospace;
+    font-weight: bold;
+    height: 46%;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    font-size: 7px;
+    background-color: bisque;
+    border: 3px solid #000;
+    image-rendering: pixelated;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+
+    box-shadow: 
+        inset 4px 4px 0px rgba(255, 255, 255, 0.7),
+        inset -4px -4px 0px rgba(0, 0, 0, 0.35),
+        4px 4px 0px #000,   
+        6px 6px 0px #555;
+
+    transform: translate(-4px, -4px);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.button.highlight::before {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: -60%;
+    width: 40%;
+    height: 300%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: skewX(-20deg);
+    animation: shimmer 2.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+
+@keyframes shimmer {
+    0%   { left: -60%; opacity: 0; }
+    10%  { opacity: 1; }
+    40%  { left: 140%; opacity: 0.6; }
+    41%  { opacity: 0; }
+    100% { left: 140%; opacity: 0; }
 }
 
 .button:hover {
-   
-   
-    scale: 1.03;
+    transform: translate(-5px, -5px);
+    box-shadow: 
+        inset 4px 4px 0px rgba(255, 255, 255, 0.7),
+        inset -4px -4px 0px rgba(0, 0, 0, 0.35),
+        5px 5px 0px #000,
+        8px 8px 0px #555;
+}
+
+.button.highlight{
+  transform: translate(-5px,-5px);
+  
+}
+
+.button svg{
+  height: 110%;
+  aspect-ratio: 1/1;
+}
+
+/* .button.highlight:hover{
+  transform: translate(-5px,-7px);
+} */
+
+.button:active {
+    transform: translate(0px, 0px);
+    box-shadow: 
+        inset 4px 4px 0px rgba(0, 0, 0, 0.3),
+        inset -4px -4px 0px rgba(255, 255, 255, 0.2),
+        0px 0px 0px #000,
+        1px 1px 0px #333;
+}
+
+
+.button:hover {
     cursor: pointer;
 }
 
 .button { padding: calc(4px*2) calc(4px*3); }
-
-.button {
-     font-family: 'Press Start 2P', monospace;
-     font-weight: bold;
-    height: 46%;
-    width: 40%;
-    font-size: 7px;
-    background-color: bisque;
-    
-    border: 3px solid #000;
-    
-    box-shadow: 
-        inset 4px 4px 0px rgba(255, 255, 255, 0.4),
-        inset -4px -4px 0px rgba(0, 0, 0, 0.3);
-    
-    image-rendering: pixelated;
-    cursor: pointer;
-}
-
-
-
-.button:active {
-    box-shadow: 
-        inset 4px 4px 0px rgba(0, 0, 0, 0.3),
-        inset -4px -4px 0px rgba(255, 255, 255, 0.4);
-}
 
 
 .led-grid {

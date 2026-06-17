@@ -108,8 +108,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateRom()
 
 
-    middle.addEventListener("click", () => {
-        console.log("clicking oh god")
+    middle.addEventListener("click", async () => {
+        middle.classList.remove("active")
+        await wait(200)
         slotCart()
 
         if (middle.classList.contains("rotated")) {

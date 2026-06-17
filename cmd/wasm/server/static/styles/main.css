@@ -14,22 +14,23 @@ body {
   overflow: hidden;
   font-smooth: never;
 
-  background-color: rgb(18, 15, 43);
+  background-color: rgb(84, 82, 53);
 
 
 
   background-image: repeating-linear-gradient(90deg,
       transparent,
-      transparent 19px,
+      rgba(229, 228, 237, 0.08) 14px,
+      transparent 16px,
 
 
-
-      rgba(229, 228, 237, 0.08) 21px);
+ 
+      rgba(229, 228, 237, 0.08) 19px);
       
 }
 
 .main {
-  padding: 4%;
+  padding: 3%;
   padding-bottom: 0%;
   display: flex;
   flex-direction: row;
@@ -51,8 +52,7 @@ body {
       rgba(0, 0, 0, 0.12) 3px,
       rgba(0, 0, 0, 0.12) 6px
     ),
-    linear-gradient(to bottom, rgba(0,0,0,0.4), transparent 50%),
-    
+    linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 50%),
     repeating-linear-gradient(
       92deg,
       transparent 0px,
@@ -184,7 +184,7 @@ body {
 .leg {
   height: 100%;
   width: 18%;
-  background-color: #7a7060;
+  background-color: #978a74;
   background-image: repeating-linear-gradient(
     180deg,
     transparent 0px,
