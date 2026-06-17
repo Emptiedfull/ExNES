@@ -359,8 +359,7 @@
 .cartridge.open{
   transform: translateY(-100%);
   border-bottom: none;
-  border-right:none ;
-  border-left: none;
+  
 }
 
 /* .cartridge:hover{
@@ -584,10 +583,9 @@
   align-items: center;
   display: flex;
   justify-content: center;
-  font-size: 18rem;
 }
 
 .main-title span{
-  font-size: 18rem;
+  font-size: 16rem;
 }
 

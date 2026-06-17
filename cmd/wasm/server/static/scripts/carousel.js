@@ -1,6 +1,6 @@
 let currentIndex = 3
 
-const romArray = [{ "name": "Zelda", "id": "zelda", "img": "zelda" },{ "name": "Zelda", "id": "zelda", "img": "zelda" }, { "name": "donkey kong", "id": "donkey", "img": "donkey" }, { "name": "super mario", "id": "mario", "img": "mario" }, { "name": "Ballon Fight", "id": "balloon", "img": "balloon" }, { "name": "Contra", "id": "contra", "img": "contra" }, { "name": "sb3", "id": "sb3", "img": "mario" }]
+const romArray = [{ "name": "Zelda", "id": "zelda", "img": "zelda" }, { "name": "Zelda", "id": "zelda", "img": "zelda" }, { "name": "donkey kong", "id": "donkey", "img": "donkey" }, { "name": "super mario", "id": "mario", "img": "mario" }, { "name": "Ballon Fight", "id": "balloon", "img": "balloon" }, { "name": "Contra", "id": "contra", "img": "contra" }, { "name": "sb3", "id": "sb3", "img": "mario" }]
 const middle = document.getElementById("middle")
 const left = document.getElementById("left")
 const right = document.getElementById("right")
@@ -9,12 +9,50 @@ const overlay = document.getElementById("overlay")
 const strip = document.getElementById("strip")
 const cap = document.getElementById("cartridge")
 
+romLoaded = ""
+power = false
+
 const roms = [left, middle, right]
 
+document.addEventListener("DOMContentLoaded", async () => {
 
-document.addEventListener("click", (e) => {
-    console.log(e.target)
-})
+    drawNav()
+    updateRom()
+
+
+    middle.addEventListener("click", async () => {
+        middle.classList.remove("active")
+        await wait(100)
+        span = middle.querySelector("span")
+        span.style.display = "none"
+        middle.classList.add("rotated")
+        await slotCart()
+
+        if (power){
+            await begin(romLoaded)
+        }
+    })
+
+    cap.addEventListener("click", async () => {
+       
+            await openCap()
+            await wait(200)
+            overlay.style.display = "flex"
+            overlay.style.transition = "all ease 1"
+            overlay.style.opacity = 1
+            
+            if (power){
+                await begin(romLoaded)
+            }else{
+                console.log("haha")
+            }
+        
+    })
+
+
+});
+
+
 
 function updateRom() {
 
@@ -39,13 +77,23 @@ function updateRom() {
 const setUpButtons = async () => {
     btn = document.getElementById("start")
     btn.addEventListener("click", async () => {
+         power = true
+
+        if (romLoaded != "" ){
+            begin(romLoaded)
+            return
+        }
 
         powerLed = document.getElementById("power")
         powerLed.classList.remove("off")
+       
+
+
+
         await openCap()
         await wait(200)
         overlay.style.display = "flex"
-        overlay.style.transition= "all ease 1"
+        overlay.style.transition = "all ease 1"
         overlay.style.opacity = 1
     })
 
@@ -102,30 +150,7 @@ const drawNav = () => {
 }
 
 
-document.addEventListener("DOMContentLoaded", async () => {
 
-    drawNav()
-    updateRom()
-
-
-    middle.addEventListener("click", async () => {
-        middle.classList.remove("active")
-        await wait(200)
-        slotCart()
-
-        if (middle.classList.contains("rotated")) {
-
-            span = middle.querySelector("span")
-            span.style.display = "block"
-            middle.classList.remove("rotated")
-        } else {
-
-            span = middle.querySelector("span")
-            span.style.display = "none"
-            middle.classList.add("rotated")
-        }
-    })
-});
 
 
 function pushbtn(canvasId) {
@@ -203,19 +228,13 @@ const slotCart = async () => {
     clone.style.transform = 'scale(0.9)';
 
     romled = document.getElementById("rom")
+    romLoaded = middle.id
     flickerLed(romled)
 
     await wait(500)
-
-
-
     await closeCap()
-
-
-    overlay.style.display = "none"
-
-
-
+    
+    cleapUpOverlay()
 }
 
 const closeCap = async () => {
@@ -223,8 +242,6 @@ const closeCap = async () => {
     cap.classList.remove("open")
 
     await wait(200)
-    await begin(middle.id)
-
 
 }
 
@@ -244,12 +261,11 @@ function wait(ms) {
 
 const flickerLed = async (led) => {
 
-    for (let i = 0; i < 1; i++) {
         led.classList.remove("off");
         await wait(60);
         led.classList.add("off");
         await wait(80);
-    }
+    
 
 
     led.classList.remove("off");
@@ -259,4 +275,11 @@ const flickerLed = async (led) => {
 
 
     led.classList.remove("off");
+}
+
+
+const cleapUpOverlay = ()=>{
+    overlay.style.display = "none"
+    middle.classList.remove("rotated")
+    middle.classList.add("active")
 }

@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="static/styles/main.css?v=222">
-    <link rel="stylesheet" href="static/styles/nes.css?v=110">
+    <link rel="stylesheet" href="static/styles/nes.css?v=1">
     <link rel="stylesheet" href="static/styles/table.css?v=122">
     <link rel="stylesheet" href="static/styles/overlay.css?v=22">
     <script src="static/wasm_exec.js?v=20"></script>
@@ -33,9 +33,9 @@
                         <label>Sound</label>
                     </div>
                     <div class="knob-wrap">
-                        <canvas id="brightness" width="17" height="17"
+                        <canvas id="speed" width="17" height="17" 
                             style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
-                        <label>Bright</label>
+                        <label>Speed</label>
                     </div>
 
                     <div class="grill">
@@ -60,22 +60,24 @@
                 <div class="bottom-1">
                     <div class="buttons">
                         <button class="button startBtn highlight" id="start">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="#5a3a1a" stroke-width="2.5"
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#E60012" stroke-width="4"
                                 stroke-linecap="square">
                                 <path d="M12 3v9" />
                                 <path d="M6.3 6.3a8 8 0 1 0 11.4 0" />
                             </svg>
                         </button>
                         <button class="button resetBtn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="#5a3a1a" stroke-width="2.5" stroke-linecap="square">
-    <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
-    <path d="M3 3v5h5"/>
-  </svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#5a3a1a" stroke-width="2.5"
+                                stroke-linecap="square">
+                                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                                <path d="M3 3v5h5" />
+                            </svg>
                         </button>
                         <button class="button playbtn" disabled>
-                              <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5" stroke-linecap="square">
-    <polygon points="6,3 20,12 6,21"/>
-  </svg>
+                            <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5"
+                                stroke-linecap="square">
+                                <polygon points="6,3 20,12 6,21" />
+                            </svg>
                         </button>
                     </div>
                     <div class="led-grid">
@@ -152,8 +154,8 @@
         </div>
     </div>
 </body>
-<script src="static/knob.js"></script>
-<script src="static/wasm.js?v=12"></script>
-<script src="static/scripts/carousel.js?v=22"></script>
+<script src="static/scripts/knob.js?V=222"></script>
+<script src="static/wasm.js?v=2"></script>
+<script src="static/scripts/carousel.js?v=211"></script>
 
 </html>

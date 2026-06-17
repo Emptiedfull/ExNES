@@ -1,7 +1,7 @@
 const go = new Go()
 var loaded = false
 
-WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=8"),go.importObject).then((result)=>{
+WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=128"),go.importObject).then((result)=>{
     go.run(result.instance)
     loaded = true
 })
