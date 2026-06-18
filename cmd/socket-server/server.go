@@ -12,10 +12,10 @@ import (
 
 func main() {
 
-	go func() {
-		log.Println("pprof listening on :6060")
-		log.Fatal(http.ListenAndServe(":6060", nil))
-	}()
+	// go func() {
+	// 	log.Println("pprof listening on :6060")
+	// 	log.Fatal(http.ListenAndServe(":6060", nil))
+	// }()
 
 	fmt.Println("running")
 
@@ -195,7 +195,7 @@ func updateControls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	debugConsole.Console.JoyPad.UpdateState(state)
+	debugConsole.Console.Player1.UpdateState(state)
 
 	w.WriteHeader(http.StatusOK)
 }
