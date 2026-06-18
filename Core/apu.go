@@ -4,11 +4,17 @@ type APU struct {
 	Pulse1 PulseChannel
 	Pulse2 PulseChannel
 
+	Triangle Triangle
+
+	Noise NoiseChannel
+
 	Counter frameCounter
 
 	SampleRate      float64
 	CycleAcc        float64
 	CyclesPerSample float64
+
+	timerTickLatch bool
 
 	IRGPending bool
 
@@ -85,7 +91,26 @@ func (A *APU) writeReg(addr uint16, val uint8) {
 		A.Pulse2.writeTimerLow(val)
 	case 0x4007:
 		A.Pulse2.writeTimerHigh(val)
+	case 0x4008:
+		A.Triangle.WriteLC(val)
+	case 0x4009:
+		// yeh fuck u cpu for trying to access this
+	case 0x400A:
+		A.Triangle.WriteTimerLOW(val)
+	case 0x400B:
+		A.Triangle.WriteTimerHIGH(val)
+	case 0x4015:
+		A.writeStatus(val)
+	case 0x4017:
+		A.writeFrameCounter(val)
 	}
+}
+
+func (a *APU) writeStatus(val uint8) {
+	a.Pulse1.setEnable(val&0x01 != 0)
+	a.Pulse2.setEnable(val&0x02 != 0)
+	a.Triangle.setEnable(val&0x04 != 0)
+	a.Noise.setEnabled(val&0x08 != 0)
 }
 
 func (A *APU) readStatus() uint8 {
@@ -99,6 +124,15 @@ func (A *APU) readStatus() uint8 {
 		status |= 0x02
 	}
 
+	if A.Triangle.lengthCounter > 0 {
+		status |= 0x04
+	}
+
+	if A.Noise.lengthCounter > 0 {
+		status |= 0x08
+	}
+
+	A.IRGPending = false
 	return status
 }
 
@@ -118,9 +152,85 @@ func (a *APU) writeFrameCounter(val uint8) {
 	a.Counter.cycles = 0
 }
 
+func (a *APU) tick() {
+	a.Counter.cycles++
+	a.stepFrameCounter()
+
+	a.timerTickLatch = !a.timerTickLatch
+	if a.timerTickLatch {
+		a.Pulse1.StepTimer()
+		a.Pulse1.StepTimer()
+		a.Noise.stepTimer()
+	}
+
+	a.Triangle.StepTimer()
+
+	a.CycleAcc++
+	if a.CycleAcc >= a.CyclesPerSample {
+		a.CycleAcc -= a.CyclesPerSample
+		a.sampleBuffer = append(a.sampleBuffer, a.mix())
+	}
+}
+
+func (a *APU) mix() float32 {
+
+	var buffer float32
+	return buffer
+}
+
+func (a *APU) stepFrameCounter() {
+	c := a.Counter.cycles
+
+	if a.Counter.mode == 0 {
+		switch c {
+		case 7457:
+			a.clockQuarterFrame()
+		case 14913:
+			a.clockQuarterFrame()
+			a.clockHalfFrame()
+		case 22371:
+			a.clockQuarterFrame()
+		case 29828:
+			if !a.Counter.irqStop {
+				a.IRGPending = true
+			}
+		case 29829:
+			a.clockQuarterFrame()
+			a.clockHalfFrame()
+			if !a.Counter.irqStop {
+				a.IRGPending = true
+			}
+		case 29830:
+			a.Counter.cycles = 0
+			if !a.Counter.irqStop {
+				a.IRGPending = true
+			}
+		}
+	} else {
+		switch c {
+		case 7457:
+			a.clockQuarterFrame()
+		case 14913:
+			a.clockQuarterFrame()
+			a.clockHalfFrame()
+		case 22371:
+			a.clockQuarterFrame()
+		case 37281:
+			a.clockQuarterFrame()
+			a.clockHalfFrame()
+		case 37282:
+			a.Counter.cycles = 0
+		}
+	}
+}
+
 func (a *APU) clockQuarterFrame() {
 	a.Pulse1.StepEnvelope()
 	a.Pulse2.StepEnvelope()
+
+	a.Triangle.stepLinC()
+
+	a.Noise.StepEnvelope()
 }
 
 func (a *APU) clockHalfFrame() {
@@ -128,4 +238,8 @@ func (a *APU) clockHalfFrame() {
 	a.Pulse1.StepSweep()
 	a.Pulse2.stepLengthCounter()
 	a.Pulse2.StepSweep()
+
+	a.Triangle.stepLenC()
+
+	a.Noise.StepLC()
 }

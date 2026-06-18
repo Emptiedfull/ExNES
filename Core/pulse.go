@@ -38,6 +38,13 @@ func newPulseChannel(isPulse1 bool) *PulseChannel {
 	}
 }
 
+func (p *PulseChannel) setEnable(val bool) {
+	p.enabled = val
+	if !p.enabled {
+		p.lengthCounter = 0
+	}
+}
+
 type Sweep struct {
 	enabled bool
 	period  byte
