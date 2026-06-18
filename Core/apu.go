@@ -1,5 +1,10 @@
 package Core
 
+import (
+	"math"
+	"sync"
+)
+
 type APU struct {
 	Console *Console
 
@@ -23,6 +28,38 @@ type APU struct {
 	IRGPending bool
 
 	sampleBuffer []float32
+
+	ExposedBuf *exposedBuffer
+}
+
+type exposedBuffer struct {
+	mu   sync.Mutex
+	data []uint8
+}
+
+func (b *exposedBuffer) Read(p []uint8) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if len(b.data) == 0 {
+		for i := range p {
+			p[i] = 0
+		}
+		return len(p), nil
+	}
+	n := copy(p, b.data)
+	b.data = b.data[n:]
+	return n, nil
+}
+
+func (b *exposedBuffer) pushBuffer(sample []float32) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	for _, s := range sample {
+		bits := math.Float32bits(s)
+		b.data = append(b.data, uint8(bits), uint8(bits>>8), uint8(bits>>16), uint8(bits>>24))
+	}
 }
 
 func newApu(sampleRate float64, console *Console) *APU {

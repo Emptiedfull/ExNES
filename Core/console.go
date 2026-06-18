@@ -214,6 +214,8 @@ func (c *Console) RunFrame() {
 		c.tick()
 	}
 
+	c.Apu.pushBuffer(c.Apu.sampleBuffer)
+
 	// c.RunDisplayUpdates()
 }
 
