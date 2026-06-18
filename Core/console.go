@@ -10,9 +10,12 @@ import (
 )
 
 type Console struct {
-	Cpu        *cpu
-	Ppu        *ppu
-	JoyPad     *joyPad
+	Cpu *cpu
+	Ppu *ppu
+
+	Player1 *joyPad
+	Player2 *joyPad
+
 	OpenBusVal uint8
 
 	ScreenChannel chan ScreenInfo
@@ -60,6 +63,7 @@ func (c *Console) InitRom(data io.Reader) error {
 	if (header[6] & 0x01) == 0 {
 		mirroring = 3
 	}
+	c.Ppu.mirroring = mirroring
 
 	trainerByte := header[6] & 0x04
 	if trainerByte != 0 {
@@ -92,11 +96,11 @@ func (c *Console) InitRom(data io.Reader) error {
 			return fmt.Errorf("failed to read mem: %w", err)
 		}
 	}
-	fmt.Println("prg banks:", prgBanks)
-	fmt.Println("prg size:", len(prgData))
-	fmt.Println("chr banks:", chrBanks)
-	fmt.Println("chr size:", len(chrData))
-	fmt.Println("Mapper id:", mapper)
+	// fmt.Println("prg banks:", prgBanks)
+	// fmt.Println("prg size:", len(prgData))
+	// fmt.Println("chr banks:", chrBanks)
+	// fmt.Println("chr size:", len(chrData))
+	// fmt.Println("Mapper id:", mapper)
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
 
@@ -110,14 +114,17 @@ func InitializeConsole() *Console {
 		Cpu:        &cpu{},
 		OpenBusVal: 0,
 	}
-	c.JoyPad = &joyPad{}
+
+	c.Player1 = &joyPad{}
+	c.Player2 = &joyPad{}
+
 	c.Cpu.console = c
 	c.Ppu.console = c
 	c.OpenBusVal = 0
 	c.Cpu.fetchNew = true
 	c.ScreenChannel = make(chan ScreenInfo, 100)
 
-	fmt.Println(len(c.Ppu.backBuffer))
+	// fmt.Println(len(c.Ppu.backBuffer))
 
 	c.Cpu.mem = &bus{
 		cpu: c.Cpu,
@@ -197,6 +204,7 @@ func (c *Console) RunFrame() {
 		c.tick()
 	}
 
+	// c.RunDisplayUpdates()
 }
 
 func Quickstart(filepath string) *Console {

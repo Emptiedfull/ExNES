@@ -33,7 +33,7 @@ func (p *ppu) cycleTick() {
 
 			p.screenChanged = true
 			// copy(p.FrontBuffer, p.backBuffer)
-			p.FrontBuffer = p.backBuffer
+			p.FrontBuffer = p.BackBuffer
 		}
 	}
 
@@ -324,10 +324,10 @@ func (p *ppu) pushRGB(c RGB, x, y int) {
 
 	idx := ((y << 8) + x) << 2
 
-	p.backBuffer[idx] = c.R
-	p.backBuffer[idx+1] = c.G
-	p.backBuffer[idx+2] = c.B
-	p.backBuffer[idx+3] = 254
+	p.BackBuffer[idx] = c.R
+	p.BackBuffer[idx+1] = c.G
+	p.BackBuffer[idx+2] = c.B
+	p.BackBuffer[idx+3] = 254
 }
 
 func (p *ppu) readPallete(addr uint16) uint8 {

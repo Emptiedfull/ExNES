@@ -42,6 +42,9 @@ func (J *joyPad) readState() uint8 {
 	}
 
 	state := J.latched[J.index]
+	// if state == 1 {
+	// 	fmt.Println(J.index)
+	// }
 	J.index++
 
 	return 0x40 | state
@@ -73,4 +76,8 @@ func (J *joyPad) UpdateState(c ControlState) {
 
 func (J *joyPad) UpdateBtnState(btn int, state uint8) {
 	J.current[btn] = state
+}
+
+func (J *joyPad) UpdateBtnBool(btn int, state bool) {
+	J.current[btn] = uint8(convertBoolToInt(state))
 }

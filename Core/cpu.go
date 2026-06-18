@@ -187,9 +187,9 @@ func (b *bus) Read(addr uint16) uint8 {
 		val = b.internal[addr&0x07FF]
 	case addr == 0x4016:
 
-		return b.cpu.console.JoyPad.readState()
+		return b.cpu.console.Player1.readState()
 	case addr == 0x4017:
-		// return b.cpu.console.JoyPad.readState()
+		return b.cpu.console.Player2.readState()
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		val = b.cpu.console.Ppu.ReadReg(RegIndex, b.cpu.console.OpenBusVal)
@@ -208,7 +208,8 @@ func (b *bus) Write(addr uint16, val uint8) {
 	case addr <= 0x1FFF:
 		b.internal[addr&0x07FF] = val
 	case addr == 0x4016:
-		b.cpu.console.JoyPad.writeStrobe(val & 1)
+		b.cpu.console.Player1.writeStrobe(val & 1)
+		b.cpu.console.Player2.writeStrobe(val & 1)
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		b.cpu.console.Ppu.WriteReg(RegIndex, val)

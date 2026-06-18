@@ -10,8 +10,11 @@ type ppu struct {
 	Scanline int
 	Frame    int
 
-	backBuffer  [245760]uint8
+	BackBuffer  [245760]uint8
 	FrontBuffer [245760]uint8
+
+	mirroring       int
+	mirroringChange bool
 
 	screenChanged bool
 
@@ -105,7 +108,8 @@ func (p *ppu) MirrorNameTable(addr uint16) uint16 {
 	table := addr / 0x400
 	offset := addr % 0x400
 
-	m := p.mem.mapper.getMirroring()
+	// m := p.mem.mapper.getMirroring()
+	m := p.mirroring
 
 	switch m {
 
@@ -145,10 +149,6 @@ func (p *ppu) read(addr uint16) uint8 {
 		return p.mem.Pallete[palleteAddr]
 	}
 	return 0
-}
-
-func (p *ppu) GetScreenBuffer() [245760]uint8 {
-	return p.backBuffer
 }
 
 func (p *ppu) Write(addr uint16, val uint8) {

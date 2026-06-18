@@ -10,6 +10,7 @@ import (
 
 var emu *Core.Console
 var jsScreen js.Value
+var currentSpeed js.Value
 
 func main() {
 
@@ -22,7 +23,7 @@ func main() {
 
 		jsScreen = js.Global().Get("Uint8ClampedArray").New(256 * 240 * 4)
 		js.Global().Set("frameBuffer", jsScreen)
-
+		js.Global().Set("currentSpeed", currentSpeed)
 		return "x"
 	}))
 
@@ -73,9 +74,17 @@ func main() {
 		return nil
 	}))
 
+	js.Global().Set("reset", js.FuncOf(func(this js.Value, args []js.Value) any {
+		return nil
+	}))
+
+	currentSpeed = js.ValueOf(1)
+
 	loop := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 
-		emu.RunFrame()
+		for range 2 {
+			emu.RunFrame()
+		}
 		js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
 
 		return nil
