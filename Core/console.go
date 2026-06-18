@@ -12,6 +12,7 @@ import (
 type Console struct {
 	Cpu *cpu
 	Ppu *ppu
+	Apu *APU
 
 	Player1 *joyPad
 	Player2 *joyPad
@@ -110,8 +111,9 @@ func (c *Console) InitRom(data io.Reader) error {
 func InitializeConsole() *Console {
 	c := &Console{
 
-		Ppu:        &ppu{},
-		Cpu:        &cpu{},
+		Ppu: &ppu{},
+		Cpu: &cpu{},
+
 		OpenBusVal: 0,
 	}
 
@@ -120,6 +122,8 @@ func InitializeConsole() *Console {
 
 	c.Cpu.console = c
 	c.Ppu.console = c
+	c.Apu = newApu(44100, c)
+
 	c.OpenBusVal = 0
 	c.Cpu.fetchNew = true
 	c.ScreenChannel = make(chan ScreenInfo, 100)
@@ -193,6 +197,12 @@ func (c *Console) tick() {
 
 	for range 3 {
 		c.Ppu.step()
+	}
+
+	c.Apu.tick()
+
+	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
+		c.Cpu.triggerIRQ()
 	}
 
 }

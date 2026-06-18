@@ -1,12 +1,16 @@
 package Core
 
 type APU struct {
-	Pulse1 PulseChannel
-	Pulse2 PulseChannel
+	Console *Console
 
-	Triangle Triangle
+	Pulse1 *PulseChannel
+	Pulse2 *PulseChannel
 
-	Noise NoiseChannel
+	Triangle *Triangle
+
+	Noise *NoiseChannel
+
+	Dmc *DMC
 
 	Counter frameCounter
 
@@ -21,10 +25,14 @@ type APU struct {
 	sampleBuffer []float32
 }
 
-func newApu(sampleRate float64) *APU {
+func newApu(sampleRate float64, console *Console) *APU {
 	return &APU{
-		Pulse1:          *newPulseChannel(true),
-		Pulse2:          *newPulseChannel(false),
+		Pulse1:          newPulseChannel(true),
+		Pulse2:          newPulseChannel(false),
+		Console:         console,
+		Triangle:        newTriangle(),
+		Noise:           NewNoiseChannel(),
+		Dmc:             NewDMC(),
 		SampleRate:      sampleRate,
 		CyclesPerSample: 1_789_773.0 / sampleRate,
 		sampleBuffer:    make([]float32, 0, 4096),
@@ -103,6 +111,14 @@ func (A *APU) writeReg(addr uint16, val uint8) {
 		A.writeStatus(val)
 	case 0x4017:
 		A.writeFrameCounter(val)
+	case 0x400C:
+		A.Noise.WriteEnvelope(val)
+	case 0x400D:
+		// YEH FUCK U BRO DONT ACCESS THIS
+	case 0x400E:
+		A.Noise.WriteMode(val)
+	case 0x400F:
+		A.Noise.WriteLC(val)
 	}
 }
 
@@ -111,6 +127,10 @@ func (a *APU) writeStatus(val uint8) {
 	a.Pulse2.setEnable(val&0x02 != 0)
 	a.Triangle.setEnable(val&0x04 != 0)
 	a.Noise.setEnabled(val&0x08 != 0)
+	a.Dmc.setEnable(val&0x10 != 0)
+
+	a.Dmc.IRGPending = false
+
 }
 
 func (A *APU) readStatus() uint8 {
@@ -130,6 +150,14 @@ func (A *APU) readStatus() uint8 {
 
 	if A.Noise.lengthCounter > 0 {
 		status |= 0x08
+	}
+
+	if A.Dmc.excessBytes > 0 {
+		status |= 0x10
+	}
+
+	if A.Dmc.IRGPending {
+		status |= 0x80
 	}
 
 	A.IRGPending = false
@@ -161,21 +189,23 @@ func (a *APU) tick() {
 		a.Pulse1.StepTimer()
 		a.Pulse1.StepTimer()
 		a.Noise.stepTimer()
+		a.Dmc.stepTimer()
 	}
 
 	a.Triangle.StepTimer()
+
+	if a.Dmc.stall > 0 {
+		val := a.Console.Cpu.mem.Read(a.Dmc.currentAddr)
+		a.Dmc.LoadSample(val)
+
+		a.Console.Cpu.Stall = 4
+	}
 
 	a.CycleAcc++
 	if a.CycleAcc >= a.CyclesPerSample {
 		a.CycleAcc -= a.CyclesPerSample
 		a.sampleBuffer = append(a.sampleBuffer, a.mix())
 	}
-}
-
-func (a *APU) mix() float32 {
-
-	var buffer float32
-	return buffer
 }
 
 func (a *APU) stepFrameCounter() {
@@ -231,6 +261,7 @@ func (a *APU) clockQuarterFrame() {
 	a.Triangle.stepLinC()
 
 	a.Noise.StepEnvelope()
+
 }
 
 func (a *APU) clockHalfFrame() {
@@ -242,4 +273,27 @@ func (a *APU) clockHalfFrame() {
 	a.Triangle.stepLenC()
 
 	a.Noise.StepLC()
+}
+
+func (a *APU) mix() float32 {
+	p1 := a.Pulse1.Output()
+	p2 := a.Pulse2.Output()
+
+	tri := a.Triangle.Output()
+	noi := a.Noise.Output()
+
+	dmc := a.Dmc.Output()
+
+	pulseOut := pulseTable[p1+p2]
+	tndOut := tndTable[3*uint(tri)+2*uint(noi)+uint(dmc)]
+
+	return pulseOut + tndOut
+}
+
+func (a *APU) DrainSamples() []float32 {
+	out := make([]float32, len(a.sampleBuffer))
+	copy(out, a.sampleBuffer)
+
+	a.sampleBuffer = a.sampleBuffer[:0]
+	return out
 }

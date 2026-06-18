@@ -46,6 +46,26 @@ type cycleStep struct {
 	Mode string
 }
 
+func (c *cpu) triggerIRQ() {
+	if c.getFlag(Interrupt) {
+		return
+	}
+
+	c.pushStack(uint8(c.PC >> 8))
+	c.pushStack(uint8(c.PC & 0xFF))
+	c.pushStack(c.P &^ Break)
+
+	c.setFlag(Interrupt)
+
+	l := c.mem.Read(0xFFFE)
+	h := c.mem.Read(0xFFFF)
+
+	c.PC = builduint16(l, h)
+
+	c.Stall += 7
+
+}
+
 func (c *cpu) executeNmiCycle() int {
 
 	switch c.nmiStep {
@@ -185,11 +205,14 @@ func (b *bus) Read(addr uint16) uint8 {
 	switch {
 	case addr <= 0x1FFF:
 		val = b.internal[addr&0x07FF]
+	case addr == 0x4015:
+		val = b.cpu.console.Apu.readStatus()
 	case addr == 0x4016:
 
 		return b.cpu.console.Player1.readState()
 	case addr == 0x4017:
 		return b.cpu.console.Player2.readState()
+
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		val = b.cpu.console.Ppu.ReadReg(RegIndex, b.cpu.console.OpenBusVal)
@@ -210,6 +233,8 @@ func (b *bus) Write(addr uint16, val uint8) {
 	case addr == 0x4016:
 		b.cpu.console.Player1.writeStrobe(val & 1)
 		b.cpu.console.Player2.writeStrobe(val & 1)
+	case addr >= 0x4000 && addr <= 0x4017:
+		b.cpu.console.Apu.writeReg(addr, val)
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		b.cpu.console.Ppu.WriteReg(RegIndex, val)
