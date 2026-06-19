@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"time"
 
 	"github.com/ebitengine/oto/v3"
 )
@@ -18,6 +19,7 @@ func setUpAudio() {
 		SampleRate:   44100,
 		ChannelCount: 1,
 		Format:       oto.FormatFloat32LE,
+		BufferSize:   time.Millisecond * 20,
 	})
 
 	if err != nil {
@@ -29,7 +31,7 @@ func setUpAudio() {
 	fmt.Println("pplaying audio")
 	audioCtx = ctx // keep alive
 
-	player := ctx.NewPlayer(debugConsole.Console.Apu.ExposedBuf)
+	player := ctx.NewPlayer(debugConsole.Console.Apu)
 	player.Play()
 
 	audioPlayer = player

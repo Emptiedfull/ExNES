@@ -136,8 +136,9 @@ func startConsole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go debugConsole.StartDebugConsole()
+	// go debugConsole.StartDebugConsole()
 	setUpAudio()
+	go debugConsole.Console.Apu.LogAudioStats()
 
 	w.WriteHeader(http.StatusOK)
 }
