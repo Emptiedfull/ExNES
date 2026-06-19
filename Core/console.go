@@ -188,6 +188,7 @@ func (c *Console) RunDisplayUpdates() {
 }
 
 func (c *Console) tick() {
+	// c.RunDisplayUpdates()
 	if c.Cpu.Stall > 0 {
 		c.Cpu.Stall--
 		c.Cpu.TotalCycles++
@@ -201,9 +202,15 @@ func (c *Console) tick() {
 
 	c.Apu.tick()
 
+	if c.Apu.HasSample() {
+		c.Apu.ExposedBuf.pushBuffer([]float32{c.Apu.PopSample()})
+	}
+
 	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
 		c.Cpu.triggerIRQ()
 	}
+
+	c.RunDisplayUpdates()
 
 }
 
@@ -214,9 +221,10 @@ func (c *Console) RunFrame() {
 		c.tick()
 	}
 
-	c.Apu.pushBuffer(c.Apu.sampleBuffer)
+	// samples := c.Apu.DrainSamples()
 
-	// c.RunDisplayUpdates()
+	// c.Apu.ExposedBuf.pushBuffer(samples)
+
 }
 
 func Quickstart(filepath string) *Console {

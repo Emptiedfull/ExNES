@@ -135,7 +135,7 @@ func (p *PulseChannel) stepLengthCounter() {
 }
 
 func (p *PulseChannel) StepSweep() {
-	//update mute (not ai dont kill me )
+	p.updateMuting()
 
 	if p.Sweep.divider == 0 && p.Sweep.enabled && p.Sweep.shift != 0 && !p.Sweep.muting {
 		p.timerPeriod = p.GetTargetPeriod()
@@ -155,10 +155,10 @@ func (p *PulseChannel) GetTargetPeriod() uint16 {
 		if p.Pulse1 {
 			return p.timerPeriod - x - 1
 		} else {
-			return p.timer - x
+			return p.timerPeriod - x
 		}
 	} else {
-		return p.timer + x
+		return p.timerPeriod + x
 	}
 }
 
@@ -167,6 +167,8 @@ func (p *PulseChannel) updateMuting() {
 
 	if p.timerPeriod < 8 || target > 0x07FF {
 		p.muting = true
+	} else {
+		p.muting = false
 	}
 }
 
@@ -280,6 +282,7 @@ func (n *NoiseChannel) StepEnvelope() {
 	}
 
 	if n.envelope.divider == 0 {
+		n.envelope.divider = n.envelope.volume
 		if n.envelope.decayVol == 0 {
 			if n.envelope.loop {
 				n.envelope.decayVol = 15
@@ -403,13 +406,13 @@ func (t *Triangle) Output() uint8 {
 		return 0
 	}
 
-	if t.lengthCounter == 0 {
-		return 0
-	}
+	// if t.lengthCounter == 0 {
+	// 	return 0
+	// }
 
-	if t.linearCounter == 0 {
-		return 0
-	}
+	// if t.linearCounter == 0 {
+	// 	return 0
+	// }
 
 	return triangleSequence[t.sequence]
 }
@@ -456,7 +459,7 @@ func (d *DMC) WriteFlags(val uint8) { // IL-- RRRR
 	d.timerPeriod = dmcRateTable[val&0x0F]
 
 	if !d.irqEnabled {
-		d.irqEnabled = false
+		d.IRGPending = false
 	}
 }
 
@@ -514,8 +517,8 @@ func (d *DMC) stepTimer() {
 }
 
 func (d *DMC) stepOutput() {
-	if d.mute {
-		if d.shiftReg&0x01 != 1 {
+	if !d.mute {
+		if d.shiftReg&0x01 == 1 {
 			if d.output <= 125 {
 				d.output += 2
 			}

@@ -1,6 +1,7 @@
 package Core
 
 import (
+	"fmt"
 	"math"
 	"sync"
 )
@@ -30,11 +31,25 @@ type APU struct {
 	sampleBuffer []float32
 
 	ExposedBuf *exposedBuffer
+
+	//danger fields
+
+	drivingBuffer *exposedBuffer
 }
 
 type exposedBuffer struct {
 	mu   sync.Mutex
 	data []uint8
+}
+
+func (a *APU) HasSample() bool {
+	return len(a.sampleBuffer) > 0
+}
+
+func (a *APU) PopSample() float32 {
+	s := a.sampleBuffer[0]
+	a.sampleBuffer = a.sampleBuffer[1:]
+	return s
 }
 
 func (b *exposedBuffer) Read(p []uint8) (int, error) {
@@ -48,6 +63,7 @@ func (b *exposedBuffer) Read(p []uint8) (int, error) {
 		return len(p), nil
 	}
 	n := copy(p, b.data)
+
 	b.data = b.data[n:]
 	return n, nil
 }
@@ -73,6 +89,9 @@ func newApu(sampleRate float64, console *Console) *APU {
 		SampleRate:      sampleRate,
 		CyclesPerSample: 1_789_773.0 / sampleRate,
 		sampleBuffer:    make([]float32, 0, 4096),
+		ExposedBuf: &exposedBuffer{
+			data: make([]uint8, 0),
+		},
 	}
 
 }
@@ -81,11 +100,18 @@ var pulseTable [31]float32
 var tndTable [203]float32
 
 func init() {
+	fmt.Println("initing audio")
 	for i := range 31 {
+		if i == 0 {
+			continue
+		}
 		pulseTable[i] = 95.52 / (8128.0/float32(i) + 100.0) //magic numbers wooo
 	}
 
 	for i := 1; i < 203; i++ {
+		if i == 0 {
+			continue
+		}
 		tndTable[i] = 163.67 / (24329.0/float32(i) + 100.0)
 	}
 }
@@ -101,21 +127,6 @@ type cycleInfo struct {
 	quarterFrame bool
 	halfFrame    bool
 	irq          bool
-}
-
-var FourSteps = [5]cycleInfo{
-	{7457, true, false, false},
-	{14913, true, true, false},
-	{22371, true, false, false},
-	{29828, false, false, true},
-	{29829, true, true, true},
-}
-
-var FiveSteps = [4]cycleInfo{
-	{7457, true, false, false},
-	{14913, true, true, false},
-	{22371, true, false, false},
-	{37281, true, true, false},
 }
 
 func (A *APU) writeReg(addr uint16, val uint8) {
@@ -189,6 +200,10 @@ func (A *APU) readStatus() uint8 {
 		status |= 0x08
 	}
 
+	if A.IRGPending {
+		status |= 0x40
+	}
+
 	if A.Dmc.excessBytes > 0 {
 		status |= 0x10
 	}
@@ -224,7 +239,7 @@ func (a *APU) tick() {
 	a.timerTickLatch = !a.timerTickLatch
 	if a.timerTickLatch {
 		a.Pulse1.StepTimer()
-		a.Pulse1.StepTimer()
+		a.Pulse2.StepTimer()
 		a.Noise.stepTimer()
 		a.Dmc.stepTimer()
 	}
@@ -235,13 +250,15 @@ func (a *APU) tick() {
 		val := a.Console.Cpu.mem.Read(a.Dmc.currentAddr)
 		a.Dmc.LoadSample(val)
 
-		a.Console.Cpu.Stall = 4
+		a.Console.Cpu.Stall += 4
 	}
 
 	a.CycleAcc++
 	if a.CycleAcc >= a.CyclesPerSample {
 		a.CycleAcc -= a.CyclesPerSample
+
 		a.sampleBuffer = append(a.sampleBuffer, a.mix())
+		AudioStats.SamplesCreated.Add(1)
 	}
 }
 

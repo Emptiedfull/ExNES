@@ -230,6 +230,8 @@ func (b *bus) Write(addr uint16, val uint8) {
 	switch {
 	case addr <= 0x1FFF:
 		b.internal[addr&0x07FF] = val
+	case addr == 0x4014:
+		b.cpu.console.ExecuteOAMDMA(val)
 	case addr == 0x4016:
 		b.cpu.console.Player1.writeStrobe(val & 1)
 		b.cpu.console.Player2.writeStrobe(val & 1)
@@ -238,8 +240,7 @@ func (b *bus) Write(addr uint16, val uint8) {
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		b.cpu.console.Ppu.WriteReg(RegIndex, val)
-	case addr == 0x4014:
-		b.cpu.console.ExecuteOAMDMA(val)
+
 	case addr >= 0x6000:
 		b.mapper.WritePRG(addr, val)
 	case addr <= 0x7FFF:

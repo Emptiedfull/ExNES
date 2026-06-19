@@ -74,7 +74,6 @@ func (d *Debugger) StartDebugConsole() {
 		for now.After(targetTime) {
 
 			d.Console.RunFrame()
-			d.Console.RunDisplayUpdates()
 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
 
 		}
