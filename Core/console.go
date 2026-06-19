@@ -202,15 +202,13 @@ func (c *Console) tick() {
 
 	c.Apu.tick()
 
-	if c.Apu.HasSample() {
-		c.Apu.ExposedBuf.pushBuffer([]float32{c.Apu.PopSample()})
-	}
+	// if c.Apu.HasSample() {
+	// 	c.Apu.ExposedBuf.pushBuffer([]float32{c.Apu.PopSample()})
+	// }
 
 	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
 		c.Cpu.triggerIRQ()
 	}
-
-	c.RunDisplayUpdates()
 
 }
 

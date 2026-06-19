@@ -7,9 +7,11 @@ import (
 	"time"
 )
 
-func (a *APU) MalgoAdapter(_, output []byte, framecount int32) {
-	samplesNeeded := int(framecount)
+func (a *APU) MalgoAdapter(output []byte, input []byte, framecount uint32) {
+	a.DriveSamples(output, framecount)
+}
 
+func (a *APU) DriveSamples(output []byte, samplesNeeded uint32) {
 	for i := range samplesNeeded {
 		for !a.HasSample() {
 			a.Console.TickNoAudio()
@@ -24,36 +26,6 @@ func (a *APU) MalgoAdapter(_, output []byte, framecount int32) {
 		output[i*4+3] = byte(bits >> 24)
 	}
 }
-
-func (a *APU) Read(p []uint8) (int, error) {
-	AudioStats.ReadCalls.Add(1)
-	AudioStats.BytesPulled.Add(int64(len(p)))
-
-	maxSamples := 512
-	samplesNeeded := min(len(p)/4, maxSamples)
-	// samplesNeeded := len(p) / 4
-
-	for i := range samplesNeeded {
-		if !a.HasSample() {
-			// AudioStats.Underruns.Add(1)
-			for !a.HasSample() {
-				a.Console.TickNoAudio()
-			}
-		}
-
-		sample := a.PopSample()
-		bits := math.Float32bits(sample)
-
-		p[i*4] = uint8(bits)
-		p[i*4+1] = uint8(bits >> 8)
-		p[i*4+2] = uint8(bits >> 16)
-		p[i*4+3] = uint8(bits >> 24)
-
-	}
-
-	return 20, nil
-}
-
 func (c *Console) TickNoAudio() {
 	if c.Cpu.Stall > 0 {
 		c.Cpu.Stall--

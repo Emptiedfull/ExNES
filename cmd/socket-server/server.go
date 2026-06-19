@@ -1,3 +1,5 @@
+//go:build !js && !wasm
+
 package main
 
 import (
@@ -221,13 +223,12 @@ func quickStart(w http.ResponseWriter, r *http.Request) {
 
 func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	debugConsole.Console = Core.Quickstart("C:/Users/user/ExNES/games/NROM/mario.nes")
-	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper2/contra.nes")
+	debugConsole.Console = Core.Quickstart("C:/Users/user/ExNES/games/Mapper2/contra.nes")
+	// c.LoadROM()
 
 	//c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper1/ff.nes")
 	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/test_roms/ppu/vbl.nes")
 	// c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper4/mario3.nes")
-
 	debugConsole.Disassembly = make(map[uint16]Core.AssemblyLine)
 
 	debugConsole.Console.Ppu.DebugBuffer = make([]uint8, 512*64)

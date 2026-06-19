@@ -1,7 +1,9 @@
 const go = new Go()
 var loaded = false
 
-WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=8"),go.importObject).then((result)=>{
+
+
+WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=0"),go.importObject).then((result)=>{
     go.run(result.instance)
     loaded = true
 })
@@ -27,7 +29,30 @@ function renderLoop() {
     requestAnimationFrame(renderLoop)
 }
 
+let BufferSize = 128
 
+
+const setUpAudio = async ()=>{
+    console.log("starting audio processor")
+
+    audioCtx = new AudioContext({sampleRate: 44100})
+
+    await audioCtx.audioWorklet.addModule('static/scripts/worklet.js')
+
+    const node = new AudioWorkletNode(audioCtx,'static/scripts/worklet.js',{
+        outputChannelCount: [1],
+    })
+
+    node.connect(audioCtx.destination)
+
+    buf = Uint8Array(BufferSize * 4)
+
+    node.port.onmessage = (e) =>{
+        if (e.data.type === 'requestSamples'){
+            console.log("requesting samples")
+        }
+    } 
+}
 
 const loadRom = async(game)=>{
     const response = await fetch("static/supported/"+game+".nes")
