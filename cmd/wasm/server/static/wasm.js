@@ -3,9 +3,16 @@ var loaded = false
 
 
 
-WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=0"),go.importObject).then((result)=>{
+WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=10"),go.importObject).then(async(result)=>{
     go.run(result.instance)
     loaded = true
+
+     window.startEmulator()
+      await loadRom('mario')
+    renderLoop()
+    window.initBuffer(256)
+
+     await setUpAudio()
 })
 
 
@@ -16,6 +23,12 @@ const imageData = ctx.createImageData(256,240)
 
 window.addEventListener("DOMContentLoaded",async ()=>{
     await setUpButtons()
+   
+
+    
+   
+   
+
     
 })
 
@@ -29,29 +42,29 @@ function renderLoop() {
     requestAnimationFrame(renderLoop)
 }
 
-let BufferSize = 128
+let BufferSize = 256
+let buf = new Uint8Array(BufferSize*4)
+
+document.addEventListener('keydown', () => {
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume()
+    }
+}, { once: true })
 
 
 const setUpAudio = async ()=>{
     console.log("starting audio processor")
 
     audioCtx = new AudioContext({sampleRate: 44100})
+    const proc = audioCtx.createScriptProcessor(BufferSize,0,1)
+   
+    proc.onaudioprocess = (e)=>{
+        window.getSamples(BufferSize,buf)
+        e.outputBuffer.getChannelData(0).set(new Float32Array(buf.buffer))
+    }
 
-    await audioCtx.audioWorklet.addModule('static/scripts/worklet.js')
+    proc.connect(audioCtx.destination)
 
-    const node = new AudioWorkletNode(audioCtx,'static/scripts/worklet.js',{
-        outputChannelCount: [1],
-    })
-
-    node.connect(audioCtx.destination)
-
-    buf = Uint8Array(BufferSize * 4)
-
-    node.port.onmessage = (e) =>{
-        if (e.data.type === 'requestSamples'){
-            console.log("requesting samples")
-        }
-    } 
 }
 
 const loadRom = async(game)=>{

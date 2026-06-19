@@ -113,7 +113,7 @@ func startAudioDriver() {
 	}))
 
 	js.Global().Set("getSamples", js.FuncOf(func(this js.Value, args []js.Value) any {
-		fmt.Println("tyo mna")
+
 		samplesNeeded := args[0].Int()
 
 		emu.Apu.DriveSamples(outputBuf, uint32(samplesNeeded))
@@ -129,6 +129,13 @@ func startAudioDriver() {
 
 		outputScreen = js.Global().Get("Uint8ClampedArray").New(256 * 240 * 4)
 		js.Global().Set("frameBuffer", outputScreen)
+		return nil
+	}))
+
+	js.Global().Set("update", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+
+		emu.Player1.UpdateBtnBool(args[0].Int(), args[1].Bool())
+
 		return nil
 	}))
 
