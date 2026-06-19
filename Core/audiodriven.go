@@ -7,6 +7,24 @@ import (
 	"time"
 )
 
+func (a *APU) MalgoAdapter(_, output []byte, framecount int32) {
+	samplesNeeded := int(framecount)
+
+	for i := range samplesNeeded {
+		for !a.HasSample() {
+			a.Console.TickNoAudio()
+		}
+
+		sample := a.PopSample()
+
+		bits := math.Float32bits(sample)
+		output[i*4] = byte(bits)
+		output[i*4+1] = byte(bits >> 8)
+		output[i*4+2] = byte(bits >> 16)
+		output[i*4+3] = byte(bits >> 24)
+	}
+}
+
 func (a *APU) Read(p []uint8) (int, error) {
 	AudioStats.ReadCalls.Add(1)
 	AudioStats.BytesPulled.Add(int64(len(p)))
@@ -33,7 +51,7 @@ func (a *APU) Read(p []uint8) (int, error) {
 
 	}
 
-	return len(p), nil
+	return 20, nil
 }
 
 func (c *Console) TickNoAudio() {

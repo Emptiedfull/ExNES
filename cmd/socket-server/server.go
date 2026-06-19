@@ -12,10 +12,6 @@ import (
 
 func main() {
 
-	// go func() {
-	// 	log.Println("pprof listening on :6060")
-	// 	log.Fatal(http.ListenAndServe(":6060", nil))
-	// }()
 	fmt.Println("running")
 
 	run_server()
@@ -137,8 +133,8 @@ func startConsole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// go debugConsole.StartDebugConsole()
-	setUpAudio()
-	go debugConsole.Console.Apu.LogAudioStats()
+	setUpAudioDriver()
+	// go debugConsole.Console.Apu.LogAudioStats()
 
 	w.WriteHeader(http.StatusOK)
 }

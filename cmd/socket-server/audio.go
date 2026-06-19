@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ebitengine/oto/v3"
+	"github.com/gen2brain/malgo"
 )
 
 var (
@@ -14,7 +15,63 @@ var (
 	audioPlayer *oto.Player
 )
 
+func setUpAudioDriver() {
+	ctx, err := malgo.InitContext(nil, malgo.ContextConfig{}, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	config := malgo.DefaultDeviceConfig(malgo.Playback)
+
+	config.Playback.Format = malgo.FormatF32
+	config.Playback.Channels = 1
+	config.SampleRate = 44100
+	config.PeriodSizeInMilliseconds = 8
+	config.Alsa.NoMMap = 1
+
+	onSamples := func(output, input []byte, frameCount uint32) {
+		if frameCount == 0 || len(output) == 0 {
+			fmt.Println(len(output), len(input))
+			return
+		}
+
+		samplesNeeded := int(frameCount)
+
+		for i := range samplesNeeded {
+			for !debugConsole.Console.Apu.HasSample() {
+				debugConsole.Console.TickNoAudio()
+			}
+
+			sample := debugConsole.Console.Apu.PopSample()
+
+			bits := math.Float32bits(sample)
+			output[i*4] = byte(bits)
+			output[i*4+1] = byte(bits >> 8)
+			output[i*4+2] = byte(bits >> 16)
+			output[i*4+3] = byte(bits >> 24)
+		}
+
+	}
+
+	device, err := malgo.InitDevice(ctx.Context, config, malgo.DeviceCallbacks{Data: onSamples})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+		i := 1
+		for range ticker.C {
+			fmt.Println(debugConsole.Console.Ppu.Frame / i)
+			i++
+		}
+	}()
+
+	device.Start()
+}
+
 func setUpAudio() {
+
 	ctx, readyChan, err := oto.NewContext(&oto.NewContextOptions{
 		SampleRate:   44100,
 		ChannelCount: 1,
