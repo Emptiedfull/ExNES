@@ -16,7 +16,7 @@ func main() {
 
 	stallChan := make(chan bool)
 
-	fmt.Println("core version 2")
+	fmt.Println("core version 20")
 
 	startFrameDriver()
 
@@ -48,6 +48,8 @@ func startFrameDriver() {
 		if len(samples) == 0 {
 			return js.ValueOf(0)
 		}
+
+		fmt.Println("getting samples", len(samples))
 
 		count := len(samples)
 		need := count * 4

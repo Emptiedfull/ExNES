@@ -3,7 +3,7 @@ var loaded = false
 
 
 
-WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=50"),go.importObject).then(async(result)=>{
+WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=10"),go.importObject).then(async(result)=>{
     go.run(result.instance)
     loaded = true
 
@@ -22,14 +22,7 @@ window.addEventListener("DOMContentLoaded",async ()=>{
 })
 
 function renderLoop() {
-    console.log('audio state:', audioCtx.state)
     nesFrame()
-
-    // window.getSamples(BufferSize,buf)
-    // proc.port.postMessage({buffer:buf.buffer},[buf.buffer])
-    // buf = new Uint8Array(BufferSize * 4) 
-    // floatView = new Float32Array(buf.buffer)
-    
     imageData.data.set(frameBuffer)
     ctx.putImageData(imageData,0,0)
 

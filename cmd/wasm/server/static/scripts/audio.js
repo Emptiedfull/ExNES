@@ -1,22 +1,23 @@
 
-let BufferSize = 2096
+let BufferSize = 4096
 
 const sharedBuf = new SharedArrayBuffer(BufferSize*4+8) 
 const ringBufs = new Float32Array(sharedBuf,0,BufferSize)
-const ringIdx = new Int32Array(sharedBuf,0,BufferSize*4,2)
+const ringIdx = new Int32Array(sharedBuf,BufferSize*4,2)
 
 const S_Size = 2048
 const S_Buf = new Float32Array(S_Size)
 
-let proc,ctx
+let proc,audioCtx
 
 const setUpAudio = async ()=>{
 
     audioCtx = new AudioContext({sampleRate: 44100})
 
-    initBuffer(new Float32Array(2048))
+    initBuffer(new Uint8Array(S_Buf.buffer))
 
-    await audioCtx.audioWorklet.addModule("/static/scripts/audioProc.js?v=1102")
+
+    await audioCtx.audioWorklet.addModule("/static/scripts/audioProc.js?v=1122")
     proc = new AudioWorkletNode(audioCtx,"audioproc",{
         outputChannelCount: [1]
     })
@@ -41,7 +42,7 @@ const setUpAudio = async ()=>{
             const x = Math.min(count,free)
 
             if (x < count){
-                console.log("soemthing is super wrong, dropped samples:",count-n)
+                console.log("soemthing is super wrong, dropped samples:",count-x)
             }
 
             for (let i =0;i < x;i++){

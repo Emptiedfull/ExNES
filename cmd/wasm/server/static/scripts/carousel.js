@@ -103,10 +103,9 @@ const setUpButtons = async () => {
 async function begin(game) {
 
     startEmulator()
-     initBuffer(1024)
     console.log("console started")
     await loadRom(game)
-         audioCtx.resume()
+    audioCtx.resume()
     renderLoop()
    
    
