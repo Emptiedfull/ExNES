@@ -195,7 +195,6 @@ func (c *Console) tick() {
 	} else {
 		c.Cpu.tick()
 	}
-
 	for range 3 {
 		c.Ppu.step()
 	}

@@ -5,6 +5,7 @@ package main
 import (
 	"exnes/Core"
 	"fmt"
+	"math"
 	"syscall/js"
 )
 
@@ -16,7 +17,7 @@ func main() {
 
 	fmt.Println("core version 2")
 
-	startAudioDriver()
+	startFrameDriver()
 
 	<-stallChan
 }
@@ -95,12 +96,44 @@ func startFrameDriver() {
 		return nil
 	})
 
+	var outputBuf []byte
+
+	js.Global().Set("initBuffer", js.FuncOf(func(this js.Value, args []js.Value) any {
+		count := args[0].Int()
+		outputBuf = make([]byte, count*4)
+
+		return nil
+	}))
+
+	js.Global().Set("getSamples", js.FuncOf(func(this js.Value, args []js.Value) any {
+		samplesNeeded := args[0].Int()
+		jsBuf := args[1]
+
+		for i := range samplesNeeded {
+			var sample float32
+			if emu.Apu.HasSample() {
+				sample = emu.Apu.PopSample()
+			} else {
+				sample = 0
+			}
+
+			bits := math.Float32bits(sample)
+			outputBuf[i*4] = byte(bits)
+			outputBuf[i*4+1] = byte(bits >> 8)
+
+			outputBuf[i*4+2] = byte(bits >> 16)
+			outputBuf[i*4+3] = byte(bits >> 24)
+		}
+
+		js.CopyBytesToJS(jsBuf, outputBuf)
+		return nil
+	}))
+
 	js.Global().Set("nesFrame", loop)
 
 }
 
 func startAudioDriver() {
-
 	var outputBuf []byte
 	var emu *Core.Console
 	var outputScreen js.Value
@@ -113,14 +146,26 @@ func startAudioDriver() {
 	}))
 
 	js.Global().Set("getSamples", js.FuncOf(func(this js.Value, args []js.Value) any {
-
 		samplesNeeded := args[0].Int()
-
-		emu.Apu.DriveSamples(outputBuf, uint32(samplesNeeded))
-
 		jsBuf := args[1]
-		js.CopyBytesToJS(jsBuf, outputBuf)
 
+		for i := range samplesNeeded {
+			var sample float32
+			if emu.Apu.HasSample() {
+				sample = emu.Apu.PopSample()
+			} else {
+				sample = 0
+			}
+
+			bits := math.Float32bits(sample)
+			outputBuf[i*4] = byte(bits)
+			outputBuf[i*4+1] = byte(bits >> 8)
+
+			outputBuf[i*4+2] = byte(bits >> 16)
+			outputBuf[i*4+3] = byte(bits >> 24)
+		}
+
+		js.CopyBytesToJS(jsBuf, outputBuf)
 		return nil
 	}))
 

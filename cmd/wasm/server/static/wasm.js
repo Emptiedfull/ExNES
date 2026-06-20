@@ -3,16 +3,12 @@ var loaded = false
 
 
 
-WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=10"),go.importObject).then(async(result)=>{
+WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=50"),go.importObject).then(async(result)=>{
     go.run(result.instance)
     loaded = true
 
-     window.startEmulator()
-      await loadRom('mario')
-    renderLoop()
-    window.initBuffer(256)
+    await setUpAudio()
 
-     await setUpAudio()
 })
 
 
@@ -23,18 +19,17 @@ const imageData = ctx.createImageData(256,240)
 
 window.addEventListener("DOMContentLoaded",async ()=>{
     await setUpButtons()
-   
-
-    
-   
-   
-
     
 })
 
 function renderLoop() {
+    console.log('audio state:', audioCtx.state)
     nesFrame()
 
+    // window.getSamples(BufferSize,buf)
+    // proc.port.postMessage({buffer:buf.buffer},[buf.buffer])
+    // buf = new Uint8Array(BufferSize * 4) 
+    // floatView = new Float32Array(buf.buffer)
     
     imageData.data.set(frameBuffer)
     ctx.putImageData(imageData,0,0)
@@ -42,25 +37,31 @@ function renderLoop() {
     requestAnimationFrame(renderLoop)
 }
 
-let BufferSize = 256
+let BufferSize = 1024
 let buf = new Uint8Array(BufferSize*4)
+let fbuf = new Float32Array(buf.buffer)
 
-document.addEventListener('keydown', () => {
-    if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume()
-    }
-}, { once: true })
+// document.addEventListener('keydown', () => {
+//     if (audioCtx && audioCtx.state === 'suspended') {
+//         audioCtx.resume()
+//     }
+// }, { once: true })
 
 
 const setUpAudio = async ()=>{
     console.log("starting audio processor")
 
     audioCtx = new AudioContext({sampleRate: 44100})
-    const proc = audioCtx.createScriptProcessor(BufferSize,0,1)
-   
-    proc.onaudioprocess = (e)=>{
-        window.getSamples(BufferSize,buf)
-        e.outputBuffer.getChannelData(0).set(new Float32Array(buf.buffer))
+    await audioCtx.audioWorklet.addModule("/static/scripts/audioProc.js?v=12")
+
+    proc = new AudioWorkletNode(audioCtx,"audioproc",{
+        outputChannelCount: [1]
+    })
+
+    proc.port.onmessage = (e) =>{
+        if (e.data.type == "needSampples"){
+            console.log("HAHAH")
+        }
     }
 
     proc.connect(audioCtx.destination)

@@ -28,7 +28,7 @@ type APU struct {
 
 	IRGPending bool
 
-	sampleBuffer []float32
+	SampleBuffer []float32
 
 	ExposedBuf *exposedBuffer
 
@@ -43,12 +43,12 @@ type exposedBuffer struct {
 }
 
 func (a *APU) HasSample() bool {
-	return len(a.sampleBuffer) > 0
+	return len(a.SampleBuffer) > 0
 }
 
 func (a *APU) PopSample() float32 {
-	s := a.sampleBuffer[0]
-	a.sampleBuffer = a.sampleBuffer[1:]
+	s := a.SampleBuffer[0]
+	a.SampleBuffer = a.SampleBuffer[1:]
 	return s
 }
 
@@ -88,7 +88,7 @@ func newApu(sampleRate float64, console *Console) *APU {
 		Dmc:             NewDMC(),
 		SampleRate:      sampleRate,
 		CyclesPerSample: 1_789_773.0 / sampleRate,
-		sampleBuffer:    make([]float32, 0, 4096),
+		SampleBuffer:    make([]float32, 0, 4096),
 		ExposedBuf: &exposedBuffer{
 			data: make([]uint8, 0),
 		},
@@ -257,7 +257,7 @@ func (a *APU) tick() {
 	if a.CycleAcc >= a.CyclesPerSample {
 		a.CycleAcc -= a.CyclesPerSample
 
-		a.sampleBuffer = append(a.sampleBuffer, a.mix())
+		a.SampleBuffer = append(a.SampleBuffer, a.mix())
 		AudioStats.SamplesCreated.Add(1)
 	}
 }
@@ -345,9 +345,9 @@ func (a *APU) mix() float32 {
 }
 
 func (a *APU) DrainSamples() []float32 {
-	out := make([]float32, len(a.sampleBuffer))
-	copy(out, a.sampleBuffer)
+	out := make([]float32, len(a.SampleBuffer))
+	copy(out, a.SampleBuffer)
 
-	a.sampleBuffer = a.sampleBuffer[:0]
+	a.SampleBuffer = a.SampleBuffer[:0]
 	return out
 }

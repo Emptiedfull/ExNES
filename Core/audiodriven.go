@@ -72,7 +72,7 @@ func (a *APU) LogAudioStats() {
 
 		fmt.Printf(
 			"[APU] reads/s: %d | bytes/s: %d | samples pulled/s: %d (want ~44100) | samples/read: %d | underruns/s: %d | buffer backlog: %d\n",
-			calls, bytes, bytes/4, samplesPerCall, underruns, len(a.sampleBuffer),
+			calls, bytes, bytes/4, samplesPerCall, underruns, len(a.SampleBuffer),
 		)
 	}
 }
