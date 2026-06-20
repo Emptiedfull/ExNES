@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"syscall/js"
+	"unsafe"
 )
 
 var currentSpeed js.Value
@@ -25,6 +26,42 @@ func main() {
 func startFrameDriver() {
 	var emu *Core.Console
 	var jsScreen js.Value
+
+	const S_size = 2048
+	var S_Arr = make([]byte, S_size*4)
+
+	var JS_Arr js.Value
+
+	js.Global().Set("initBuffer", js.FuncOf(func(this js.Value, args []js.Value) any {
+		JS_Arr = args[0]
+		return nil
+	}))
+
+	js.Global().Set("getSamples", js.FuncOf(func(this js.Value, args []js.Value) any {
+
+		// size := int32(len(sampleBuf))
+		if emu == nil {
+			return js.ValueOf(0)
+		}
+
+		samples := emu.Apu.DrainSamples()
+		if len(samples) == 0 {
+			return js.ValueOf(0)
+		}
+
+		count := len(samples)
+		need := count * 4
+
+		view := unsafe.Slice(
+			(*byte)(unsafe.Pointer(&samples[0])), need,
+		)
+
+		copy(S_Arr, view)
+
+		js.CopyBytesToJS(JS_Arr, S_Arr[:need])
+
+		return nil
+	}))
 
 	fmt.Println("core initialized 1")
 	js.Global().Set("startEmulator", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -96,38 +133,31 @@ func startFrameDriver() {
 		return nil
 	})
 
-	var outputBuf []byte
+	// var outputBuf []byte
 
-	js.Global().Set("initBuffer", js.FuncOf(func(this js.Value, args []js.Value) any {
-		count := args[0].Int()
-		outputBuf = make([]byte, count*4)
+	// js.Global().Set("getSamples", js.FuncOf(func(this js.Value, args []js.Value) any {
+	// 	samplesNeeded := args[0].Int()
+	// 	jsBuf := args[1]
 
-		return nil
-	}))
+	// 	for i := range samplesNeeded {
+	// 		var sample float32
+	// 		if emu.Apu.HasSample() {
+	// 			sample = emu.Apu.PopSample()
+	// 		} else {
+	// 			sample = 0
+	// 		}
 
-	js.Global().Set("getSamples", js.FuncOf(func(this js.Value, args []js.Value) any {
-		samplesNeeded := args[0].Int()
-		jsBuf := args[1]
+	// 		bits := math.Float32bits(sample)
+	// 		outputBuf[i*4] = byte(bits)
+	// 		outputBuf[i*4+1] = byte(bits >> 8)
 
-		for i := range samplesNeeded {
-			var sample float32
-			if emu.Apu.HasSample() {
-				sample = emu.Apu.PopSample()
-			} else {
-				sample = 0
-			}
+	// 		outputBuf[i*4+2] = byte(bits >> 16)
+	// 		outputBuf[i*4+3] = byte(bits >> 24)
+	// 	}
 
-			bits := math.Float32bits(sample)
-			outputBuf[i*4] = byte(bits)
-			outputBuf[i*4+1] = byte(bits >> 8)
-
-			outputBuf[i*4+2] = byte(bits >> 16)
-			outputBuf[i*4+3] = byte(bits >> 24)
-		}
-
-		js.CopyBytesToJS(jsBuf, outputBuf)
-		return nil
-	}))
+	// 	js.CopyBytesToJS(jsBuf, outputBuf)
+	// 	return nil
+	// }))
 
 	js.Global().Set("nesFrame", loop)
 
@@ -154,7 +184,7 @@ func startAudioDriver() {
 			if emu.Apu.HasSample() {
 				sample = emu.Apu.PopSample()
 			} else {
-				sample = 0
+				sample = 1
 			}
 
 			bits := math.Float32bits(sample)
@@ -164,7 +194,6 @@ func startAudioDriver() {
 			outputBuf[i*4+2] = byte(bits >> 16)
 			outputBuf[i*4+3] = byte(bits >> 24)
 		}
-
 		js.CopyBytesToJS(jsBuf, outputBuf)
 		return nil
 	}))

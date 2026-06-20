@@ -37,9 +37,7 @@ function renderLoop() {
     requestAnimationFrame(renderLoop)
 }
 
-let BufferSize = 1024
-let buf = new Uint8Array(BufferSize*4)
-let fbuf = new Float32Array(buf.buffer)
+
 
 // document.addEventListener('keydown', () => {
 //     if (audioCtx && audioCtx.state === 'suspended') {
@@ -47,26 +45,6 @@ let fbuf = new Float32Array(buf.buffer)
 //     }
 // }, { once: true })
 
-
-const setUpAudio = async ()=>{
-    console.log("starting audio processor")
-
-    audioCtx = new AudioContext({sampleRate: 44100})
-    await audioCtx.audioWorklet.addModule("/static/scripts/audioProc.js?v=12")
-
-    proc = new AudioWorkletNode(audioCtx,"audioproc",{
-        outputChannelCount: [1]
-    })
-
-    proc.port.onmessage = (e) =>{
-        if (e.data.type == "needSampples"){
-            console.log("HAHAH")
-        }
-    }
-
-    proc.connect(audioCtx.destination)
-
-}
 
 const loadRom = async(game)=>{
     const response = await fetch("static/supported/"+game+".nes")
