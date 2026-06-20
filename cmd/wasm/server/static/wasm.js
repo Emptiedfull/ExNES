@@ -11,7 +11,6 @@ WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=50"),go.importObject)
 
 })
 
-
 const canvas = document.getElementById("screen")
 const ctx = canvas.getContext("2d")
 const imageData = ctx.createImageData(256,240)

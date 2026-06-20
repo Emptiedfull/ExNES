@@ -60,10 +60,10 @@ func startFrameDriver() {
 
 		js.CopyBytesToJS(JS_Arr, S_Arr[:need])
 
-		return nil
+		return js.ValueOf(count)
 	}))
 
-	fmt.Println("core initialized 1")
+	fmt.Println("core initialized 2")
 	js.Global().Set("startEmulator", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		emu = Core.InitializeConsole()
 		fmt.Println("console initialized")

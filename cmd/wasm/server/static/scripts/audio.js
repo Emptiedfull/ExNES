@@ -14,7 +14,7 @@ const setUpAudio = async ()=>{
 
     audioCtx = new AudioContext({sampleRate: 44100})
 
-    initBuffer(S_Size)
+    initBuffer(new Float32Array(2048))
 
     await audioCtx.audioWorklet.addModule("/static/scripts/audioProc.js?v=1102")
     proc = new AudioWorkletNode(audioCtx,"audioproc",{
