@@ -33,27 +33,27 @@ const keyMap = {
     'ArrowRight': 'dpad-right'
 }
 
-window.addEventListener('keydown', (e) => {
-    // joypad = document.getElementById("joypad")
-    // joypad.classList.add("active")
-    if (keyMap[e.code] !== undefined  && romRunning) {
-        window.update(ControlMap[keyMap[e.code]],true)
+// window.addEventListener('keydown', (e) => {
+//     // joypad = document.getElementById("joypad")
+//     // joypad.classList.add("active")
+//     if (keyMap[e.code] !== undefined  && romRunning) {
+//         window.update(ControlMap[keyMap[e.code]],true)
 
-          btn = document.getElementById(keyMap[e.code])
-          PressBtn(btn)
-    }
-})
+//           btn = document.getElementById(keyMap[e.code])
+//           PressBtn(btn)
+//     }
+// })
 
-window.addEventListener('keyup', (e) => {
-    if (keyMap[e.code] !== undefined && romRunning) {
+// window.addEventListener('keyup', (e) => {
+//     if (keyMap[e.code] !== undefined && romRunning) {
         
-        window.update(ControlMap[keyMap[e.code]],false)
+//         window.update(ControlMap[keyMap[e.code]],false)
 
-          btn = document.getElementById(keyMap[e.code])
-          ReleaseBtn(btn)
+//           btn = document.getElementById(keyMap[e.code])
+//           ReleaseBtn(btn)
        
-    }
-})
+//     }
+// })
 
 
 document.addEventListener("DOMContentLoaded",async()=>{

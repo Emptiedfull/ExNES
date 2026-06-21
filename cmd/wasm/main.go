@@ -133,32 +133,6 @@ func startFrameDriver() {
 		return nil
 	})
 
-	// var outputBuf []byte
-
-	// js.Global().Set("getSamples", js.FuncOf(func(this js.Value, args []js.Value) any {
-	// 	samplesNeeded := args[0].Int()
-	// 	jsBuf := args[1]
-
-	// 	for i := range samplesNeeded {
-	// 		var sample float32
-	// 		if emu.Apu.HasSample() {
-	// 			sample = emu.Apu.PopSample()
-	// 		} else {
-	// 			sample = 0
-	// 		}
-
-	// 		bits := math.Float32bits(sample)
-	// 		outputBuf[i*4] = byte(bits)
-	// 		outputBuf[i*4+1] = byte(bits >> 8)
-
-	// 		outputBuf[i*4+2] = byte(bits >> 16)
-	// 		outputBuf[i*4+3] = byte(bits >> 24)
-	// 	}
-
-	// 	js.CopyBytesToJS(jsBuf, outputBuf)
-	// 	return nil
-	// }))
-
 	js.Global().Set("nesFrame", loop)
 
 }

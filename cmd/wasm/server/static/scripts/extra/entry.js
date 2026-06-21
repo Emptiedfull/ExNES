@@ -1,31 +1,63 @@
-const go = new Go()
-var loaded = false
-
-
-
-// WebAssembly.instantiateStreaming(fetch("/static/nes.wasm?v=1011"), go.importObject).then(async (result) => {
-//     go.run(result.instance)
-//     loaded = true
-
-//     await setUpAudio()
-
-// })
-
 const worker = new Worker("static/scripts/extra/emuWorker.js")
+let fBytes = null
+
+let romRunning = false
+
+window.addEventListener("DOMContentLoaded", async () => {
+    await setUpButtons()
+    initCables()
+})
+
+window.addEventListener('keydown', (e) => {
+    if (keyMap[e.code] !== undefined  && romRunning) {
+          worker.postMessage({ type: 'input', action: ControlMap[keyMap[e.code]], pressed: true })
+          btn = document.getElementById(keyMap[e.code])
+          PressBtn(btn)
+    }
+})
+
+window.addEventListener('keyup', (e) => {
+    if (keyMap[e.code] !== undefined && romRunning) {
+        
+        worker.postMessage({ type: 'input', action: ControlMap[keyMap[e.code]], pressed: false })
+
+          btn = document.getElementById(keyMap[e.code])
+          ReleaseBtn(btn)
+       
+    }
+})
+
+
 
 const canvas = document.getElementById("screen")
 const ctx = canvas.getContext("2d")
 const imageData = ctx.createImageData(256, 240)
 
 
-window.addEventListener("DOMContentLoaded", async () => {
-    await setUpButtons()
-    initCables()
-    // await wait(200)
-    // alignCables(cable,port,wire)
+worker.onmessage = ({data})=>{
+    switch (data.type){
+        case 'init':
+            
+            fBytes = new Uint8Array(data.FBuf)
+            
+            
+            break
+        case 'frameUp':
+            
+            imageData.data.set(fBytes)
+            ctx.putImageData(imageData, 0, 0)
+            break
+
+    }
+}
 
 
-})
+const loadRom = (game)=>{
+    worker.postMessage({type:'loadRom',rom:game})
+    romRunning = true
+}
+
+
 
 const initCables = () => {
     cable1 = document.getElementById("cable-1")
@@ -85,40 +117,4 @@ const startCable = (cable, port, wire) => {
     wire.style.top = bodyBox.bottom + portBox.height / 2 + "px"
     wire.style.left = portBox.left + portBox.width / 4 + "px"
 
-}
-
-let last = 0
-let targetTime = 1000 / 61
-
-function renderLoop(currentTime) {
-
-
-    const elapsed = currentTime - last
-    if (elapsed >= targetTime) {
-        nesFrame()
-        imageData.data.set(frameBuffer)
-        ctx.putImageData(imageData, 0, 0)
-
-        last = currentTime
-    }
-
-    requestAnimationFrame(renderLoop)
-}
-
-
-
-// document.addEventListener('keydown', () => {
-//     if (audioCtx && audioCtx.state === 'suspended') {
-//         audioCtx.resume()
-//     }
-// }, { once: true })
-
-
-const loadRom = async (game) => {
-    const response = await fetch("static/supported/" + game + ".nes?v=2")
-    const buffer = await response.arrayBuffer()
-
-    const uint8view = new Uint8Array(buffer)
-
-    initRom(uint8view)
 }
