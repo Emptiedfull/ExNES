@@ -133,6 +133,22 @@
   justify-content: center;
 }
 
+.controller-cable{
+  background-color: rgb(25, 14, 16);
+  z-index: 1000;
+  position: absolute;
+
+  transition: ease all 1s;
+}
+
+.cable-wire{
+  position: absolute;
+  z-index: 2000;
+  transform: translateX(50%);
+  background-color:rgb(25, 14, 16);
+   transition: ease all 1s;
+}
+
 .controller:hover{
     border-color: white;
     border-radius: 2px;

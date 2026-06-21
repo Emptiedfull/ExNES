@@ -9,6 +9,8 @@ const overlay = document.getElementById("overlay")
 const strip = document.getElementById("strip")
 const cap = document.getElementById("cartridge")
 
+let romRunning = false
+
 romLoaded = ""
 power = false
 
@@ -44,9 +46,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (power){
                 await begin(romLoaded)
             }else{
-                console.log("haha")
+                
             }
-        
     })
 
 
@@ -103,14 +104,16 @@ const setUpButtons = async () => {
 async function begin(game) {
 
     startEmulator()
-    console.log("console started")
     await loadRom(game)
     audioCtx.resume()
     renderLoop()
-   
-   
+
+    romRunning = true
+    console.log("setting rom running true")
 
 }
+
+
 
 
 function move(direction) {

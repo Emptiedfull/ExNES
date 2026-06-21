@@ -9,10 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="static/styles/main.css?v=2000">
-    <link rel="stylesheet" href="static/styles/nes.css?v=11">
-    <link rel="stylesheet" href="static/styles/table.css?v=121">
+    <link rel="stylesheet" href="static/styles/nes.css?v=22211">
+    <link rel="stylesheet" href="static/styles/table.css?v=12122">
     <link rel="stylesheet" href="static/styles/overlay.css?v=2">
-    <link rel="stylesheet" href="static/styles/joypad.css?v=0">  
+    <link rel="stylesheet" href="static/styles/joypad.css?v=021">
     <script src="static/wasm_exec.js?v=1120"></script>
     <script src="static/scripts/audio.js?v=1292"></script>
 </head>
@@ -96,11 +96,13 @@
                     <div class="controllers">
                         <div class="port">
                             <span class="controllerLabel">1</span>
-                            <div class="controller controller-corners"></div>
+                            <div class="controller controller-corners" id="port-1"></div>
+
+
                         </div>
                         <div class="port">
-                            <span class="controllerLabel">2</span>
-                            <div class="controller controller-corners"></div>
+                            <span class="controllerLabel"  >2</span>
+                            <div class="controller controller-corners" id="port-2"></div>
                         </div>
                     </div>
                 </div>
@@ -159,7 +161,7 @@
         </div>
     </div>
 
-    <div class="Joypad Joypad-corners">
+    <div class="Joypad Joypad-corners" id="joypad" style="display: none;">
         <div class="Joypad-inner">
             <div class="movement-section">
                 <div class="dpad">
@@ -172,34 +174,20 @@
                         </div>
                     </div>
                     <div class="dpad-main">
-
                         <div class="main-vertical">
                             <div class="main-vertical-line">
-                                <button class="dpad-up" id="dpad-up">
-
-                                </button>
-                                <button id="dpad-down">
-
-                                </button>
+                                <button class="dpad-up joypad-button" id="dpad-up"></button>
+                                <button class="joypad-button" id="dpad-down"></button>
                             </div>
                         </div>
                         <div class="main-horizontal">
                             <div class="main-horizontal-line">
-                                <button id="dpad-left">
-
-                                </button>
-                                <button id="dpad-right">
-
-                                </button>
+                                <button class="joypad-button" id="dpad-left"></button>
+                                <button class="joypad-button" id="dpad-right"></button>
                             </div>
                         </div>
-
-
                     </div>
-
-
                 </div>
-
             </div>
             <div class="control-section">
                 <div class="decoration">
@@ -218,36 +206,40 @@
                 </div>
                 <div class="control-buttons">
                     <div class="control-buttons-inner">
-                        <button class="select control-button">
-                            <button class="start control-button">
+                        <button class="select control-button joypad-button" id="joypad-start">
+                            <button class="start control-button joypad-button" id="joypad-select">
                     </div>
                 </div>
             </div>
             <div class="main-section">
                 <div class="main-buttons">
-                    <div class="main-button-cont">
-                        <button>
-                            A
-                        </button>
+                    <div class="main-button-cont ">
+                        <button class="joypad-button" id="joypad-A">A</button>
                     </div>
                     <div class="main-button-cont">
-                        <button>
-                            B
-                        </button>
+                        <button class="joypad-button" id="joypad-B">B</button>
                     </div>
-
                 </div>
                 <div class="main-text">
                     NONTENDO
                 </div>
-
             </div>
+
 
         </div>
     </div>
+   
+    <div class="controller-cable controller-corners" id="cable-1"> </div>
+     <div class="cable-wire" id="wire-1"></div>
+
+      <div class="controller-cable controller-corners" id="cable-2"> </div>
+     <div class="cable-wire" id="wire-2"></div>
+
 </body>
 <script src="static/scripts/knob.js?V=2"></script>
-<script src="static/wasm.js?v=102"></script>
-<script src="static/scripts/carousel.js?v=221"></script>
+<script src="static/wasm.js?v=212"></script>
+<script src="static/scripts/carousel.js?v=21"></script>
+<script src="static/scripts/joypad.js?v=01120"></script>
+
 
 </html>

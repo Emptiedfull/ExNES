@@ -1,9 +1,11 @@
 .Joypad {
     position: absolute;
-    width: 45%;
+    height: 35%;
     aspect-ratio: 4.8/2;
-    bottom: -20%;
-    left: 25%;
+    bottom: -15%;
+    right:0;
+    transform: translateX(100%);
+    align-self: center;
     z-index: 100;
     background-color: #B5AFA0;
 
@@ -23,6 +25,18 @@
       rgba(0, 0, 0, 0.12) 6px
     );
 
+    transition: all ease 1s;
+}
+
+.Joypad.active{
+    right: 50%;
+    transform: translateX(50%);
+}
+
+.Joypad.centered{
+    top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .Joypad-inner {
@@ -136,6 +150,11 @@
   background-color: #4f4b47;
 }
 
+.control-button.active{
+    box-shadow: inset 3px 3px 0px rgba(0,0,0,0.4);
+  transform: translateY(1px) translateX(1px);
+}
+
 .control-button:active {
   box-shadow: inset 3px 3px 0px rgba(0,0,0,0.4);
   transform: translateY(1px) translateX(1px);
@@ -212,6 +231,12 @@
 .main-button-cont button:hover {
     background-color: #ff3333;
     transform: translate(-1px,-1px);
+}
+
+.main-button-cont button.active{
+    box-shadow: 
+        inset 6px 6px 0px rgba(0,0,0,0.4),
+        0px 0px 0px rgba(0,0,0,0); 
 }
 
 
@@ -440,7 +465,41 @@
     border-left: 9px solid #8C867C;
 }
 
+#dpad-up.active{
+    background-color: #171615;
+    box-shadow:
+        inset 0px 2px 0px #111,    
+        inset 2px 0px 0px #111,
+        inset -2px 0px 0px #111,
+        inset 0px -2px 0px #3d3b38;
+}
 
+#dpad-down.active{
+     background-color: #171615;
+    box-shadow:
+        inset 0px -2px 0px #111,
+        inset 2px 0px 0px #111,
+        inset -2px 0px 0px #111,
+        inset 0px 2px 0px #3d3b38;
+}
+
+#dpad-left.active{
+ background-color: #171615;
+    box-shadow:
+        inset 2px 0px 0px #111,
+        inset 0px 2px 0px #111,
+        inset 0px -2px 0px #111,
+        inset -2px 0px 0px #3d3b38; 
+}
+
+#dpad-right.active{
+     background-color: #171615;
+    box-shadow:
+        inset -2px 0px 0px #111,
+        inset 0px 2px 0px #111,
+        inset 0px -2px 0px #111,
+        inset 2px 0px 0px #3d3b38;
+}
 
 #dpad-up:active {
     background-color: #171615;

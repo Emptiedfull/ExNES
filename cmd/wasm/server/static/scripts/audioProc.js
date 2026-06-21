@@ -48,7 +48,6 @@ class AudioProc extends AudioWorkletProcessor {
 
         if (av < output.length) {
             output.fill(0)
-            console.log("WE NEED MOREEEEE")
             this.pending = false
             return true
         }

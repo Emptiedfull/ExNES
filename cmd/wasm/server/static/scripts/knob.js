@@ -15,7 +15,6 @@ const knobSettings = {"speed":{"angle":60,"setting":1},"sound":{"angle":60,"sett
 
 function drawKnob(id, angleDeg) {
 
-  console.log(knobSettings[id])
 
   knobSettings[id].angle = angleDeg
 

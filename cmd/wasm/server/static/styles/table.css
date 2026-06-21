@@ -7,7 +7,8 @@
 }
 
 .table-top {
-  height: 50px;
+  height: 40%;
+  max-height: 100px;
   width: 100%;
   background-color: #6b3a2a;
   box-shadow:
@@ -39,6 +40,7 @@
   height: 100%;
   padding-left: 8%;
   padding-right: 8%;
+  flex: 1;
   justify-content: space-between;
 }
 

@@ -49,8 +49,6 @@ func startFrameDriver() {
 			return js.ValueOf(0)
 		}
 
-		fmt.Println("getting samples", len(samples))
-
 		count := len(samples)
 		need := count * 4
 
