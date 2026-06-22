@@ -29,24 +29,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         middle.classList.add("rotated")
         await slotCart()
 
-        if (power){
+        if (power) {
+            activateJoypad()
             await begin(romLoaded)
         }
     })
 
     cap.addEventListener("click", async () => {
-       
-            await openCap()
-            await wait(200)
-            overlay.style.display = "flex"
-            overlay.style.transition = "all ease 1"
-            overlay.style.opacity = 1
-            
-            if (power){
-                await begin(romLoaded)
-            }else{
-                
-            }
+
+        await openCap()
+        await wait(200)
+        overlay.style.display = "flex"
+        overlay.style.transition = "all ease 1"
+        overlay.style.opacity = 1
+
+        if (power) {
+            await begin(romLoaded)
+        } else {
+
+        }
     })
 
 
@@ -77,16 +78,16 @@ function updateRom() {
 const setUpButtons = async () => {
     btn = document.getElementById("start")
     btn.addEventListener("click", async () => {
-         power = true
+        power = true
 
-        if (romLoaded != "" ){
+        if (romLoaded != "") {
             begin(romLoaded)
             return
         }
 
         powerLed = document.getElementById("power")
         powerLed.classList.remove("off")
-       
+
 
 
 
@@ -104,15 +105,18 @@ async function begin(game) {
 
     await initConsole()
     await loadRom(game)
-    // renderLoop()
-    // audioCtx.resume()
+
+
+    cable1 = document.getElementById("cable-1")
+    port1 = document.getElementById("port-1")
+    wire1 = document.getElementById("wire-1")
+
+    alignCables(cable1, port1, wire1)
 
     romRunning = true
     console.log("setting rom running true")
 
 }
-
-
 
 
 function move(direction) {
@@ -152,11 +156,7 @@ const drawNav = () => {
         ctx.fillRect(col * PS, r * PS, PS, PS);
     }
 
-
-
 }
-
-
 
 
 
@@ -214,8 +214,6 @@ const slotCart = async () => {
 
     dy = stripRect.left - slotRect.left
 
-
-
     clone.style.transition = "all 1s ease"
     clone.style.top = slotRect.top + "px"
     clone.style.left = slotRect.left + "px"
@@ -240,24 +238,10 @@ const slotCart = async () => {
 
     await wait(500)
     await closeCap()
-    
+
     cleapUpOverlay()
 }
 
-const closeCap = async () => {
-    cap.style.transition = "all ease 1s"
-    cap.classList.remove("open")
-
-    await wait(200)
-
-}
-
-const openCap = async () => {
-    cap.style.transition = "all ease 1s"
-    cap.classList.add("open")
-
-    await await (200)
-}
 
 
 
@@ -266,46 +250,3 @@ function wait(ms) {
 }
 
 
-const flickerLed = async (led) => {
-
-        led.classList.remove("off");
-        await wait(60);
-        led.classList.add("off");
-        await wait(80);
-    
-
-
-    led.classList.remove("off");
-    await wait(150);
-    led.classList.add("off");
-    await wait(120);
-
-
-    led.classList.remove("off");
-}
-
-
-const cleapUpOverlay = ()=>{
-    overlay.style.display = "none"
-    middle.classList.remove("rotated")
-    middle.classList.add("active")
-}
-
-document.addEventListener("DOMContentLoaded",async ()=>{
-  speedKnob = document.getElementById("speed")
-
-  speedKnob.addEventListener("click",async()=>{
-    // angle = knobSettings['speed'].angle
-
-   
-    // drawKnob('speed', angle+60);
-
-    // await turnKnob('speed',60,100,10)
-
-    
-    // await wiggleKnob('speed',20)
-
-    await spinKnob('speed',2)
-    await wiggleKnob('speed',20)
-  })
-})

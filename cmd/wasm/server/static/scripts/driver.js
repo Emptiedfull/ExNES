@@ -4,9 +4,10 @@ let fBytes = null
 const inputBuf = new SharedArrayBuffer(4)
 const inputState = new Int32Array(inputBuf)
 
+let romRunning = false
+
 
 const setUpAudio = async (audioBufS,SIZE)=>{
-    // console.log("setting up audio")
     const audioCtx = new AudioContext({sampleRate:44100})
 
     await audioCtx.audioWorklet.addModule("/static/scripts/extra/driverWorklet.js")
@@ -29,7 +30,6 @@ worker.onmessage = async ({data})=>{
     switch (data.type){
         case 'init':
             fBytes = new Uint8Array(data.FBuf)
-            console.log("received audioBufS byteLength:", data.audioBufS.byteLength)
             await setUpAudio(data.audioBufS,data.SIZE)
             break
         case 'frameUp':
@@ -55,6 +55,7 @@ const loadRom = (game) => {
 }
 
 const UpdatePress = (btn)=>{
+   
     if (romRunning){
         mask = ControlMap[btn]
         Atomics.or(inputState,0,1 << mask)
@@ -62,8 +63,10 @@ const UpdatePress = (btn)=>{
 }
 
 const UpdateRelease = (btn) =>{
+    
     if (romRunning){
         mask = ControlMap[btn]
-        Atomics.or(inputBuf,0,~(1 << mask))
+        
+        Atomics.and(inputState,0,~(1 << mask))
     }
 }

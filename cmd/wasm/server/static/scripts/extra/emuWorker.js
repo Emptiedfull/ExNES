@@ -1,12 +1,10 @@
 let wasm_up = false
-console.log("bro?")
 importScripts('/static/wasm_exec.js')
 const init = async ()=>{
     const go = new Go()
     const result = await WebAssembly.instantiateStreaming(fetch("/static/nes.wasm"),go.importObject)
     go.run(result.instance)
 
-    console.log("wasm ready for some action yoo")
 
 }
 
@@ -23,12 +21,8 @@ const audioBufS = new SharedArrayBuffer(SIZE*4 + 4 + 4 +4 ) //uh the plus 4 are 
 const samples = new Float32Array(audioBufS,0,SIZE)
 const control = new Int32Array(audioBufS,SIZE*4,3)
 
-const S_size = 2048
+const S_size = 1024
 const S_buf = new Float32Array(S_size)
-
-console.log("control  WORKER byteOffset:", control.byteOffset)
-console.log("control[2] WORKER byteOffset:", control.byteOffset + 2*4)
-
 
 self.onmessage = async ({data}) =>{
     switch (data.type){

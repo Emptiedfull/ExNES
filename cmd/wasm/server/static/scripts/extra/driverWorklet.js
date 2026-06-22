@@ -31,7 +31,6 @@ class ConsoleDriver extends AudioWorkletProcessor {
 
 
         if (available < output.length) {
-            console.log("requesting")
             Atomics.store(this.control, 2, 1) //WE WANT MOREEEE
             Atomics.notify(this.control, 2)
             output.fill(0)

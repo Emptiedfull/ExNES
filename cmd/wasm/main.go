@@ -111,9 +111,10 @@ func startFrameDriver() {
 	js.Global().Set("drive", js.FuncOf(func(this js.Value, args []js.Value) any {
 
 		samplesNeeded := args[0].Int()
+		syncInputs(emu, Input_Arr)
 
 		for i := range samplesNeeded {
-			syncInputs(emu, Input_Arr)
+
 			for !emu.Apu.HasSample() {
 				emu.Apu.Console.TickNoAudio()
 			}
@@ -150,81 +151,4 @@ func syncInputs(emu *Core.Console, input js.Value) {
 	emu.Player1.UpdateBtnBool(Core.ButtonLeft, mask&(1<<6) != 0)
 	emu.Player1.UpdateBtnBool(Core.ButtonRight, mask&(1<<7) != 0)
 
-}
-
-func startAudioDriver() {
-	var outputBuf []byte
-	var emu *Core.Console
-	var outputScreen js.Value
-
-	js.Global().Set("initBuffer", js.FuncOf(func(this js.Value, args []js.Value) any {
-		count := args[0].Int()
-		outputBuf = make([]byte, count*4)
-
-		return nil
-	}))
-
-	js.Global().Set("getSamples", js.FuncOf(func(this js.Value, args []js.Value) any {
-		samplesNeeded := args[0].Int()
-		jsBuf := args[1]
-
-		for i := range samplesNeeded {
-			var sample float32
-			if emu.Apu.HasSample() {
-				sample = emu.Apu.PopSample()
-			} else {
-				sample = 1
-			}
-
-			bits := math.Float32bits(sample)
-			outputBuf[i*4] = byte(bits)
-			outputBuf[i*4+1] = byte(bits >> 8)
-
-			outputBuf[i*4+2] = byte(bits >> 16)
-			outputBuf[i*4+3] = byte(bits >> 24)
-		}
-		js.CopyBytesToJS(jsBuf, outputBuf)
-		return nil
-	}))
-
-	js.Global().Set("startEmulator", js.FuncOf(func(this js.Value, args []js.Value) any {
-		emu = Core.InitializeConsole()
-
-		outputScreen = js.Global().Get("Uint8ClampedArray").New(256 * 240 * 4)
-		js.Global().Set("frameBuffer", outputScreen)
-		return nil
-	}))
-
-	js.Global().Set("update", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-
-		emu.Player1.UpdateBtnBool(args[0].Int(), args[1].Bool())
-
-		return nil
-	}))
-
-	js.Global().Set("initRom", js.FuncOf(func(this js.Value, args []js.Value) any {
-
-		romdat := args[0]
-		romArr := make([]byte, romdat.Get("length").Int())
-		js.CopyBytesToGo(romArr, romdat)
-
-		reader, _ := Core.LoadRomData(romArr)
-
-		err := emu.InitRom(reader)
-		if err != nil {
-			fmt.Println("Ah fuck here we go again", err)
-		}
-
-		emu.Cpu.Reset()
-		fmt.Println("loaded")
-
-		return nil
-	}))
-
-	loop := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		js.CopyBytesToJS(outputScreen, emu.Ppu.BackBuffer[:])
-		return nil
-	})
-
-	js.Global().Set("nesFrame", loop)
 }
