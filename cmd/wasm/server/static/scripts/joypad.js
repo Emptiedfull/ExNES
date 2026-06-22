@@ -11,16 +11,7 @@ const controlState = {
     'right': false
 }
 
-const ControlMap = {
-    "joypad-A":0,
-    "joypad-B":1,
-    "joypad-select":2,
-    "joypad-start":3,
-    "dpad-up":4,
-    "dpad-down":5,
-    "dpad-left":6,
-    "dpad-right":7,
-}
+
 
 const keyMap = {
     'KeyZ': 'joypad-A',
@@ -33,27 +24,28 @@ const keyMap = {
     'ArrowRight': 'dpad-right'
 }
 
-// window.addEventListener('keydown', (e) => {
-//     // joypad = document.getElementById("joypad")
-//     // joypad.classList.add("active")
-//     if (keyMap[e.code] !== undefined  && romRunning) {
-//         window.update(ControlMap[keyMap[e.code]],true)
+window.addEventListener('keydown', (e) => {
+    // joypad = document.getElementById("joypad")
+    // joypad.classList.add("active")
+    if (keyMap[e.code] !== undefined  && romRunning) {
+        UpdatePress(keyMap[e.code])
 
-//           btn = document.getElementById(keyMap[e.code])
-//           PressBtn(btn)
-//     }
-// })
+          btn = document.getElementById(keyMap[e.code])
+          PressBtn(btn)
+    }
+})
 
-// window.addEventListener('keyup', (e) => {
-//     if (keyMap[e.code] !== undefined && romRunning) {
+window.addEventListener('keyup', (e) => {
+    if (keyMap[e.code] !== undefined && romRunning) {
         
-//         window.update(ControlMap[keyMap[e.code]],false)
+        // window.update(ControlMap[keyMap[e.code]],false)
+        UpdateRelease(keyMap[e.code])
 
-//           btn = document.getElementById(keyMap[e.code])
-//           ReleaseBtn(btn)
+          btn = document.getElementById(keyMap[e.code])
+          ReleaseBtn(btn)
        
-//     }
-// })
+    }
+})
 
 
 document.addEventListener("DOMContentLoaded",async()=>{

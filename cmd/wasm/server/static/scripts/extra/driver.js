@@ -1,6 +1,9 @@
 const worker = new Worker("/static/scripts/extra/emuWorker.js")
 let fBytes = null
 
+const inputBuf = new SharedArrayBuffer(4)
+const inputState = new Int32Array(inputBuf)
+
 
 const setUpAudio = async (audioBufS,SIZE)=>{
     // console.log("setting up audio")
@@ -17,6 +20,10 @@ const setUpAudio = async (audioBufS,SIZE)=>{
 }
 
 
+const initConsole = async ()=>{
+    worker.postMessage({type:"init",inputBuf})
+}
+
 worker.onmessage = async ({data})=>{
    
     switch (data.type){
@@ -32,6 +39,31 @@ worker.onmessage = async ({data})=>{
     }
 }
 
+const ControlMap = {
+    "joypad-A":0,
+    "joypad-B":1,
+    "joypad-select":2,
+    "joypad-start":3,
+    "dpad-up":4,
+    "dpad-down":5,
+    "dpad-left":6,
+    "dpad-right":7,
+}
+
 const loadRom = (game) => {
     worker.postMessage({ type: 'loadRom', rom: game })
+}
+
+const UpdatePress = (btn)=>{
+    if (romRunning){
+        mask = ControlMap[btn]
+        Atomics.or(inputState,0,1 << mask)
+    }
+}
+
+const UpdateRelease = (btn) =>{
+    if (romRunning){
+        mask = ControlMap[btn]
+        Atomics.or(inputBuf,0,~(1 << mask))
+    }
 }

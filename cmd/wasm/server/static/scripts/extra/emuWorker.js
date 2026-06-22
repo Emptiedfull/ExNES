@@ -36,6 +36,7 @@ self.onmessage = async ({data}) =>{
         
             startEmulator()
             initBuffer(new Uint8Array(S_buf.buffer))
+            initInput(new Int32Array(data.inputBuf))
             self.postMessage({type:"init",audioBufS,FBuf,SIZE,S_size})
             
             break

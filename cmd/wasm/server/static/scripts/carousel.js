@@ -102,7 +102,7 @@ const setUpButtons = async () => {
 
 async function begin(game) {
 
-    worker.postMessage({type:"init"})
+    await initConsole()
     await loadRom(game)
     // renderLoop()
     // audioCtx.resume()

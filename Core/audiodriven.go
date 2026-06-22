@@ -43,7 +43,7 @@ func (c *Console) TickNoAudio() {
 		c.Cpu.triggerIRQ()
 	}
 
-	c.RunDisplayUpdates()
+	// c.RunDisplayUpdates()
 
 }
 

@@ -32,8 +32,15 @@ func startFrameDriver() {
 
 	var JS_Arr js.Value
 
+	var Input_Arr js.Value //also a dirty fucking shared buffer
+
 	js.Global().Set("initBuffer", js.FuncOf(func(this js.Value, args []js.Value) any {
 		JS_Arr = args[0]
+		return nil
+	}))
+
+	js.Global().Set("initInput", js.FuncOf(func(this js.Value, args []js.Value) any {
+		Input_Arr = args[0]
 		return nil
 	}))
 
@@ -73,13 +80,13 @@ func startFrameDriver() {
 		return "x"
 	}))
 
-	js.Global().Set("update", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	// js.Global().Set("update", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 
-		emu.Player1.UpdateBtnBool(args[0].Int(), args[1].Bool())
-		emu.Player2.UpdateBtnBool(args[0].Int(), args[1].Bool())
+	// 	emu.Player1.UpdateBtnBool(args[0].Int(), args[1].Bool())
+	// 	emu.Player2.UpdateBtnBool(args[0].Int(), args[1].Bool())
 
-		return nil
-	}))
+	// 	return nil
+	// }))
 
 	js.Global().Set("initRom", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 
@@ -101,15 +108,12 @@ func startFrameDriver() {
 		return nil
 	}))
 
-	js.Global().Set("reset", js.FuncOf(func(this js.Value, args []js.Value) any {
-		return nil
-	}))
-
 	js.Global().Set("drive", js.FuncOf(func(this js.Value, args []js.Value) any {
 
 		samplesNeeded := args[0].Int()
 
 		for i := range samplesNeeded {
+			syncInputs(emu, Input_Arr)
 			for !emu.Apu.HasSample() {
 				emu.Apu.Console.TickNoAudio()
 			}
@@ -126,21 +130,25 @@ func startFrameDriver() {
 		js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
 		js.CopyBytesToJS(JS_Arr, S_Arr)
 
-		fmt.Println(emu.Ppu.Frame)
-
 		return nil
 	}))
 
-	loop := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+}
 
-		// emu.RunFrame()
+func syncInputs(emu *Core.Console, input js.Value) {
+	if emu == nil || input.IsUndefined() {
+		return
+	}
 
-		js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
-
-		return nil
-	})
-
-	js.Global().Set("nesFrame", loop)
+	mask := input.Index(0).Int()
+	emu.Player1.UpdateBtnBool(Core.ButtonA, mask&(1<<0) != 0)
+	emu.Player1.UpdateBtnBool(Core.ButtonB, mask&(1<<1) != 0)
+	emu.Player1.UpdateBtnBool(Core.ButtonSelect, mask&(1<<2) != 0)
+	emu.Player1.UpdateBtnBool(Core.ButtonStart, mask&(1<<3) != 0)
+	emu.Player1.UpdateBtnBool(Core.ButtonUp, mask&(1<<4) != 0)
+	emu.Player1.UpdateBtnBool(Core.ButtonDown, mask&(1<<5) != 0)
+	emu.Player1.UpdateBtnBool(Core.ButtonLeft, mask&(1<<6) != 0)
+	emu.Player1.UpdateBtnBool(Core.ButtonRight, mask&(1<<7) != 0)
 
 }
 
