@@ -81,25 +81,6 @@ func startFrameDriver() {
 		return nil
 	}))
 
-	js.Global().Set("pause", js.FuncOf(func(this js.Value, args []js.Value) any {
-		if emu != nil {
-			emu.Pause()
-		}
-		return nil
-	}))
-
-	js.Global().Set("unpause", js.FuncOf(func(this js.Value, args []js.Value) any {
-		if emu != nil {
-			emu.UnPause()
-		}
-		return nil
-	}))
-
-	js.Global().Set("takeSnapshot", js.FuncOf(func(this js.Value, args []js.Value) any {
-		emu.AddSnapshot()
-		return nil
-	}))
-
 	js.Global().Set("initRom", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 
 		Arr := args[0]
@@ -124,9 +105,35 @@ func startFrameDriver() {
 		return nil
 	}))
 
+	js.Global().Set("drive", js.FuncOf(func(this js.Value, args []js.Value) any {
+
+		samplesNeeded := args[0].Int()
+
+		for i := range samplesNeeded {
+			for !emu.Apu.HasSample() {
+				emu.Apu.Console.TickNoAudio()
+			}
+			sample := emu.Apu.PopSample()
+
+			bits := math.Float32bits(sample)
+
+			S_Arr[i*4] = byte(bits)
+			S_Arr[i*4+1] = byte(bits >> 8)
+			S_Arr[i*4+2] = byte(bits >> 16)
+			S_Arr[i*4+3] = byte(bits >> 24)
+		}
+
+		js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
+		js.CopyBytesToJS(JS_Arr, S_Arr)
+
+		fmt.Println(emu.Ppu.Frame)
+
+		return nil
+	}))
+
 	loop := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 
-		emu.RunFrame()
+		// emu.RunFrame()
 
 		js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
 

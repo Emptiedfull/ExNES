@@ -105,6 +105,7 @@ async function begin(game) {
     worker.postMessage({type:"init"})
     await loadRom(game)
     // renderLoop()
+    // audioCtx.resume()
 
     romRunning = true
     console.log("setting rom running true")

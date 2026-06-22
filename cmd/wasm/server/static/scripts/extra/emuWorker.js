@@ -1,4 +1,5 @@
 let wasm_up = false
+console.log("bro?")
 importScripts('/static/wasm_exec.js')
 const init = async ()=>{
     const go = new Go()
@@ -11,58 +12,38 @@ const init = async ()=>{
 
 init()
 
-const M_clock = 21_477_272
-const CPF = 357_366
-const FPS = M_clock/CPF
-const MPF = 1000 / FPS
-
-let accum = 0
-let last = null 
-let running = false
 
 const FBuf = new SharedArrayBuffer(256*240*4)
 const FBytes = new Uint8Array(FBuf)
 
-function loop(current){
-    if (!running){
-        return 
-    }
+const SIZE = 8192
 
-    if (last == null){
-        last = current
-    }
+const audioBufS = new SharedArrayBuffer(SIZE*4 + 4 + 4 +4 ) //uh the plus 4 are different pointers, write,read and updateflag
 
-    elapsed = current - last
-    last = current
-    accum += elapsed
+const samples = new Float32Array(audioBufS,0,SIZE)
+const control = new Int32Array(audioBufS,SIZE*4,3)
 
-    accum = Math.min(accum,MPF*4)
+const S_size = 2048
+const S_buf = new Float32Array(S_size)
 
-    while (accum >= MPF){
-        nesFrame()
-        accum -= MPF
-    }
+console.log("control  WORKER byteOffset:", control.byteOffset)
+console.log("control[2] WORKER byteOffset:", control.byteOffset + 2*4)
 
-    const frame = new Uint8Array(frameBuffer.buffer)
-    FBytes.set(frame)
 
-    self.postMessage({type:"frameUp"})
-
-    self.requestAnimationFrame(loop)
-}
-
-self.onmessage = ({data}) =>{
+self.onmessage = async ({data}) =>{
     switch (data.type){
         case 'init':
+        
             startEmulator()
-            console.log()
-            self.postMessage({type:"init",FBuf})
+            initBuffer(new Uint8Array(S_buf.buffer))
+            self.postMessage({type:"init",audioBufS,FBuf,SIZE,S_size})
+            
             break
 
         case 'loadRom':
-            loadRom(data.rom)
+            await loadRom(data.rom)
             running = true
-            self.requestAnimationFrame(loop)
+            pump()
             break
         
         case 'input':
@@ -70,6 +51,37 @@ self.onmessage = ({data}) =>{
             break
 
 
+    }
+}
+
+const pump = ()=>{
+    while (true){
+      
+        Atomics.wait(control,2,0)
+       
+
+        const wp = Atomics.load(control,0)
+        const rp = Atomics.load(control,1)
+
+        const free = SIZE - (wp - rp)
+        const want = Math.min(free,S_size)
+
+        if (want > 0){
+            drive(want)
+
+            for (let i = 0; i < want;i++){
+                samples[(wp + i) % SIZE] = S_buf[i]
+            }
+
+            Atomics.store(control,0,wp+want)
+        }
+
+
+        FBytes.set(new Uint8Array(frameBuffer.buffer))
+        self.postMessage({type:"frameUp"})
+
+        Atomics.store(control,2,0)
+        Atomics.notify(control,2) //god pls work this is my 5th rewrite
     }
 }
 
@@ -81,5 +93,8 @@ const loadRom = async (game) => {
 
     initRom(uint8view)
 }
+
+
+
 
 

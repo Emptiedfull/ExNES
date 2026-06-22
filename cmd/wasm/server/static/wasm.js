@@ -1,5 +1,5 @@
-const go = new Go()
-var loaded = false
+// const go = new Go()
+// var loaded = false
 
 
 
@@ -11,7 +11,7 @@ var loaded = false
 
 // })
 
-const worker = new Worker("static/scripts/extra/emuWorker.js")
+// const worker = new Worker("static/scripts/extra/emuWorker.js")
 
 const canvas = document.getElementById("screen")
 const ctx = canvas.getContext("2d")
@@ -114,11 +114,11 @@ function renderLoop(currentTime) {
 // }, { once: true })
 
 
-const loadRom = async (game) => {
-    const response = await fetch("static/supported/" + game + ".nes?v=2")
-    const buffer = await response.arrayBuffer()
+// const loadRom = async (game) => {
+//     const response = await fetch("static/supported/" + game + ".nes?v=2")
+//     const buffer = await response.arrayBuffer()
 
-    const uint8view = new Uint8Array(buffer)
+//     const uint8view = new Uint8Array(buffer)
 
-    initRom(uint8view)
-}
+//     initRom(uint8view)
+// }
