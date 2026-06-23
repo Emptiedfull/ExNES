@@ -1,3 +1,7 @@
+import { openCap,closeCap,slotCart,activateJoypad,alignCable,pushbtn } from "./graphics.js"
+import { initConsole,loadRom,state} from "./driver.js"
+
+
 let currentIndex = 3
 
 const romArray = [{ "name": "Zelda", "id": "zelda", "img": "zelda" }, { "name": "Zelda", "id": "zelda", "img": "zelda" }, { "name": "donkey kong", "id": "donkey", "img": "donkey" }, { "name": "super mario", "id": "mario", "img": "mario" }, { "name": "Ballon Fight", "id": "balloon", "img": "balloon" }, { "name": "Contra", "id": "contra", "img": "contra" }, { "name": "sb3", "id": "sb3", "img": "mario" }]
@@ -9,24 +13,29 @@ const overlay = document.getElementById("overlay")
 const strip = document.getElementById("strip")
 const cap = document.getElementById("cartridge")
 
+const powerLed = document.getElementById("power")
 
-romLoaded = ""
-power = false
+
+let romLoaded = ""
+let power = false
 
 const roms = [left, middle, right]
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    drawNav()
+    await setUpButtons()
+
+
     updateRom()
 
 
     middle.addEventListener("click", async () => {
         middle.classList.remove("active")
         await wait(100)
-        span = middle.querySelector("span")
+        let span = middle.querySelector("span")
         span.style.display = "none"
         middle.classList.add("rotated")
+        romLoaded = middle.id
         await slotCart()
 
         if (power) {
@@ -37,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     cap.addEventListener("click", async () => {
 
-        await openCap()
+        await openCap(cap)
         await wait(200)
         overlay.style.display = "flex"
         overlay.style.transition = "all ease 1"
@@ -57,27 +66,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function updateRom() {
 
-    romSelection = romArray.slice(currentIndex - 1, currentIndex + 2)
+    const romSelection = romArray.slice(currentIndex - 1, currentIndex + 2)
 
     if (romSelection.length == 3) {
         for (let i = 0; i < 3; i++) {
             const element = romSelection[i];
             const rom = roms[i]
 
-            text = rom.querySelector("span")
             rom.id = element.id
-            img = rom.querySelector("img")
+
+            const rom_title = rom.querySelector("span")
+            const img = rom.querySelector("img")
+
             img.src = "static/rom_images/" + element.img + ".png"
-            spine = rom.querySelector(".rom-spine")
+            const spine = rom.querySelector(".rom-spine")
             spine.innerText = element.name
-            text.innerText = element.name
+            rom_title.innerText = element.name
         }
     }
 }
 
 const setUpButtons = async () => {
-    btn = document.getElementById("start")
-    btn.addEventListener("click", async () => {
+    const powerBtn = document.getElementById("start")
+    powerBtn.addEventListener("click", async () => {
         power = true
 
         if (romLoaded != "") {
@@ -85,20 +96,31 @@ const setUpButtons = async () => {
             return
         }
 
-        powerLed = document.getElementById("power")
         powerLed.classList.remove("off")
 
-
-
-
-        await openCap()
+        await openCap(cap)
         await wait(200)
         overlay.style.display = "flex"
         overlay.style.transition = "all ease 1"
         overlay.style.opacity = 1
     })
 
+
+    const nav_back = document.getElementById("nav-back")
+    nav_back.addEventListener("click",async()=>{
+        move(-1)
+        pushbtn("canvas-back")
+    })
+
+    const nav_front = document.getElementById("nav-front")
+    nav_front.addEventListener("click",async()=>{
+        move(1)
+        pushbtn("canvas-next")
+    })
+
+
 }
+
 
 
 async function begin(game) {
@@ -107,110 +129,24 @@ async function begin(game) {
     await loadRom(game)
 
 
-    cable1 = document.getElementById("cable-1")
-    port1 = document.getElementById("port-1")
-    wire1 = document.getElementById("wire-1")
+    alignCable(1)
 
-    alignCables(cable1, port1, wire1)
-
-    romRunning = true
-    console.log("setting rom running true")
+    state.romRunning = true
 
 }
 
 
 function move(direction) {
-    newIdx = currentIndex + direction
+    let newIdx = currentIndex + direction
     if (newIdx >= romArray.length || newIdx < 0) {
         return
     }
-
     currentIndex = newIdx
     updateRom()
 }
 
 
-function pushbtn(canvasId) {
 
-    const c = document.getElementById(canvasId);
-
-    c.style.filter = 'brightness(2)';
-    c.style.transform = 'scale(0.85)';
-
-    setTimeout(() => {
-        c.style.filter = 'brightness(1.3)';
-        c.style.transform = 'scale(1.1)';
-    }, 150);
-
-    setTimeout(() => {
-        c.style.filter = '';
-        c.style.transform = 'scale(1)';
-    }, 280);
-}
-
-
-const slotCart = async () => {
-    await wait(800);
-    overlay.style.opacity = 0
-
-    const spine = middle.querySelector(".rom-spine");
-
-
-    const spineRect = spine.getBoundingClientRect();
-
-    const clone = spine.cloneNode(true);
-    const computedStyle = window.getComputedStyle(spine);
-
-
-    clone.style.font = computedStyle.font;
-    clone.style.color = computedStyle.color;
-    clone.style.letterSpacing = computedStyle.letterSpacing;
-    clone.style.textTransform = computedStyle.textTransform;
-    clone.style.position = 'fixed';
-    clone.style.top = spineRect.top + 'px';
-    clone.style.left = spineRect.left + 'px';
-    clone.style.width = spineRect.width + 'px';
-    clone.style.height = slot.height + 'px';
-    clone.style.transition = 'none';
-    clone.style.transform = 'none';
-    clone.style.margin = '0';
-    clone.style.zIndex = '99';
-
-    document.body.appendChild(clone);
-
-
-    const slotRect = slot.getBoundingClientRect()
-    const stripRect = strip.getBoundingClientRect()
-
-    dy = stripRect.left - slotRect.left
-
-    clone.style.transition = "all 1s ease"
-    clone.style.top = slotRect.top + "px"
-    clone.style.left = slotRect.left + "px"
-    clone.style.width = dy + "px"
-
-
-
-    await wait(1000)
-    clone.style.transition = 'all 0.25s ease-in';
-    clone.style.transform = ' scale(0.88)';
-    clone.style.transformOrigin = 'center top';
-
-    await wait(500);
-
-
-    clone.style.transition = 'all 0.15s ease-out';
-    clone.style.transform = 'scale(0.9)';
-
-    romled = document.getElementById("rom")
-    romLoaded = middle.id
-    flickerLed(romled)
-
-    await wait(500)
-    await closeCap()
-
-    cleapUpOverlay()
-}
 
 
 

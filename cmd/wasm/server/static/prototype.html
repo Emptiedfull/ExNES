@@ -119,10 +119,10 @@
 
     <div class="rom-overlay" id="overlay" style="display: none;">
         <div class="nav-panel">
-            <div class="nav-btn back" onclick="move(-1); pushbtn('canvas-back')">
+            <div class="nav-btn back" id="nav-back">
                 <canvas id="canvas-back" width="224" height="224" style="image-rendering:pixelated"></canvas>
             </div>
-            <div class="nav-btn next" onclick="move(1); pushbtn('canvas-next')">
+            <div class="nav-btn next" id="nav-front">
                 <canvas id="canvas-next" width="224" height="224" style="image-rendering:pixelated"></canvas>
             </div>
         </div>
@@ -234,8 +234,8 @@
      <div class="cable-wire" id="wire-2"></div>
 
 </body>
-<script src="static/scripts/graphics.js"></script>
-<script src="static/scripts/driver.js"></script>
-<script src="static/scripts/nes.js?v=21"></script>
-<script src="static/scripts/joypad.js"></script>
+<script src="static/scripts/graphics.js" type="module"></script>
+<script src="static/scripts/driver.js" type="module"></script>
+<script src="static/scripts/nes.js?v=21" type="module"></script>
+<script src="static/scripts/joypad.js" type="module"></script>
 </html>

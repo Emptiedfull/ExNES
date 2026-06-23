@@ -1,100 +1,117 @@
 
-const canvas = document.getElementById("screen")
-const ctx = canvas.getContext("2d")
-const imageData = ctx.createImageData(256, 240)
 
-const knobSettings = {"speed":{"angle":60,"setting":1},"sound":{"angle":60,"setting":1}}
+
+const knobSettings = { "speed": { "angle": 60, "setting": 1 }, "sound": { "angle": 60, "setting": 1 } }
+
+const body = document.querySelector("body")
+const middle = document.getElementById("middle")
+const romled = document.getElementById("rom")
+const cap = document.getElementById("cartridge")
+const joypad = document.getElementById("joypad")
+
+function wait(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
 
 
 window.addEventListener("DOMContentLoaded", async () => {
-    await setUpButtons()
-    initCables()
-
-    await wait(200)
-
-
-
+  initCables()
+  console.log("reached here ")
+  drawNav()
 })
 
 const initCables = () => {
-    cable1 = document.getElementById("cable-1")
-    port1 = document.getElementById("port-1")
-    wire1 = document.getElementById("wire-1")
 
-    cable2 = document.getElementById("cable-2")
-    port2 = document.getElementById("port-2")
-    wire2 = document.getElementById("wire-2")
+  let cable1 = document.getElementById("cable-1")
+  let port1 = document.getElementById("port-1")
+  let wire1 = document.getElementById("wire-1")
 
-    startCable(cable1, port1, wire1)
-    startCable(cable2, port2, wire2)
+  let cable2 = document.getElementById("cable-2")
+  let port2 = document.getElementById("port-2")
+  let wire2 = document.getElementById("wire-2")
 
+
+  startCable(cable1, port1, wire1)
+  startCable(cable2, port2, wire2)
+
+}
+
+export const alignCable = (cableID) => {
+  if (cableID == 1) {
+    let cable1 = document.getElementById("cable-1")
+    let port1 = document.getElementById("port-1")
+    let wire1 = document.getElementById("wire-1")
+
+    alignCables(cable1, port1, wire1)
+  } else if (cableID == 2) {
+    let cable2 = document.getElementById("cable-2")
+    let port2 = document.getElementById("port-2")
+    let wire2 = document.getElementById("wire-2")
+
+    alignCables(cable2, port2, wire2)
+  }
 }
 
 const alignCables = (cable, port, wire) => {
 
 
-    portBox = port.getBoundingClientRect()
+  let portBox = port.getBoundingClientRect()
 
 
-    cable.style.top = portBox.top + "px"
-    cable.style.left = portBox.left + "px"
+  cable.style.top = portBox.top + "px"
+  cable.style.left = portBox.left + "px"
 
-    bodyBox = document.querySelector("body").getBoundingClientRect()
+  let bodyBox = body.getBoundingClientRect()
 
-    console.log(portBox.bottom, bodyBox.bottom)
-
-    dy = bodyBox.bottom - portBox.bottom + 200
-    dx = portBox.width / 4
+  let dy = bodyBox.bottom - portBox.bottom + 200
+  let dx = portBox.width / 4
 
 
-    wire.style.height = dy + "px"
-    wire.style.top = portBox.top + portBox.height / 2 + "px"
-    wire.style.left = portBox.left + portBox.width / 4 + "px"
+  wire.style.height = dy + "px"
+  wire.style.top = portBox.top + portBox.height / 2 + "px"
+  wire.style.left = portBox.left + portBox.width / 4 + "px"
 
 
-    wire.style.width = dx + "px"
+  wire.style.width = dx + "px"
 
 }
 
 const startCable = (cable, port, wire) => {
-    portBox = port.getBoundingClientRect()
-    bodyBox = document.querySelector("body").getBoundingClientRect()
+  let portBox = port.getBoundingClientRect()
+  let bodyBox = document.querySelector("body").getBoundingClientRect()
 
-    cable.style.position = "absolute"
-    cable.style.width = portBox.width + "px"
-    cable.style.height = portBox.height + "px"
-    cable.style.left = portBox.left + "px"
-    cable.style.top = bodyBox.bottom + "px"
+  cable.style.position = "absolute"
+  cable.style.width = portBox.width + "px"
+  cable.style.height = portBox.height + "px"
+  cable.style.left = portBox.left + "px"
+  cable.style.top = bodyBox.bottom + "px"
 
-    wire.style.position = "absolute"
-    dy = bodyBox.bottom - portBox.bottom + 200
-    dx = portBox.width / 4
+  wire.style.position = "absolute"
+  let dy = bodyBox.bottom - portBox.bottom + 200
+  let dx = portBox.width / 4
 
-    wire.style.height = dy + "px"
-    wire.style.top = bodyBox.bottom + portBox.height / 2 + "px"
-    wire.style.left = portBox.left + portBox.width / 4 + "px"
+  wire.style.height = dy + "px"
+  wire.style.top = bodyBox.bottom + portBox.height / 2 + "px"
+  wire.style.left = portBox.left + portBox.width / 4 + "px"
 
 }
 
-const activateJoypad = ()=>{
-    console.log("starting joypad")
-
-    joypad = document.getElementById("joypad")
-    joypad.classList.add("active")
+export const activateJoypad = () => {
+  joypad.classList.add("active")
 }
 
 
 const C = { //this color pallete was ai generated
-  body:    '#8B6F4E',
+  body: '#8B6F4E',
   bodyMid: '#7A5F3E',
-  hi:      '#C4A882',
-  hiTop:   '#D9C4A0',
-  shadow:  '#4A3522',
+  hi: '#C4A882',
+  hiTop: '#D9C4A0',
+  shadow: '#4A3522',
   shadowD: '#332614',
-  rim:     '#3B2A16',
-  rimHi:   '#6B5030',
-  dot:     '#1E1208',
-  dotHi:   '#3A2810',
+  rim: '#3B2A16',
+  rimHi: '#6B5030',
+  dot: '#1E1208',
+  dotHi: '#3A2810',
 };
 
 
@@ -111,7 +128,7 @@ function drawKnob(id, angleDeg) {
   const height = canvas.height
 
   const cx = Math.floor(width / 2)
-  const cy = Math.floor(height/ 2)
+  const cy = Math.floor(height / 2)
   const r = Math.floor(width / 2) - 1;
 
   const fill = (x, y, col) => {
@@ -121,7 +138,7 @@ function drawKnob(id, angleDeg) {
     ctx.fillRect(x, y, 1, 1);
   };
 
-  
+
   for (let py = -r; py <= r; py++) {
     for (let px = -r; px <= r; px++) {
       const dist = Math.sqrt(px * px + py * py)
@@ -143,7 +160,7 @@ function drawKnob(id, angleDeg) {
 
 
       let col = C.body
-      
+
       if (px <= -Math.floor(r * 0.1) && py <= -Math.floor(r * 0.1) && dist < r * 0.75) {
         col = C.hi;
       }
@@ -164,7 +181,7 @@ function drawKnob(id, angleDeg) {
     }
   }
 
-  
+
   const rad = (angleDeg - 90) * Math.PI / 180;
   const len = r - 3;
   const ex = Math.round(cx + Math.cos(rad) * len);
@@ -174,8 +191,8 @@ function drawKnob(id, angleDeg) {
     const t = i / steps;
     const px = Math.round(cx + (ex - cx) * t);
     const py = Math.round(cy + (ey - cy) * t);
-    
-    const d = Math.sqrt((px-cx)**2 + (py-cy)**2);
+
+    const d = Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
     if (d < r - 1) fill(px, py, i < 2 ? C.dotHi : C.dot);
   }
   fill(cx, cy, C.dot);
@@ -187,124 +204,204 @@ drawKnob("speed", 0)
 
 
 async function turnKnob(id, targetAngle, durationMs = 400, steps = 20) {
-    const startAngle = knobSettings[id].angle
-    const diff = targetAngle - startAngle
-    const stepTime = durationMs / steps
+  const startAngle = knobSettings[id].angle
+  const diff = targetAngle - startAngle
+  const stepTime = durationMs / steps
 
-    for (let i = 1; i <= steps; i++) {
-        const t = i / steps
-        const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
-        const angle = startAngle + diff * eased
-        drawKnob(id, angle)
-        await wait(stepTime)
-    }
-    drawKnob(id, targetAngle)
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps
+    const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+    const angle = startAngle + diff * eased
+    drawKnob(id, angle)
+    await wait(stepTime)
+  }
+  drawKnob(id, targetAngle)
 }
 
 
 async function spinKnob(id, rounds = 1, durationMs = 600) {
-    const startAngle = knobSettings[id].angle
-    const targetAngle = startAngle + (360 * rounds)
-    await turnKnob(id, targetAngle, durationMs, 40)
-    knobSettings[id].angle = knobSettings[id].angle % 360
+  const startAngle = knobSettings[id].angle
+  const targetAngle = startAngle + (360 * rounds)
+  await turnKnob(id, targetAngle, durationMs, 40)
+  knobSettings[id].angle = knobSettings[id].angle % 360
 }
 
 
 async function stuckKnob(id) {
-    const current = knobSettings[id].angle
+  const current = knobSettings[id].angle
 
-    
-    await turnKnob(id, current + 35, 120, 8)
-    await turnKnob(id, current + 20, 60, 5)
-    await turnKnob(id, current + 25, 50, 4)
-    await turnKnob(id, current, 150, 10)
+
+  await turnKnob(id, current + 35, 120, 8)
+  await turnKnob(id, current + 20, 60, 5)
+  await turnKnob(id, current + 25, 50, 4)
+  await turnKnob(id, current, 150, 10)
 }
 
 async function wiggleKnob(id, intensity = 15) {
-    const current = knobSettings[id].angle
-    await turnKnob(id, current + intensity, 80, 6)
-    await turnKnob(id, current - intensity, 100, 8)
-    await turnKnob(id, current + intensity * 0.5, 70, 5)
-    await turnKnob(id, current, 80, 6)
+  const current = knobSettings[id].angle
+  await turnKnob(id, current + intensity, 80, 6)
+  await turnKnob(id, current - intensity, 100, 8)
+  await turnKnob(id, current + intensity * 0.5, 70, 5)
+  await turnKnob(id, current, 80, 6)
 }
 
 async function bootKnob(id, targetAngle = 60) {
-    knobSettings[id].angle = -150
-    drawKnob(id, -150)
-    await wait(100)
-    await turnKnob(id, targetAngle, 500, 30)
+  knobSettings[id].angle = -150
+  drawKnob(id, -150)
+  await wait(100)
+  await turnKnob(id, targetAngle, 500, 30)
 }
 
-async function resetKnob(id,targetAngle = 0) {
-  await turnKnob(id,360)
+async function resetKnob(id, targetAngle = 0) {
+  await turnKnob(id, 360)
 }
 
 
-const closeCap = async () => {
-    cap.style.transition = "all ease 1s"
-    cap.classList.remove("open")
-    await wait(200)
+export const closeCap = async () => {
+  cap.style.transition = "all ease 1s"
+  cap.classList.remove("open")
+  await wait(200)
 
 }
 
-const openCap = async () => {
-    cap.style.transition = "all ease 1s"
-    cap.classList.add("open")
+export function pushbtn(canvasId) {
 
-    await await (200)
+    const c = document.getElementById(canvasId);
+
+    c.style.filter = 'brightness(2)';
+    c.style.transform = 'scale(0.85)';
+
+    setTimeout(() => {
+        c.style.filter = 'brightness(1.3)';
+        c.style.transform = 'scale(1.1)';
+    }, 150);
+
+    setTimeout(() => {
+        c.style.filter = '';
+        c.style.transform = 'scale(1)';
+    }, 280);
+}
+
+
+export const openCap = async () => {
+  cap.style.transition = "all ease 1s"
+  cap.classList.add("open")
+
+  await await (200)
+}
+
+export const slotCart = async () => {
+  await wait(800);
+  overlay.style.opacity = 0
+
+  const spine = middle.querySelector(".rom-spine");
+
+
+  const spineRect = spine.getBoundingClientRect();
+
+  const clone = spine.cloneNode(true);
+  const computedStyle = window.getComputedStyle(spine);
+
+
+  clone.style.font = computedStyle.font;
+  clone.style.color = computedStyle.color;
+  clone.style.letterSpacing = computedStyle.letterSpacing;
+  clone.style.textTransform = computedStyle.textTransform;
+  clone.style.position = 'fixed';
+  clone.style.top = spineRect.top + 'px';
+  clone.style.left = spineRect.left + 'px';
+  clone.style.width = spineRect.width + 'px';
+  clone.style.height = slot.height + 'px';
+  clone.style.transform = 'none';
+  clone.style.margin = '0';
+  clone.style.zIndex = '99';
+
+  document.body.appendChild(clone);
+
+
+  const slotRect = slot.getBoundingClientRect()
+  const stripRect = strip.getBoundingClientRect()
+
+  let dy = stripRect.left - slotRect.left
+
+  clone.style.transition = "all 1s ease"
+  clone.style.top = slotRect.top + "px"
+  clone.style.left = slotRect.left + "px"
+  clone.style.width = dy + "px"
+
+
+
+  await wait(1000)
+  clone.style.transition = 'all 0.25s ease-in';
+  clone.style.transform = ' scale(0.88)';
+  clone.style.transformOrigin = 'center top';
+
+  await wait(500);
+
+
+  clone.style.transition = 'all 0.15s ease-out';
+  clone.style.transform = 'scale(0.9)';
+
+
+  flickerLed(romled)
+
+  await wait(500)
+  await closeCap()
+
+  cleapUpOverlay()
 }
 
 
 const flickerLed = async (led) => {
 
-    led.classList.remove("off");
-    await wait(60);
-    led.classList.add("off");
-    await wait(80);
+  led.classList.remove("off");
+  await wait(60);
+  led.classList.add("off");
+  await wait(80);
 
 
 
-    led.classList.remove("off");
-    await wait(150);
-    led.classList.add("off");
-    await wait(120);
+  led.classList.remove("off");
+  await wait(150);
+  led.classList.add("off");
+  await wait(120);
 
 
-    led.classList.remove("off");
+  led.classList.remove("off");
 }
 
 
 const cleapUpOverlay = () => {
-    overlay.style.display = "none"
-    middle.classList.remove("rotated")
-    middle.classList.add("active")
+  overlay.style.display = "none"
+  middle.classList.remove("rotated")
+  middle.classList.add("active")
 }
 
 
-const drawNav = () => {
+export const drawNav = () => {
 
-    var c = document.getElementById('canvas-back')
-    var ctx = c.getContext('2d')
-    var PS = 16, COLS = 14, ROWS = 14
-    var T = { hi: '#ffc040', md: '#b05000', dk: '#3a1400' }
-    var G = [0, 0, 0, 0, 0, 0, 0, 'hi', 'hi', 'hi', 'hi', 'hi', 'hi', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'md', 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'md', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'dk', 'dk', 'dk', 'dk', 'hi', 0]
-    for (var i = 0; i < G.length; i++) {
-        if (!G[i]) continue
-        var r = Math.floor(i / COLS), col = i % COLS
-        ctx.fillStyle = T[G[i]]
-        ctx.fillRect(col * PS, r * PS, PS, PS)
-    }
+  var c = document.getElementById('canvas-back')
+  var ctx = c.getContext('2d')
+  var PS = 16, COLS = 14, ROWS = 14
+  var T = { hi: '#ffc040', md: '#b05000', dk: '#3a1400' }
+  var G = [0, 0, 0, 0, 0, 0, 0, 'hi', 'hi', 'hi', 'hi', 'hi', 'hi', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'md', 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'md', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'dk', 'dk', 'dk', 'dk', 'hi', 0]
+  for (var i = 0; i < G.length; i++) {
+    if (!G[i]) continue
+    var r = Math.floor(i / COLS), col = i % COLS
+    ctx.fillStyle = T[G[i]]
+    ctx.fillRect(col * PS, r * PS, PS, PS)
+  }
 
-    var c = document.getElementById('canvas-next');
-    var ctx = c.getContext('2d');
-    var PS = 16, COLS = 14, ROWS = 14;
-    var T = { hi: '#ffc040', md: '#b05000', dk: '#3a1400' };
-    var G = [0, 'hi', 'hi', 'hi', 'hi', 'hi', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'md', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 'md', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'dk', 'dk', 'dk', 'dk', 'dk', 0, 0, 0, 0, 0, 0, 0];
-    for (var i = 0; i < G.length; i++) {
-        if (!G[i]) continue;
-        var r = Math.floor(i / COLS), col = i % COLS;
-        ctx.fillStyle = T[G[i]];
-        ctx.fillRect(col * PS, r * PS, PS, PS);
-    }
+  var c = document.getElementById('canvas-next');
+  var ctx = c.getContext('2d');
+  var PS = 16, COLS = 14, ROWS = 14;
+  var T = { hi: '#ffc040', md: '#b05000', dk: '#3a1400' };
+  var G = [0, 'hi', 'hi', 'hi', 'hi', 'hi', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'dk', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 0, 'md', 'md', 'md', 'md', 'md', 'hi', 0, 0, 0, 0, 0, 0, 0, 0, 'md', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'md', 'md', 'md', 'md', 'dk', 0, 0, 0, 0, 0, 0, 0, 'hi', 'dk', 'dk', 'dk', 'dk', 'dk', 0, 0, 0, 0, 0, 0, 0];
+  for (var i = 0; i < G.length; i++) {
+    if (!G[i]) continue;
+    var r = Math.floor(i / COLS), col = i % COLS;
+    ctx.fillStyle = T[G[i]];
+    ctx.fillRect(col * PS, r * PS, PS, PS);
+  }
 
 }

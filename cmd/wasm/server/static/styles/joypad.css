@@ -9,6 +9,8 @@
     z-index: 100;
     background-color: #B5AFA0;
 
+    display: none;
+
     padding: 3.5rem;
     padding-top: 4rem;
     box-shadow:
@@ -29,6 +31,7 @@
 }
 
 .Joypad.active{
+    display: block;
     right: 50%;
     transform: translateX(50%);
 }

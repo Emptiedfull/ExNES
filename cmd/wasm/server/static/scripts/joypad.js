@@ -1,3 +1,5 @@
+import { state,UpdatePress,UpdateRelease } from "./driver.js"
+
 
 const keyMap = {
     'KeyZ': 'joypad-A',
@@ -11,20 +13,20 @@ const keyMap = {
 }
 
 window.addEventListener('keydown', (e) => {
-    if (keyMap[e.code] !== undefined  && romRunning) {
+    if (keyMap[e.code] !== undefined  && state.romRunning) {
          UpdatePress(keyMap[e.code])
 
-          btn = document.getElementById(keyMap[e.code])
+          let btn = document.getElementById(keyMap[e.code])
           PressBtn(btn)
     }
 })
 
 window.addEventListener('keyup', (e) => {
-    if (keyMap[e.code] !== undefined && romRunning) {
+    if (keyMap[e.code] !== undefined && state.romRunning) {
         
         UpdateRelease(keyMap[e.code])
 
-          btn = document.getElementById(keyMap[e.code])
+          let btn = document.getElementById(keyMap[e.code])
           ReleaseBtn(btn)
        
     }
