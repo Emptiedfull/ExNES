@@ -81,7 +81,7 @@ const pump = ()=>{
 }
 
 const loadRom = async (game) => {
-    const response = await fetch( game + ".nes?v=2")
+    const response = await fetch("games/" + game + ".nes?v=2")
     const buffer = await response.arrayBuffer()
 
     const uint8view = new Uint8Array(buffer)
