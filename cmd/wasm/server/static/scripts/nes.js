@@ -1,5 +1,6 @@
 import { openCap,closeCap,slotCart,activateJoypad,alignCable,pushbtn } from "./graphics.js"
 import { initConsole,loadRom,state} from "./driver.js"
+import { wait } from "./joypad.js"
 
 
 let currentIndex = 3
@@ -150,9 +151,5 @@ function move(direction) {
 
 
 
-
-function wait(ms) {
-    return new Promise(r => setTimeout(r, ms));
-}
 
 

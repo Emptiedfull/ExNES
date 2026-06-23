@@ -1,4 +1,4 @@
-const worker = new Worker(new URL('./extra/emuWorker.js', import.meta.url))
+const worker = new Worker(new URL('./emuWorker.js', import.meta.url))
 let fBytes = null
 
 const inputBuf = new SharedArrayBuffer(4)
@@ -16,7 +16,7 @@ export const state = {
 const setUpAudio = async (audioBufS, SIZE) => {
     const audioCtx = new AudioContext({ sampleRate: 44100 })
 
-    await audioCtx.audioWorklet.addModule(new URL("./extra/driverWorklet.js", import.meta.url))
+    await audioCtx.audioWorklet.addModule(new URL("./driverWorklet.js", import.meta.url))
 
     const node = new AudioWorkletNode(audioCtx, 'apu-proc', {
         outputChannelCount: [1],

@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"time"
+
+	"github.com/evanw/esbuild/pkg/api"
 )
 
 func main() {
@@ -23,9 +25,64 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 
-	memory := newCache(true)
+	api.Build(api.BuildOptions{
+		EntryPoints: []string{
+			"static/scripts/nes.js",
+		},
+		MinifyWhitespace:  true,
+		MinifyIdentifiers: true,
+		MinifySyntax:      true,
+		Bundle:            true,
+		Splitting:         true,
+		Format:            api.FormatESModule,
+		Outdir:            "static/dist",
+		// Outfile:           "app.js",
+		Write: true,
+	})
 
-	memory.get("./static/prototype.html")
+	api.Build(api.BuildOptions{
+		EntryPoints: []string{
+			"static/scripts/emuWorker.js",
+		},
+		MinifyWhitespace:  true,
+		MinifyIdentifiers: true,
+		MinifySyntax:      true,
+		Bundle:            true,
+		Outdir:            "static/dist",
+		Write:             true,
+	})
+
+	results := api.Build(api.BuildOptions{
+		EntryPoints: []string{
+			"static/scripts/driverWorklet.js",
+		},
+		MinifyWhitespace:  true,
+		MinifyIdentifiers: true,
+		MinifySyntax:      true,
+		Bundle:            true,
+		Outdir:            "static/dist",
+		Write:             true,
+	})
+
+	for _, err := range results.Errors {
+		fmt.Println(err)
+	}
+
+	res := api.Build(api.BuildOptions{
+		EntryPoints: []string{
+			"static/styles/all.css",
+		},
+		MinifyWhitespace:  true,
+		MinifyIdentifiers: true,
+		MinifySyntax:      true,
+		Bundle:            true,
+		Outdir:            "static/dist",
+		Write:             true,
+	})
+
+	for _, err := range res.Errors {
+		fmt.Println(err)
+	}
 }
 
 func handleStatic(w http.ResponseWriter, r *http.Request) {
