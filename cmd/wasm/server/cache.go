@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"sync"
 
@@ -29,11 +28,10 @@ func (c *cache) get(file string) []byte {
 	if val, ok := c.data[file]; ok {
 		return val
 	} else {
-		fmt.Println("compressing:", file)
 		orignal := getFileSize(file)
 		size, err := c.CompressToMemory(file)
 		if err != nil {
-			log.Fatal(err.Error())
+			// log.Fatal(err.Error())
 		}
 		fmt.Printf("compressed %v,from: %v to: %v \n", file, orignal, size)
 		return c.data[file]
@@ -107,10 +105,8 @@ func getFileSize(src string) string {
 	info, err := os.Stat(src)
 
 	if err != nil {
-		log.Fatalf("error reading file: %v", err)
+		// log.Fatalf("error reading file: %v", err)
 	}
-
-	fmt.Println(info.Name())
 
 	return formatSize(info.Size())
 }

@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -17,22 +19,21 @@ var mimeList = map[string]string{
 	".js":   "text/javascript",
 	".css":  "text/css",
 	".wasm": "application/wasm",
+	".png":  "image/png",
+}
+
+var compressibleList = map[string]bool{
+	".wasm": true,
+	".html": true,
+	".js":   true,
+	".css":  true,
+	".png":  false,
 }
 
 func main() {
-	// err, size := compileWasm("../", "./static/nes.wasm")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// log.Printf("Wasm compiled succesfully: %v", size)
-
-	// err = CompressToFile("./static/nes.wasm", "./compressed/nes.wasm.br")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
+	fmt.Print("building... ")
 	bundleOutput()
+	fmt.Println("completed build")
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleStatic)
@@ -41,7 +42,6 @@ func main() {
 	if err != nil {
 		fmt.Println("ERROR STARTING THE FUCKASS SRERVER")
 	}
-
 }
 
 func handleStatic(w http.ResponseWriter, r *http.Request) {
@@ -56,17 +56,22 @@ func handleStatic(w http.ResponseWriter, r *http.Request) {
 
 	path := filepath.Join(staticDir, url)
 
-	w.Header().Set("Content-type", mimeList[extension])
-
-	if extension == ".png" {
+	_, err := os.Stat(path)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
 	w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
+	w.Header().Set("Content-type", mimeList[extension])
 
-	if strings.Contains(accepts, "br") {
+	if strings.Contains(accepts, "br") && compressibleList[extension] {
 		handleCompressibles(w, r, path)
+	} else {
+		file, _ := os.Open(path)
+		io.Copy(w, file)
 	}
 
 	// path := filepath.Join(staticDir, url)
