@@ -1,15 +1,14 @@
 let wasm_up = false
-importScripts('/static/wasm_exec.js')
+importScripts('/wasm_exec.js')
 const init = async ()=>{
     const go = new Go()
-    const result = await WebAssembly.instantiateStreaming(fetch("/static/nes.wasm"),go.importObject)
+    const result = await WebAssembly.instantiateStreaming(fetch("/nes.wasm"),go.importObject)
     go.run(result.instance)
 
 
 }
 
 init()
-
 
 const FBuf = new SharedArrayBuffer(256*240*4)
 const FBytes = new Uint8Array(FBuf)
@@ -81,7 +80,7 @@ const pump = ()=>{
 }
 
 const loadRom = async (game) => {
-    const response = await fetch("/static/games/NROM/" + "bomber" + ".nes?v=2")
+    const response = await fetch("/games/NROM/" + "bomber" + ".nes?v=2")
     const buffer = await response.arrayBuffer()
 
     const uint8view = new Uint8Array(buffer)

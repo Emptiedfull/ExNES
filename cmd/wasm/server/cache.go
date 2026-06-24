@@ -35,7 +35,7 @@ func (c *cache) get(file string) []byte {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		fmt.Printf("compressed %v,from: %v to: %v", file, orignal, size)
+		fmt.Printf("compressed %v,from: %v to: %v \n", file, orignal, size)
 		return c.data[file]
 	}
 }
@@ -105,10 +105,12 @@ func CompressToFile(src, dst string) error {
 
 func getFileSize(src string) string {
 	info, err := os.Stat(src)
-	fmt.Println(info.Name())
+
 	if err != nil {
-		fmt.Println("error reading file")
+		log.Fatalf("error reading file: %v", err)
 	}
+
+	fmt.Println(info.Name())
 
 	return formatSize(info.Size())
 }

@@ -79,7 +79,7 @@ function updateRom() {
             const rom_title = rom.querySelector("span")
             const img = rom.querySelector("img")
 
-            img.src = "static/rom_images/" + element.img + ".png"
+            img.src = "/rom_images/" + element.img + ".png"
             const spine = rom.querySelector(".rom-spine")
             spine.innerText = element.name
             rom_title.innerText = element.name

@@ -1,16 +1,23 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
-	"os"
-	"os/exec"
 	"path/filepath"
-	"time"
-
-	"github.com/evanw/esbuild/pkg/api"
+	"strings"
 )
+
+const distDir = "./dist"
+const staticDir = "./static"
+
+var globalCache = newCache(true)
+
+var mimeList = map[string]string{
+	".html": "text/html",
+	".js":   "text/javascript",
+	".css":  "text/css",
+	".wasm": "application/wasm",
+}
 
 func main() {
 	// err, size := compileWasm("../", "./static/nes.wasm")
@@ -25,109 +32,54 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 
-	api.Build(api.BuildOptions{
-		EntryPoints: []string{
-			"static/scripts/nes.js",
-		},
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		Bundle:            true,
-		Splitting:         true,
-		Format:            api.FormatESModule,
-		Outdir:            "static/dist",
-		// Outfile:           "app.js",
-		Write: true,
-	})
+	bundleOutput()
 
-	api.Build(api.BuildOptions{
-		EntryPoints: []string{
-			"static/scripts/emuWorker.js",
-		},
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		Bundle:            true,
-		Outdir:            "static/dist",
-		Write:             true,
-	})
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handleStatic)
 
-	results := api.Build(api.BuildOptions{
-		EntryPoints: []string{
-			"static/scripts/driverWorklet.js",
-		},
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		Bundle:            true,
-		Outdir:            "static/dist",
-		Write:             true,
-	})
-
-	for _, err := range results.Errors {
-		fmt.Println(err)
+	err := http.ListenAndServe(":9090", mux)
+	if err != nil {
+		fmt.Println("ERROR STARTING THE FUCKASS SRERVER")
 	}
 
-	res := api.Build(api.BuildOptions{
-		EntryPoints: []string{
-			"static/styles/all.css",
-		},
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		Bundle:            true,
-		Outdir:            "static/dist",
-		Write:             true,
-	})
-
-	for _, err := range res.Errors {
-		fmt.Println(err)
-	}
 }
 
 func handleStatic(w http.ResponseWriter, r *http.Request) {
+	url := filepath.Clean(r.URL.Path)
 
-	extension := filepath.Ext(r.URL.RawPath)
-	fmt.Println(extension)
+	if url == "/" || url == "" {
+		url = "/index.html"
+	}
 
+	accepts := r.Header.Get("Accept-Encoding")
+	extension := strings.ToLower(filepath.Ext(url))
+
+	path := filepath.Join(staticDir, url)
+
+	w.Header().Set("Content-type", mimeList[extension])
+
+	if extension == ".png" {
+		return
+	}
+
+	w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
+	w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
+
+	if strings.Contains(accepts, "br") {
+		handleCompressibles(w, r, path)
+	}
+
+	// path := filepath.Join(staticDir, url)
+	// data := globalCache.get(path)
+
+	// w.Write(data)
 }
 
-func compileWasm(src, dst string) (error, string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+func handleCompressibles(w http.ResponseWriter, r *http.Request, path string) {
+	data := globalCache.get(path)
 
-	cmd := exec.CommandContext(ctx, "tinygo", "build", "-o", dst, "-target", "wasm", "-opt", "z", src)
+	w.Header().Set("Content-Encoding", "br")
+	w.Header().Set("vary", "Accept-Encoding")
 
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("Error compiling wasm: %w", err), "0"
-	}
-
-	info, err := os.Stat(dst)
-	if err != nil {
-		return fmt.Errorf("Error finding compiled file: %w", err), "0"
-	}
-
-	sizeStr := formatSize(info.Size())
-
-	return nil, sizeStr
-}
-
-func formatSize(size int64) string {
-	const unit = 1024
-
-	if size < unit {
-		return fmt.Sprintf("%d B", size)
-	}
-
-	div, exp := int64(unit), 0
-
-	for n := size / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-
-	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
+	w.Write(data)
 }

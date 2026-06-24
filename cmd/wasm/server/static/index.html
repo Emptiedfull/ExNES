@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>exNES WOOO</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <!-- <link rel="stylesheet" href="static/styles/main.css?v=2000">
+    <link rel="stylesheet" href="static/styles/nes.css?v=22211">
+    <link rel="stylesheet" href="static/styles/table.css?v=12122">
+    <link rel="stylesheet" href="static/styles/overlay.css?v=2">
+    <link rel="stylesheet" href="static/styles/joypad.css?v=021"> -->
+
+    <link rel="stylesheet" href="/dist/all.css">
+    <script src="/wasm_exec.js"></script>
+</head>
+
+<body>
+    <div class="screen-items">
+        <div class="main">
+
+            <div class="main-title">
+                <span style="color: rgb(70, 123, 215);">Ex</span><span style="color: #E60012;">NES</span>
+            </div>
+            <div class="tv">
+                <div class="tv-body pixel-corners">
+                    <div class="tv-corners--wrapper">
+                        <canvas class="tv-corners tv-corners" id="screen" width="256" height="240"
+                            style="image-rendering: pixelated; ;"></canvas>
+                    </div>
+                    <div class="control-bar control-corners">
+                        <div class="knob-wrap">
+                            <canvas id="sound" width="17" height="17"
+                                style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
+                            <label>Sound</label>
+                        </div>
+                        <div class="knob-wrap">
+                            <canvas id="speed" width="17" height="17"
+                                style="width:86px;height:86px; image-rendering: pixelated;"></canvas>
+                            <label>Speed</label>
+                        </div>
+
+                        <div class="grill">
+                        </div>
+                    </div>
+                </div>
+                <div class="legRow">
+                    <div class="leg"></div>
+                    <div class="leg"></div>
+                </div>
+            </div>
+
+            <div class="nes">
+                <div class="cartridge" id="cartridge">
+                    NONTENDO <br> <span style="color: black;">entertainment system</span>
+                </div>
+                <div class="top-cap"></div>
+                <div class="mid-line">
+                    <div class="slot" id="slot"></div>
+                </div>
+                <div class="bottom-cap">
+                    <div class="bottom-1">
+                        <div class="buttons">
+                            <button class="button startBtn highlight" id="start">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#E60012" stroke-width="4"
+                                    stroke-linecap="square">
+                                    <path d="M12 3v9" />
+                                    <path d="M6.3 6.3a8 8 0 1 0 11.4 0" />
+                                </svg>
+                            </button>
+                            <button class="button resetBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#5a3a1a" stroke-width="2.5"
+                                    stroke-linecap="square">
+                                    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                                    <path d="M3 3v5h5" />
+                                </svg>
+                            </button>
+                            <button class="button playbtn" disabled>
+                                <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5"
+                                    stroke-linecap="square">
+                                    <polygon points="6,3 20,12 6,21" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="led-grid">
+                            <div class="pixel-led off" id="power">
+                            </div>
+                            <div class="pixel-led off" id="rom">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="strip" id="strip">
+                    <div class="controllers">
+                        <div class="port">
+                            <span class="controllerLabel">1</span>
+                            <div class="controller controller-corners" id="port-1"></div>
+
+
+                        </div>
+                        <div class="port">
+                            <span class="controllerLabel"  >2</span>
+                            <div class="controller controller-corners" id="port-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="table">
+            <div class="table-top"></div>
+            <div class="table-legs">
+                <div class="table-leg"></div>
+                <div class="table-leg"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="rom-overlay" id="overlay" style="display: none;">
+        <div class="nav-panel">
+            <div class="nav-btn back" id="nav-back">
+                <canvas id="canvas-back" width="224" height="224" style="image-rendering:pixelated"></canvas>
+            </div>
+            <div class="nav-btn next" id="nav-front">
+                <canvas id="canvas-next" width="224" height="224" style="image-rendering:pixelated"></canvas>
+            </div>
+        </div>
+        <div class="romCarousel">
+            <div class="romItem side" id="left">
+                <span>Mario</span>
+                <div class="romImg"><img></div>
+                <div class="rom-top"></div>
+                <div class="rom-bottom"></div>
+                <div class="rom-grain"></div>
+                <div class="rom-grain-offset"></div>
+                <div class="rom-arrow"></div>
+                <div class="rom-spine">MARIO BROS</div>
+            </div>
+            <div class="romItem active" id="middle">
+                <span>Mario</span>
+                <div class="romImg"><img></div>
+                <div class="rom-top"></div>
+                <div class="rom-bottom"></div>
+                <div class="rom-grain"></div>
+                <div class="rom-grain-offset"></div>
+                <div class="rom-arrow"></div>
+                <div class="rom-spine">MARIO BROS</div>
+            </div>
+            <div class="romItem side" id="right">
+                <span>Mario</span>
+                <div class="romImg"><img></div>
+                <div class="rom-top"></div>
+                <div class="rom-bottom"></div>
+                <div class="rom-grain"></div>
+                <div class="rom-grain-offset"></div>
+                <div class="rom-arrow"></div>
+                <div class="rom-spine">MARIO BROS</div>
+            </div>
+        </div>
+    </div>
+    <div class="Joypad Joypad-corners" id="joypad">
+        <div class="Joypad-inner">
+            <div class="movement-section">
+                <div class="dpad">
+                    <div class="dpad-cross">
+                        <div class="cross-vertical">
+                            <div class="cross-vertical-line"></div>
+                        </div>
+                        <div class="cross-horizontal">
+                            <div class="cross-horizontal-line"></div>
+                        </div>
+                    </div>
+                    <div class="dpad-main">
+                        <div class="main-vertical">
+                            <div class="main-vertical-line">
+                                <button class="dpad-up joypad-button" id="dpad-up"></button>
+                                <button class="joypad-button" id="dpad-down"></button>
+                            </div>
+                        </div>
+                        <div class="main-horizontal">
+                            <div class="main-horizontal-line">
+                                <button class="joypad-button" id="dpad-left"></button>
+                                <button class="joypad-button" id="dpad-right"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="control-section">
+                <div class="decoration">
+                    <div class="decobox" id="control-update">
+                        Update Controls
+                    </div>
+                    <div class="decobox"></div>
+                    <div class="decobox" id="control-label">
+                        <span>
+                            START
+                        </span>
+                        <span>
+                            SELECT
+                        </span>
+                    </div>
+                </div>
+                <div class="control-buttons">
+                    <div class="control-buttons-inner">
+                        <button class="select control-button joypad-button" id="joypad-start">
+                            <button class="start control-button joypad-button" id="joypad-select">
+                    </div>
+                </div>
+            </div>
+            <div class="main-section">
+                <div class="main-buttons">
+                    <div class="main-button-cont ">
+                        <button class="joypad-button" id="joypad-A">A</button>
+                    </div>
+                    <div class="main-button-cont">
+                        <button class="joypad-button" id="joypad-B">B</button>
+                    </div>
+                </div>
+                <div class="main-text">
+                    NONTENDO
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+   
+    <div class="controller-cable controller-corners" id="cable-1"> </div>
+     <div class="cable-wire" id="wire-1"></div>
+
+      <div class="controller-cable controller-corners" id="cable-2"> </div>
+     <div class="cable-wire" id="wire-2"></div>
+
+</body>
+<!-- <script src="static/scripts/graphics.js" type="module"></script>
+<script src="static/scripts/driver.js" type="module"></script>
+<script src="static/scripts/nes.js?v=21" type="module"></script>
+<script src="static/scripts/joypad.js" type="module"></script> -->
+<script src="/dist/nes.js" type="module"></script>
+</html>
