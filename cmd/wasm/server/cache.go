@@ -23,17 +23,21 @@ func newCache(log bool) cache {
 	}
 }
 
+func (c *cache) clear() {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.data = make(map[string][]byte)
+}
+
 func (c *cache) get(file string) []byte {
 
 	if val, ok := c.data[file]; ok {
 		return val
 	} else {
-		orignal := getFileSize(file)
-		size, err := c.CompressToMemory(file)
-		if err != nil {
-			// log.Fatal(err.Error())
-		}
-		fmt.Printf("compressed %v,from: %v to: %v \n", file, orignal, size)
+
+		c.CompressToMemory(file)
+
 		return c.data[file]
 	}
 }

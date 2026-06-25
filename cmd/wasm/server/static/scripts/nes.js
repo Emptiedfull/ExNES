@@ -5,7 +5,6 @@ import { wait } from "./joypad.js"
 
 let currentIndex = 3
 
-const romArray = [{ "name": "Zelda", "id": "zelda", "img": "zelda" }, { "name": "Zelda", "id": "zelda", "img": "zelda" }, { "name": "donkey kong", "id": "donkey", "img": "donkey" }, { "name": "super mario", "id": "mario", "img": "mario" }, { "name": "Ballon Fight", "id": "balloon", "img": "balloon" }, { "name": "Contra", "id": "contra", "img": "contra" }, { "name": "sb3", "id": "sb3", "img": "mario" }]
 const middle = document.getElementById("middle")
 const left = document.getElementById("left")
 const right = document.getElementById("right")
@@ -13,6 +12,8 @@ const slot = document.getElementById("slot")
 const overlay = document.getElementById("overlay")
 const strip = document.getElementById("strip")
 const cap = document.getElementById("cartridge")
+
+const GamesArray = []
 
 const powerLed = document.getElementById("power")
 
@@ -25,6 +26,7 @@ const roms = [left, middle, right]
 document.addEventListener("DOMContentLoaded", async () => {
 
     await setUpButtons()
+    await initGames()
 
 
     updateRom()
@@ -64,22 +66,42 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 
+const initGames = async ()=>{
+    let response = await fetch("./games")
+
+    if (response.ok){
+        let data = await response.json()
+
+        data.forEach(element => {
+            GamesArray.push(element)
+        });
+       
+    }
+
+    console.log(GamesArray)
+
+}
+
+
 
 function updateRom() {
+     let romSelection = GamesArray.slice(currentIndex - 1, currentIndex + 2)
 
-    const romSelection = romArray.slice(currentIndex - 1, currentIndex + 2)
+    if (currentIndex == 0){
+         romSelection = [GamesArray.at(-1),GamesArray[0],GamesArray[1]]
+    }
 
     if (romSelection.length == 3) {
         for (let i = 0; i < 3; i++) {
             const element = romSelection[i];
             const rom = roms[i]
 
-            rom.id = element.id
+            rom.id = element.ID
 
             const rom_title = rom.querySelector("span")
             const img = rom.querySelector("img")
 
-            img.src = "/rom_images/" + element.img + ".webp"
+            img.src = "/rom_images/" + element.ID + ".webp"
             const spine = rom.querySelector(".rom-spine")
             spine.innerText = element.name
             rom_title.innerText = element.name
@@ -138,8 +160,20 @@ async function begin(game) {
 
 
 function move(direction) {
+
+
     let newIdx = currentIndex + direction
-    if (newIdx >= romArray.length || newIdx < 0) {
+
+    if (newIdx < 0 ){
+        currentIndex = GamesArray.length + newIdx
+        console.log("reseted index to:",currentIndex)
+        updateRom()
+        return
+    }
+
+    if (newIdx >= GamesArray.length){
+        currentIndex = currentIndex - GamesArray.length
+        updateRom()
         return
     }
     currentIndex = newIdx

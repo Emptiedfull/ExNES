@@ -58,6 +58,8 @@ const ControlMap = {
     "dpad-right": 7,
 }
 
+console.log("hello")
+
 export const loadRom = (game) => {
     worker.postMessage({ type: 'loadRom', rom: game })
 }
