@@ -3,16 +3,18 @@
 package main
 
 import (
+	"encoding/binary"
 	"exnes/Core"
 	"fmt"
 	"math"
 	"syscall/js"
-	"unsafe"
 )
 
 var currentSpeed js.Value
 
 func main() {
+
+	fmt.Println(1 / 1000.0)
 
 	stallChan := make(chan bool)
 
@@ -33,6 +35,7 @@ func startFrameDriver() {
 	var JS_Arr js.Value
 
 	var Input_Arr js.Value //also a dirty fucking shared buffer
+	var Speed_Arr js.Value
 
 	js.Global().Set("initBuffer", js.FuncOf(func(this js.Value, args []js.Value) any {
 		JS_Arr = args[0]
@@ -44,33 +47,11 @@ func startFrameDriver() {
 		return nil
 	}))
 
-	js.Global().Set("getSamples", js.FuncOf(func(this js.Value, args []js.Value) any {
-
-		// size := int32(len(sampleBuf))
-		if emu == nil {
-			return js.ValueOf(0)
-		}
-
-		samples := emu.Apu.DrainSamples()
-		if len(samples) == 0 {
-			return js.ValueOf(0)
-		}
-
-		count := len(samples)
-		need := count * 4
-
-		view := unsafe.Slice(
-			(*byte)(unsafe.Pointer(&samples[0])), need,
-		)
-
-		copy(S_Arr, view)
-
-		js.CopyBytesToJS(JS_Arr, S_Arr[:need])
-
-		return js.ValueOf(count)
+	js.Global().Set("initSpeed", js.FuncOf(func(this js.Value, args []js.Value) any {
+		Speed_Arr = args[0]
+		return nil
 	}))
 
-	fmt.Println("core initialized 2")
 	js.Global().Set("startEmulator", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		emu = Core.InitializeConsole()
 		fmt.Println("console initialized")
@@ -100,9 +81,13 @@ func startFrameDriver() {
 		return nil
 	}))
 
+	var speed float32 = 1
+
 	js.Global().Set("drive", js.FuncOf(func(this js.Value, args []js.Value) any {
 
-		samplesNeeded := args[0].Int()
+		speed = getSpeed(Speed_Arr) / 1000.0
+
+		samplesNeeded := int(float32(args[0].Int()) * speed)
 		syncInputs(emu, Input_Arr)
 
 		for i := range samplesNeeded {
@@ -126,6 +111,12 @@ func startFrameDriver() {
 		return nil
 	}))
 
+}
+
+func getSpeed(speedBuf js.Value) float32 {
+	bytes := make([]byte, 4)
+	js.CopyBytesToGo(bytes, speedBuf)
+	return float32(binary.LittleEndian.Uint32(bytes))
 }
 
 func syncInputs(emu *Core.Console, input js.Value) {

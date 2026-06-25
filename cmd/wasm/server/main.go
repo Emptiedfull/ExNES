@@ -40,6 +40,8 @@ var compressibleList = map[string]bool{
 
 func main() {
 
+	compileWasm("../main.go", "./static/nes.wasm")
+
 	restartChan := make(chan bool)
 
 	go StartServer(restartChan)
@@ -126,7 +128,6 @@ func handleStatic(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", mimeList[extension])
 
 	if strings.Contains(accepts, "br") && compressibleList[extension] {
-		fmt.Println(path)
 		handleCompressibles(w, r, path)
 	} else {
 		file, _ := os.Open(path)

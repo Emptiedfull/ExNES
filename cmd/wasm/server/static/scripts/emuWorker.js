@@ -15,7 +15,10 @@ const FBytes = new Uint8Array(FBuf)
 
 const SIZE = 8192
 
-const audioBufS = new SharedArrayBuffer(SIZE*4 + 4 + 4 +4 ) //uh the plus 4 are different pointers, write,read and updateflag
+let SPEED = 1
+let speedChanged = false
+
+const audioBufS = new SharedArrayBuffer(SIZE*4 + 4 + 4 +4 + 4 ) //uh the plus 4 are different pointers, write,read and updateflag
 
 const samples = new Float32Array(audioBufS,0,SIZE)
 const control = new Int32Array(audioBufS,SIZE*4,3)
@@ -30,6 +33,7 @@ self.onmessage = async ({data}) =>{
             startEmulator()
             initBuffer(new Uint8Array(S_buf.buffer))
             initInput(new Int32Array(data.inputBuf))
+            initSpeed(new Uint8Array(data.speedBuf))
             self.postMessage({type:"init",audioBufS,FBuf,SIZE,S_size})
             
             break
@@ -60,6 +64,9 @@ const pump = ()=>{
         const free = SIZE - (wp - rp)
         const want = Math.min(free,S_size)
 
+
+    
+
         if (want > 0){
             drive(want)
 
@@ -70,6 +77,8 @@ const pump = ()=>{
             Atomics.store(control,0,wp+want)
         }
 
+        
+
 
         FBytes.set(new Uint8Array(frameBuffer.buffer))
         self.postMessage({type:"frameUp"})
@@ -78,6 +87,7 @@ const pump = ()=>{
         Atomics.notify(control,2) //god pls work this is my 5th rewrite
     }
 }
+
 
 const loadRom = async (game) => {
     const response = await fetch("/games/" + game + ".nes")

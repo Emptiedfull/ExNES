@@ -1,5 +1,5 @@
 import { openCap,closeCap,slotCart,activateJoypad,alignCable,pushbtn,turnKnob,wiggleKnob,knobSettings } from "./graphics.js"
-import { initConsole,loadRom,state,setVolume} from "./driver.js"
+import { initConsole,loadRom,state,updateVolume,UpdateSpeed} from "./driver.js"
 import { wait } from "./joypad.js"
 
 
@@ -61,13 +61,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         }
     })
-});
+}); 
 
 const BeginKnobs = async ()=>{
     knobSettings["sound"].setting = 4
     knobSettings["angle"] = 180
 
     await turnKnob("sound",180)
+    await turnKnob("speed",180)
 }
 
 
@@ -90,12 +91,38 @@ const setUpKnobs = async ()=>{
 
         let targetAngle = soundIncrements[knobSettings["sound"].setting]
         if (targetAngle == 0){
-            setVolume(0)
+            updateVolume(0)
         }else{
-            setVolume(targetAngle/180)
+            updateVolume(targetAngle/180)
         }
         await turnKnob("sound",targetAngle)
     })
+
+    const speedKnob = document.getElementById("speed")
+    const speedIncrements = [45,90,135,180,225,270,315,360]
+
+    speedKnob.addEventListener("click",async ()=>{
+        if (romLoaded == "" || power == false){
+            await wiggleKnob("speed",45)
+            await turnKnob("speed",0)
+            return
+        }
+
+        knobSettings["speed"].setting = knobSettings["speed"].setting + 1
+
+        // if (knobSettings["speed"].setting >= knobSettings["speed"].setting - 1){
+        //     knobSettings["speed"].setting = 0
+        // }
+
+        let targetAngle = speedIncrements[knobSettings["speed"].setting]
+
+
+        UpdateSpeed(1000 * targetAngle / 180)
+
+        await turnKnob("speed",targetAngle)
+    })
+
+
 }
 
 

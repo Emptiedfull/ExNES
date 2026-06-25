@@ -10,6 +10,11 @@ const canvas = document.getElementById("screen")
 const ctx = canvas.getContext("2d")
 const imageData = ctx.createImageData(256, 240)
 
+const speedBuf = new SharedArrayBuffer(4)
+const speedNum = new Int32Array(speedBuf)
+
+Atomics.store(speedNum,0,1000)
+
 export const state = {
     romRunning: false,
 }
@@ -32,11 +37,9 @@ const setUpAudio = async (audioBufS, SIZE) => {
 
     node.connect(gain)
     gain.connect(audioCtx.destination)
-
-   
 }
 
-export const setVolume = (intensity) =>{
+export const updateVolume = (intensity) =>{
     if (gain !== null){
            gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
      gain.gain.linearRampToValueAtTime(intensity, audioCtx.currentTime + 1)
@@ -45,7 +48,7 @@ export const setVolume = (intensity) =>{
 
 
 export const initConsole = async () => {
-    worker.postMessage({ type: "init", inputBuf })
+    worker.postMessage({ type: "init", inputBuf,speedBuf })
 }
 
 
@@ -58,6 +61,7 @@ worker.onmessage = async ({ data }) => {
             await setUpAudio(data.audioBufS, data.SIZE)
             break
         case 'frameUp':
+            console.log("frame INCOMING")
             imageData.data.set(fBytes)
             ctx.putImageData(imageData, 0, 0)
             break
@@ -79,6 +83,11 @@ console.log("hello")
 
 export const loadRom = (game) => {
     worker.postMessage({ type: 'loadRom', rom: game })
+}
+
+export const UpdateSpeed = (speed) =>{
+    console.log("setting speed to:",speed)
+    Atomics.store(speedNum,0,speed)
 }
 
 export const UpdatePress = (btn) => {
