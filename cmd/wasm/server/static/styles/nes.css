@@ -369,7 +369,7 @@
 }
 
 .cartridge:hover{
-  transform: translateY(-50%);
+  transform: translateY(-55%);
 }
 
 .cartridge.open{
@@ -377,12 +377,6 @@
   border-bottom: none;
   
 }
-
-/* .cartridge:hover{
-    border-color: rgb(231, 231, 77);
-    border-width: 5px;
-} */
-
 
 
 .mid-line{

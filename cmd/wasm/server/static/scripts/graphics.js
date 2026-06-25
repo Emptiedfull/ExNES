@@ -1,13 +1,14 @@
 
 
 
-const knobSettings = { "speed": { "angle": 60, "setting": 1 }, "sound": { "angle": 60, "setting": 1 } }
 
 const body = document.querySelector("body")
 const middle = document.getElementById("middle")
 const romled = document.getElementById("rom")
 const cap = document.getElementById("cartridge")
 const joypad = document.getElementById("joypad")
+
+export const knobSettings = { "speed": { "angle": 0, "setting": 0 }, "sound": { "angle": 0, "setting": 0 } }
 
 function wait(ms) {
   return new Promise(r => setTimeout(r, ms));
@@ -16,9 +17,16 @@ function wait(ms) {
 
 window.addEventListener("DOMContentLoaded", async () => {
   initCables()
-  console.log("reached here ")
   drawNav()
+
+
+drawKnob("sound", 0)
+drawKnob("speed", 0)
+
+
 })
+
+
 
 const initCables = () => {
 
@@ -198,12 +206,8 @@ function drawKnob(id, angleDeg) {
   fill(cx, cy, C.dot);
 }
 
-drawKnob("sound", 0)
-drawKnob("speed", 0)
 
-
-
-async function turnKnob(id, targetAngle, durationMs = 400, steps = 20) {
+export async function turnKnob(id, targetAngle, durationMs = 400, steps = 20) {
   const startAngle = knobSettings[id].angle
   const diff = targetAngle - startAngle
   const stepTime = durationMs / steps
@@ -219,7 +223,7 @@ async function turnKnob(id, targetAngle, durationMs = 400, steps = 20) {
 }
 
 
-async function spinKnob(id, rounds = 1, durationMs = 600) {
+export async function spinKnob(id, rounds = 1, durationMs = 600) {
   const startAngle = knobSettings[id].angle
   const targetAngle = startAngle + (360 * rounds)
   await turnKnob(id, targetAngle, durationMs, 40)
@@ -227,17 +231,9 @@ async function spinKnob(id, rounds = 1, durationMs = 600) {
 }
 
 
-async function stuckKnob(id) {
-  const current = knobSettings[id].angle
 
 
-  await turnKnob(id, current + 35, 120, 8)
-  await turnKnob(id, current + 20, 60, 5)
-  await turnKnob(id, current + 25, 50, 4)
-  await turnKnob(id, current, 150, 10)
-}
-
-async function wiggleKnob(id, intensity = 15) {
+export async function wiggleKnob(id, intensity = 15) {
   const current = knobSettings[id].angle
   await turnKnob(id, current + intensity, 80, 6)
   await turnKnob(id, current - intensity, 100, 8)
@@ -245,14 +241,14 @@ async function wiggleKnob(id, intensity = 15) {
   await turnKnob(id, current, 80, 6)
 }
 
-async function bootKnob(id, targetAngle = 60) {
+export async function bootKnob(id, targetAngle = 60) {
   knobSettings[id].angle = -150
   drawKnob(id, -150)
   await wait(100)
   await turnKnob(id, targetAngle, 500, 30)
 }
 
-async function resetKnob(id, targetAngle = 0) {
+export async function resetKnob(id, targetAngle = 0) {
   await turnKnob(id, 360)
 }
 
@@ -266,20 +262,20 @@ export const closeCap = async () => {
 
 export function pushbtn(canvasId) {
 
-    const c = document.getElementById(canvasId);
+  const c = document.getElementById(canvasId);
 
-    c.style.filter = 'brightness(2)';
-    c.style.transform = 'scale(0.85)';
+  c.style.filter = 'brightness(2)';
+  c.style.transform = 'scale(0.85)';
 
-    setTimeout(() => {
-        c.style.filter = 'brightness(1.3)';
-        c.style.transform = 'scale(1.1)';
-    }, 150);
+  setTimeout(() => {
+    c.style.filter = 'brightness(1.3)';
+    c.style.transform = 'scale(1.1)';
+  }, 150);
 
-    setTimeout(() => {
-        c.style.filter = '';
-        c.style.transform = 'scale(1)';
-    }, 280);
+  setTimeout(() => {
+    c.style.filter = '';
+    c.style.transform = 'scale(1)';
+  }, 280);
 }
 
 

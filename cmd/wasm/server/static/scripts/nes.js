@@ -1,5 +1,5 @@
-import { openCap,closeCap,slotCart,activateJoypad,alignCable,pushbtn } from "./graphics.js"
-import { initConsole,loadRom,state} from "./driver.js"
+import { openCap,closeCap,slotCart,activateJoypad,alignCable,pushbtn,turnKnob,wiggleKnob,knobSettings } from "./graphics.js"
+import { initConsole,loadRom,state,setVolume} from "./driver.js"
 import { wait } from "./joypad.js"
 
 
@@ -24,7 +24,7 @@ let power = false
 const roms = [left, middle, right]
 
 document.addEventListener("DOMContentLoaded", async () => {
-
+    await setUpKnobs()
     await setUpButtons()
     await initGames()
 
@@ -61,9 +61,42 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         }
     })
-
-
 });
+
+const BeginKnobs = async ()=>{
+    knobSettings["sound"].setting = 4
+    knobSettings["angle"] = 180
+
+    await turnKnob("sound",180)
+}
+
+
+const setUpKnobs = async ()=>{
+    const soundKnob = document.getElementById("sound")
+    const soundIncrements = [0,45,90,135,180,225,270,315,360]
+    soundKnob.addEventListener("click",async ()=>{
+
+        if (romLoaded == "" || power == false){
+            await wiggleKnob("sound",45)
+            await turnKnob("sound",0)
+            return 
+        }
+
+        knobSettings["sound"].setting = knobSettings["sound"].setting + 1
+
+        if (knobSettings["sound"].setting >= soundIncrements.length - 1){
+            knobSettings["sound"].setting = 0
+        }
+
+        let targetAngle = soundIncrements[knobSettings["sound"].setting]
+        if (targetAngle == 0){
+            setVolume(0)
+        }else{
+            setVolume(targetAngle/180)
+        }
+        await turnKnob("sound",targetAngle)
+    })
+}
 
 
 const initGames = async ()=>{
@@ -151,6 +184,8 @@ async function begin(game) {
     await initConsole()
     await loadRom(game)
 
+    await BeginKnobs()
+
 
     alignCable(1)
 
@@ -158,10 +193,7 @@ async function begin(game) {
 
 }
 
-
 function move(direction) {
-
-
     let newIdx = currentIndex + direction
 
     if (newIdx < 0 ){

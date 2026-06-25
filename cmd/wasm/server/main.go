@@ -35,6 +35,7 @@ var compressibleList = map[string]bool{
 	".js":   true,
 	".css":  true,
 	".png":  false,
+	".nes":  true,
 }
 
 func main() {
@@ -55,7 +56,6 @@ func StartServer(restartChan chan bool) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleStatic)
 	mux.HandleFunc("/games", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("yo")
 		games := PrepareGameList()
 
 		err := json.NewEncoder(w).Encode(games)
@@ -126,6 +126,7 @@ func handleStatic(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", mimeList[extension])
 
 	if strings.Contains(accepts, "br") && compressibleList[extension] {
+		fmt.Println(path)
 		handleCompressibles(w, r, path)
 	} else {
 		file, _ := os.Open(path)

@@ -80,14 +80,6 @@ func startFrameDriver() {
 		return "x"
 	}))
 
-	// js.Global().Set("update", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-
-	// 	emu.Player1.UpdateBtnBool(args[0].Int(), args[1].Bool())
-	// 	emu.Player2.UpdateBtnBool(args[0].Int(), args[1].Bool())
-
-	// 	return nil
-	// }))
-
 	js.Global().Set("initRom", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 
 		Arr := args[0]

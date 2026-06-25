@@ -1,3 +1,5 @@
+import { wait } from "./joypad.js"
+
 const worker = new Worker(new URL('./emuWorker.js', import.meta.url))
 let fBytes = null
 
@@ -12,9 +14,11 @@ export const state = {
     romRunning: false,
 }
 
+let audioCtx = null
+let gain = null
 
 const setUpAudio = async (audioBufS, SIZE) => {
-    const audioCtx = new AudioContext({ sampleRate: 44100 })
+    audioCtx = new AudioContext({ sampleRate: 44100 })
 
     await audioCtx.audioWorklet.addModule(new URL("./driverWorklet.js", import.meta.url))
 
@@ -22,8 +26,21 @@ const setUpAudio = async (audioBufS, SIZE) => {
         outputChannelCount: [1],
     })
 
+    gain = audioCtx.createGain()
+
     node.port.postMessage({ audioBufS, SIZE })
-    node.connect(audioCtx.destination)
+
+    node.connect(gain)
+    gain.connect(audioCtx.destination)
+
+   
+}
+
+export const setVolume = (intensity) =>{
+    if (gain !== null){
+           gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
+     gain.gain.linearRampToValueAtTime(intensity, audioCtx.currentTime + 1)
+    }
 }
 
 
