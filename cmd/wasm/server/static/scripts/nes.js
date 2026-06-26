@@ -110,9 +110,9 @@ const setUpKnobs = async ()=>{
 
         knobSettings["speed"].setting = knobSettings["speed"].setting + 1
 
-        // if (knobSettings["speed"].setting >= knobSettings["speed"].setting - 1){
-        //     knobSettings["speed"].setting = 0
-        // }
+        if (knobSettings["speed"].setting >= speedIncrements.length - 1){
+            knobSettings["speed"].setting = 0
+        }
 
         let targetAngle = speedIncrements[knobSettings["speed"].setting]
 
@@ -137,9 +137,6 @@ const initGames = async ()=>{
         });
        
     }
-
-    console.log(GamesArray)
-
 }
 
 
@@ -149,6 +146,10 @@ function updateRom() {
 
     if (currentIndex == 0){
          romSelection = [GamesArray.at(-1),GamesArray[0],GamesArray[1]]
+    }
+
+    if (currentIndex == GamesArray.length - 1){
+        romSelection = [GamesArray.at(-2),GamesArray.at[-1],GamesArray[0]]
     }
 
     if (romSelection.length == 3) {

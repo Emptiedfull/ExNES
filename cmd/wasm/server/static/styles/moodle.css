@@ -1,0 +1,94 @@
+.moodle-bar {
+    position: absolute;
+    width: 40%;
+    right: 0;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    padding: 3rem;
+    gap: 2rem;
+
+}
+
+
+
+.modal {
+    background: #f0e8d0;
+    box-shadow: 6px 6px 0 #1a1a2e;
+    padding: 0;
+    width: 100%;
+    min-height: 100px;
+    transform: translateX(calc(100% + 3rem)); 
+    opacity: 0;
+    transition: none;
+}
+
+@keyframes slideIN {
+    0% { transform: translateX(calc(100% + 3rem))};
+    50% {opacity: 1;}
+    100% {transform: translateX(0);opacity: 1;}
+}
+
+ @keyframes slideOUT {
+    0%   { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(calc(100% + 3rem)); opacity: 0; }
+  }
+
+
+.modal h1 {
+    padding: 10px 10px;
+    font-size: 2.4rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.modal h1.info {
+    background: #1a3a6e;
+    color: #f0e8d0;
+    border-bottom: 3px solid #11111e;
+}
+
+.modal h1.error {
+    background: #f0e8d0;
+    color: #c0392b;
+    border: 3px solid #c0392b;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+
+.modal.txt-modal {
+    border-color: #c0392b;
+    box-shadow: 4px 4px 0 #c0392b;
+}
+
+
+.modal-text {
+    padding: 10px 12px;
+    font-size: 1.4rem;
+    line-height: 1.6;
+    color: #1a1a2e;
+}
+
+
+
+
+
+.moodle-item.active {}
+
+.moodle-corners.error::after {
+    background-color: var(--goodred);
+}
+
+.moodle-item h1 {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+}
+
+.moodle-item p {
+    font-size: 1.3rem;
+    line-height: 1.2;
+}

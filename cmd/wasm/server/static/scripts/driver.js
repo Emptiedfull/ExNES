@@ -51,8 +51,6 @@ export const initConsole = async () => {
     worker.postMessage({ type: "init", inputBuf,speedBuf })
 }
 
-
-
 worker.onmessage = async ({ data }) => {
 
     switch (data.type) {
@@ -61,7 +59,6 @@ worker.onmessage = async ({ data }) => {
             await setUpAudio(data.audioBufS, data.SIZE)
             break
         case 'frameUp':
-            console.log("frame INCOMING")
             imageData.data.set(fBytes)
             ctx.putImageData(imageData, 0, 0)
             break
@@ -86,7 +83,6 @@ export const loadRom = (game) => {
 }
 
 export const UpdateSpeed = (speed) =>{
-    console.log("setting speed to:",speed)
     Atomics.store(speedNum,0,speed)
 }
 
