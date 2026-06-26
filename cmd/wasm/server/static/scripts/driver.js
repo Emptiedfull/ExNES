@@ -1,4 +1,5 @@
 import { wait } from "./joypad.js"
+import { createModal } from "./modal.js"
 
 const worker = new Worker(new URL('./emuWorker.js', import.meta.url))
 let fBytes = null
@@ -12,6 +13,10 @@ const imageData = ctx.createImageData(256, 240)
 
 const speedBuf = new SharedArrayBuffer(4)
 const speedNum = new Int32Array(speedBuf)
+
+let audioBufS = null
+let control = null
+
 
 Atomics.store(speedNum,0,1000)
 
@@ -35,8 +40,25 @@ const setUpAudio = async (audioBufS, SIZE) => {
 
     node.port.postMessage({ audioBufS, SIZE })
 
+
     node.connect(gain)
     gain.connect(audioCtx.destination)
+}
+
+export const PauseAudio = async ()=>{
+
+    await audioCtx.suspend()
+
+    await wait(50)
+
+    console.log(audioBufS)
+
+    Atomics.store(control,2,2)
+    Atomics.notify(control,2)
+}
+
+export const ResumeAudio = async ()=>{
+    await audioCtx.resume()
 }
 
 export const updateVolume = (intensity) =>{
@@ -56,7 +78,12 @@ worker.onmessage = async ({ data }) => {
     switch (data.type) {
         case 'init':
             fBytes = new Uint8Array(data.FBuf)
+            audioBufS = data.audioBufS
+            control = new Int32Array(audioBufS,data.SIZE*4,3)
             await setUpAudio(data.audioBufS, data.SIZE)
+            break
+        case "wasm":
+            createModal("Console Ready!!","Press the power button to start the console")
             break
         case 'frameUp':
             imageData.data.set(fBytes)

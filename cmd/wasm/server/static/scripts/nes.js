@@ -1,6 +1,7 @@
 import { openCap,closeCap,slotCart,activateJoypad,alignCable,pushbtn,turnKnob,wiggleKnob,knobSettings } from "./graphics.js"
-import { initConsole,loadRom,state,updateVolume,UpdateSpeed} from "./driver.js"
+import { initConsole,loadRom,state,updateVolume,UpdateSpeed,PauseAudio,ResumeAudio} from "./driver.js"
 import { wait } from "./joypad.js"
+import { createModal } from "./modal.js"
 
 
 let currentIndex = 3
@@ -13,6 +14,7 @@ const overlay = document.getElementById("overlay")
 const strip = document.getElementById("strip")
 const cap = document.getElementById("cartridge")
 
+
 const GamesArray = []
 
 const powerLed = document.getElementById("power")
@@ -24,43 +26,13 @@ let power = false
 const roms = [left, middle, right]
 
 document.addEventListener("DOMContentLoaded", async () => {
+
     await setUpKnobs()
     await setUpButtons()
     await initGames()
 
-
     updateRom()
-
-
-    middle.addEventListener("click", async () => {
-        middle.classList.remove("active")
-        await wait(100)
-        let span = middle.querySelector("span")
-        span.style.display = "none"
-        middle.classList.add("rotated")
-        romLoaded = middle.id
-        await slotCart()
-
-        if (power) {
-            activateJoypad()
-            await begin(romLoaded)
-        }
-    })
-
-    cap.addEventListener("click", async () => {
-
-        await openCap(cap)
-        await wait(200)
-        overlay.style.display = "flex"
-        overlay.style.transition = "all ease 1"
-        overlay.style.opacity = 1
-
-        if (power) {
-            await begin(romLoaded)
-        } else {
-
-        }
-    })
+    
 }); 
 
 const BeginKnobs = async ()=>{
@@ -202,6 +174,36 @@ const setUpButtons = async () => {
         pushbtn("canvas-next")
     })
 
+    middle.addEventListener("click", async () => {
+        middle.classList.remove("active")
+        await wait(100)
+        let span = middle.querySelector("span")
+        span.style.display = "none"
+        middle.classList.add("rotated")
+        romLoaded = middle.id
+        await slotCart()
+
+        if (power) {
+            activateJoypad()
+            await begin(romLoaded)
+        }
+    })
+
+    cap.addEventListener("click", async () => {
+
+        await openCap(cap)
+        await wait(200)
+        overlay.style.display = "flex"
+        overlay.style.transition = "all ease 1"
+        overlay.style.opacity = 1
+
+        if (power) {
+            await begin(romLoaded)
+        } else {
+
+        }
+    })
+
 
 }
 
@@ -218,6 +220,18 @@ async function begin(game) {
     alignCable(1)
 
     state.romRunning = true
+
+    uhm()
+
+}
+
+const uhm = async ()=>{
+    await wait(1000)
+    console.log("pausing game")
+    await PauseAudio()
+
+    await wait(1000)
+    await ResumeAudio()
 
 }
 

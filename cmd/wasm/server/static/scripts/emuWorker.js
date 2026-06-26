@@ -5,6 +5,9 @@ const init = async ()=>{
     const result = await WebAssembly.instantiateStreaming(fetch("/nes.wasm"),go.importObject)
     go.run(result.instance)
 
+    console.log("uhm uhm")
+
+    self.postMessage({"type":"wasm"})
 
 }
 
@@ -54,8 +57,14 @@ self.onmessage = async ({data}) =>{
 
 const pump = ()=>{
     while (true){
+
       
         Atomics.wait(control,2,0)
+
+        console.log(Atomics.load(control,2))
+        if (Atomics.load(control,2) == 2){
+            return
+        }
        
 
         const wp = Atomics.load(control,0)
