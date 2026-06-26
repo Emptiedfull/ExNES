@@ -14,11 +14,9 @@ const overlay = document.getElementById("overlay")
 const strip = document.getElementById("strip")
 const cap = document.getElementById("cartridge")
 
-
 const GamesArray = []
 
 const powerLed = document.getElementById("power")
-
 
 let romLoaded = ""
 let power = false
@@ -117,11 +115,15 @@ function updateRom() {
      let romSelection = GamesArray.slice(currentIndex - 1, currentIndex + 2)
 
     if (currentIndex == 0){
+        
          romSelection = [GamesArray.at(-1),GamesArray[0],GamesArray[1]]
+         console.log(romSelection)
     }
 
     if (currentIndex == GamesArray.length - 1){
-        romSelection = [GamesArray.at(-2),GamesArray.at[-1],GamesArray[0]]
+        console.log("uhm this activated")
+
+        romSelection = [GamesArray.at(-2),GamesArray.at(-1),GamesArray[0]]
     }
 
     if (romSelection.length == 3) {
@@ -160,7 +162,6 @@ const setUpButtons = async () => {
         overlay.style.transition = "all ease 1"
         overlay.style.opacity = 1
     })
-
 
     const nav_back = document.getElementById("nav-back")
     nav_back.addEventListener("click",async()=>{
@@ -213,9 +214,8 @@ const setUpButtons = async () => {
 
 async function begin(game) {
     console.log("starting to start this shit hole:",game)
-     initConsole()
+    initConsole()
     await loadRom(game)
-    // await ResumeAudio()
     
     await BeginKnobs()
 
@@ -231,16 +231,20 @@ function move(direction) {
     let newIdx = currentIndex + direction
 
     if (newIdx < 0 ){
-        currentIndex = GamesArray.length + newIdx
+        console.log("setting current index to:(underflow)",currentIndex,GamesArray.length)
+        currentIndex = GamesArray.length - 1
         updateRom()
         return
     }
 
     if (newIdx >= GamesArray.length){
-        currentIndex = currentIndex - GamesArray.length
+        
+        currentIndex = newIdx - GamesArray.length
+         console.log("setting current index to:(overflow)",currentIndex)
         updateRom()
         return
     }
+
     currentIndex = newIdx
     updateRom()
 }
