@@ -42,6 +42,8 @@ func main() {
 
 	compileWasm("../main.go", "./static/nes.wasm")
 
+	fmt.Println("Wasm compiled")
+
 	restartChan := make(chan bool)
 
 	go StartServer(restartChan)
@@ -73,10 +75,10 @@ func StartServer(restartChan chan bool) {
 	go func() {
 		for range restartChan {
 
-			fmt.Println("building assests...")
+			fmt.Print("building assests...")
 			bundleOutput()
 			globalCache.clear()
-			fmt.Println("completed build")
+			fmt.Println(" completed build")
 
 		}
 	}()

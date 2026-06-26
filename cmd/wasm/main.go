@@ -14,11 +14,7 @@ var currentSpeed js.Value
 
 func main() {
 
-	fmt.Println(1 / 1000.0)
-
 	stallChan := make(chan bool)
-
-	fmt.Println("core version 20")
 
 	startFrameDriver()
 
@@ -76,16 +72,14 @@ func startFrameDriver() {
 		}
 
 		emu.Cpu.Reset()
-		fmt.Println("console ready")
+		fmt.Println("rom loaded")
 
 		return nil
 	}))
 
-	var speed float32 = 1
-
 	js.Global().Set("drive", js.FuncOf(func(this js.Value, args []js.Value) any {
 
-		speed = getSpeed(Speed_Arr) / 1000.0
+		speed := getSpeed(Speed_Arr) / 1000.0
 
 		samplesNeeded := int(float32(args[0].Int()) * speed)
 		syncInputs(emu, Input_Arr)

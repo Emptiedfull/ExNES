@@ -1,14 +1,12 @@
 let wasm_up = false
+let rom_loaded = false
 importScripts('/wasm_exec.js')
 const init = async ()=>{
     const go = new Go()
     const result = await WebAssembly.instantiateStreaming(fetch("/nes.wasm"),go.importObject)
     go.run(result.instance)
 
-    console.log("uhm uhm")
-
     self.postMessage({"type":"wasm"})
-
 }
 
 init()
@@ -17,9 +15,6 @@ const FBuf = new SharedArrayBuffer(256*240*4)
 const FBytes = new Uint8Array(FBuf)
 
 const SIZE = 8192
-
-let SPEED = 1
-let speedChanged = false
 
 const audioBufS = new SharedArrayBuffer(SIZE*4 + 4 + 4 +4 + 4 ) //uh the plus 4 are different pointers, write,read and updateflag
 
@@ -32,18 +27,19 @@ const S_buf = new Float32Array(S_size)
 self.onmessage = async ({data}) =>{
     switch (data.type){
         case 'init':
-        
+            console.log("restarting emulator")
             startEmulator()
             initBuffer(new Uint8Array(S_buf.buffer))
             initInput(new Int32Array(data.inputBuf))
             initSpeed(new Uint8Array(data.speedBuf))
             self.postMessage({type:"init",audioBufS,FBuf,SIZE,S_size})
-            
             break
 
         case 'loadRom':
             await loadRom(data.rom)
-            running = true
+            pump()
+            break
+        case 'pump':
             pump()
             break
         
@@ -55,14 +51,17 @@ self.onmessage = async ({data}) =>{
     }
 }
 
+
+
 const pump = ()=>{
+    console.log("starting execution loop")
     while (true){
 
       
         Atomics.wait(control,2,0)
-
-        console.log(Atomics.load(control,2))
+        console.log("202")
         if (Atomics.load(control,2) == 2){
+            console.log("ending execution loop")
             return
         }
        

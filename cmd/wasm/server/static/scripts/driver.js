@@ -28,6 +28,11 @@ let audioCtx = null
 let gain = null
 
 const setUpAudio = async (audioBufS, SIZE) => {
+
+    if (audioCtx !== null && gain !== null){
+        return 
+    }
+
     audioCtx = new AudioContext({ sampleRate: 44100 })
 
     await audioCtx.audioWorklet.addModule(new URL("./driverWorklet.js", import.meta.url))
@@ -43,35 +48,46 @@ const setUpAudio = async (audioBufS, SIZE) => {
 
     node.connect(gain)
     gain.connect(audioCtx.destination)
+
+    console.log("audio started")
 }
 
 export const PauseAudio = async ()=>{
 
+    if (audioCtx == null) {
+        return
+    }
     await audioCtx.suspend()
-
-    await wait(50)
-
-    console.log(audioBufS)
 
     Atomics.store(control,2,2)
     Atomics.notify(control,2)
 }
 
 export const ResumeAudio = async ()=>{
+    console.log("playing")
+    if (audioCtx == null){
+        return
+    }
     await audioCtx.resume()
+
+    Atomics.store(control,2,1)
+    Atomics.notify(control,2)
+
+    worker.postMessage({"type":"pump"})
 }
 
 export const updateVolume = (intensity) =>{
     if (gain !== null){
            gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
-     gain.gain.linearRampToValueAtTime(intensity, audioCtx.currentTime + 1)
+           gain.gain.linearRampToValueAtTime(intensity, audioCtx.currentTime + 1)
     }
 }
 
-
-export const initConsole = async () => {
-    worker.postMessage({ type: "init", inputBuf,speedBuf })
+export const initConsole = ()=>{
+    worker.postMessage({type:"init",speedBuf,inputBuf})
 }
+
+
 
 worker.onmessage = async ({ data }) => {
 
@@ -84,6 +100,7 @@ worker.onmessage = async ({ data }) => {
             break
         case "wasm":
             createModal("Console Ready!!","Press the power button to start the console")
+            worker.postMessage({ type: "init", inputBuf,speedBuf })
             break
         case 'frameUp':
             imageData.data.set(fBytes)
@@ -103,9 +120,12 @@ const ControlMap = {
     "dpad-right": 7,
 }
 
-console.log("hello")
-
 export const loadRom = (game) => {
+    Atomics.store(control,2,1)
+    Atomics.notify(control,2)
+
+    audioCtx.resume()
+
     worker.postMessage({ type: 'loadRom', rom: game })
 }
 

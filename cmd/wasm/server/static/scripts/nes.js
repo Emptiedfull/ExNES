@@ -175,8 +175,10 @@ const setUpButtons = async () => {
     })
 
     middle.addEventListener("click", async () => {
+
+
         middle.classList.remove("active")
-        await wait(100)
+        await wait(50)
         let span = middle.querySelector("span")
         span.style.display = "none"
         middle.classList.add("rotated")
@@ -191,56 +193,45 @@ const setUpButtons = async () => {
 
     cap.addEventListener("click", async () => {
 
+        await PauseAudio()
+        
         await openCap(cap)
         await wait(200)
         overlay.style.display = "flex"
         overlay.style.transition = "all ease 1"
         overlay.style.opacity = 1
 
-        if (power) {
-            await begin(romLoaded)
-        } else {
+        // if (power) {
+        //     await begin(romLoaded)
+        // } else {
 
-        }
+        // }
     })
 
 
 }
 
-
-
 async function begin(game) {
-
-    await initConsole()
+    console.log("starting to start this shit hole:",game)
+     initConsole()
     await loadRom(game)
-
+    // await ResumeAudio()
+    
     await BeginKnobs()
 
 
     alignCable(1)
 
     state.romRunning = true
-
-    uhm()
-
 }
 
-const uhm = async ()=>{
-    await wait(1000)
-    console.log("pausing game")
-    await PauseAudio()
 
-    await wait(1000)
-    await ResumeAudio()
-
-}
 
 function move(direction) {
     let newIdx = currentIndex + direction
 
     if (newIdx < 0 ){
         currentIndex = GamesArray.length + newIdx
-        console.log("reseted index to:",currentIndex)
         updateRom()
         return
     }

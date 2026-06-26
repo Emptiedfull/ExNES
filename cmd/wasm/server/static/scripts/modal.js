@@ -6,9 +6,8 @@ export const SetUpModals = ()=>{
 
 export const createModal = async (head,body,error = false,fleeting = true)=>{
 
-    console.log("creating modal")
+    
     let modalList = document.querySelector(".moodle-bar")
-    console.log(modalList)
 
     const modal = document.createElement("div")
     modal.classList.add("modal","modal-corners")
