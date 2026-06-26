@@ -1,3 +1,4 @@
+
 let wasm_up = false
 let rom_loaded = false
 importScripts('/wasm_exec.js')
@@ -54,14 +55,10 @@ self.onmessage = async ({data}) =>{
 
 
 const pump = ()=>{
-    console.log("starting execution loop")
+   
     while (true){
-
-      
         Atomics.wait(control,2,0)
-        console.log("202")
         if (Atomics.load(control,2) == 2){
-            console.log("ending execution loop")
             return
         }
        
@@ -73,8 +70,6 @@ const pump = ()=>{
         const want = Math.min(free,S_size)
 
 
-    
-
         if (want > 0){
             drive(want)
 
@@ -84,8 +79,6 @@ const pump = ()=>{
 
             Atomics.store(control,0,wp+want)
         }
-
-        
 
 
         FBytes.set(new Uint8Array(frameBuffer.buffer))
@@ -99,6 +92,12 @@ const pump = ()=>{
 
 const loadRom = async (game) => {
     const response = await fetch("/games/" + game + ".nes")
+
+    if (!response.ok){
+        createModal("Unable to fetch Rom",response,true)
+        return 
+    }
+
     const buffer = await response.arrayBuffer()
 
     const uint8view = new Uint8Array(buffer)

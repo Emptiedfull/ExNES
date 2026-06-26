@@ -2,6 +2,7 @@ import { openCap,closeCap,slotCart,activateJoypad,alignCable,pushbtn,turnKnob,wi
 import { initConsole,loadRom,state,updateVolume,UpdateSpeed,PauseAudio,ResumeAudio} from "./driver.js"
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
+import { activateTip,startRandomTipEngine } from "./tooltips.js"
 
 
 let currentIndex = 3
@@ -24,13 +25,15 @@ let power = false
 const roms = [left, middle, right]
 
 document.addEventListener("DOMContentLoaded", async () => {
-
+    startRandomTipEngine()
     await setUpKnobs()
     await setUpButtons()
     await initGames()
 
+    await wait(500)
+
+
     updateRom()
-    
 }); 
 
 const BeginKnobs = async ()=>{
@@ -117,12 +120,9 @@ function updateRom() {
     if (currentIndex == 0){
         
          romSelection = [GamesArray.at(-1),GamesArray[0],GamesArray[1]]
-         console.log(romSelection)
     }
 
     if (currentIndex == GamesArray.length - 1){
-        console.log("uhm this activated")
-
         romSelection = [GamesArray.at(-2),GamesArray.at(-1),GamesArray[0]]
     }
 
@@ -201,19 +201,12 @@ const setUpButtons = async () => {
         overlay.style.display = "flex"
         overlay.style.transition = "all ease 1"
         overlay.style.opacity = 1
-
-        // if (power) {
-        //     await begin(romLoaded)
-        // } else {
-
-        // }
     })
 
 
 }
 
 async function begin(game) {
-    console.log("starting to start this shit hole:",game)
     initConsole()
     await loadRom(game)
     
@@ -231,7 +224,7 @@ function move(direction) {
     let newIdx = currentIndex + direction
 
     if (newIdx < 0 ){
-        console.log("setting current index to:(underflow)",currentIndex,GamesArray.length)
+       
         currentIndex = GamesArray.length - 1
         updateRom()
         return
@@ -240,7 +233,6 @@ function move(direction) {
     if (newIdx >= GamesArray.length){
         
         currentIndex = newIdx - GamesArray.length
-         console.log("setting current index to:(overflow)",currentIndex)
         updateRom()
         return
     }

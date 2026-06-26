@@ -44,16 +44,20 @@ export const activateModal = (modal)=>{
     modal.classList.add("active")
 }
 
-export const deactivateModal = (modal) =>{
+export const deactivateModal = async (modal) =>{
     modal.classList.remove("active")
     modal.classList.add("inactive")
+
+    await wait(400)
+    modal.remove()
+
 }
 
 const setUpForFailure = async (modal)=>{
     await wait(3500)
 
     if (modal.classList.contains("active")){
-        deactivateModal(modal)
+        await deactivateModal(modal)
     }else{
         console.log("bro alr failed")
     }

@@ -1,3 +1,5 @@
+import { createModal } from "./modal.js"
+import { activateTip } from "./tooltips.js"
 
 
 
@@ -7,6 +9,8 @@ const middle = document.getElementById("middle")
 const romled = document.getElementById("rom")
 const cap = document.getElementById("cartridge")
 const joypad = document.getElementById("joypad")
+
+const screen = document.getElementById("screen")
 
 export const knobSettings = { "speed": { "angle": 0, "setting": 0 }, "sound": { "angle": 0, "setting": 0 } }
 
@@ -18,6 +22,7 @@ function wait(ms) {
 window.addEventListener("DOMContentLoaded", async () => {
   initCables()
   drawNav()
+  initCanvas()
 
 
 drawKnob("sound", 0)
@@ -25,6 +30,21 @@ drawKnob("speed", 0)
 
 
 })
+
+const initCanvas = ()=>{
+
+    screen.addEventListener("mouseenter",async ()=>{
+      activateTip("fullscreen")
+    })
+  
+    screen.addEventListener("click",async()=>{
+      try {
+        await screen.requestFullscreen();
+      }catch(e){
+        await createModal("Unable to go fullscreen",e,true)
+      }
+    })
+}
 
 
 
@@ -105,6 +125,7 @@ const startCable = (cable, port, wire) => {
 }
 
 export const activateJoypad = () => {
+  
   joypad.classList.add("active")
 }
 

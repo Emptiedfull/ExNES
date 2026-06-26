@@ -1,6 +1,8 @@
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
 
+console.log(import.meta.url)
+
 const worker = new Worker(new URL('./emuWorker.js', import.meta.url))
 let fBytes = null
 
@@ -16,7 +18,6 @@ const speedNum = new Int32Array(speedBuf)
 
 let audioBufS = null
 let control = null
-
 
 Atomics.store(speedNum,0,1000)
 
