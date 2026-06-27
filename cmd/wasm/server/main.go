@@ -20,6 +20,7 @@ const distDir = "./dist"
 const staticDir = "./static"
 
 var globalCache = newCache(true)
+var games = make([]GameInfo, 0)
 
 var mimeList = map[string]string{
 	".html": "text/html",
@@ -39,7 +40,7 @@ var compressibleList = map[string]bool{
 }
 
 func main() {
-
+	PrepareGameList()
 	compileWasm("../main.go", "./static/nes.wasm")
 
 	fmt.Println("Wasm compiled")
@@ -60,7 +61,6 @@ func StartServer(restartChan chan bool) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleStatic)
 	mux.HandleFunc("/games", func(w http.ResponseWriter, r *http.Request) {
-		games := PrepareGameList()
 
 		err := json.NewEncoder(w).Encode(games)
 		if err != nil {
@@ -152,16 +152,12 @@ type GameInfo struct {
 	Name string `json:"name"`
 }
 
-func PrepareGameList() []GameInfo {
-	result := make([]GameInfo, 0)
+func PrepareGameList() {
+
 	err := filepath.WalkDir("./static/games", func(path string, d fs.DirEntry, err error) error {
 
-		// if d.IsDir() {
-		// 	fmt.Println(path)
-		// 	return fmt.Errorf("FUCK FUCK FUCK THERES A DIRECTORY IN THE GAMES THE WORLD IS ENDING")
-		// }
-
 		s, found := strings.CutPrefix(path, "static/games/")
+		globalCache.get(path)
 
 		if found {
 			s2, found := strings.CutSuffix(s, ".nes")
@@ -172,7 +168,7 @@ func PrepareGameList() []GameInfo {
 					Name: strings.ToTitle(strings.ReplaceAll(s2, "_", " ")),
 				}
 
-				result = append(result, g)
+				games = append(games, g)
 			}
 		}
 
@@ -183,5 +179,4 @@ func PrepareGameList() []GameInfo {
 		fmt.Println(err)
 	}
 
-	return result
 }

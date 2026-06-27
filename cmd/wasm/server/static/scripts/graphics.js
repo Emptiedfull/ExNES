@@ -8,9 +8,15 @@ const body = document.querySelector("body")
 const middle = document.getElementById("middle")
 const romled = document.getElementById("rom")
 const cap = document.getElementById("cartridge")
-const joypad = document.getElementById("joypad")
+
 
 const screen = document.getElementById("screen")
+
+const control_cont = document.getElementById("joypad-cont")
+const panel = document.getElementById("update-panel")
+const joypad = document.getElementById("joypad")
+
+const updateBtn = document.getElementById("control-update")
 
 export const knobSettings = { "speed": { "angle": 0, "setting": 0 }, "sound": { "angle": 0, "setting": 0 } }
 
@@ -25,8 +31,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   initCanvas()
 
 
-drawKnob("sound", 0)
-drawKnob("speed", 0)
+  drawKnob("sound", 0)
+  drawKnob("speed", 0)
+
+  // activateJoypad()
+
+  await wait(1000)
+
+  // openControlPanel()
 
 
 })
@@ -125,8 +137,18 @@ const startCable = (cable, port, wire) => {
 }
 
 export const activateJoypad = () => {
-  
-  joypad.classList.add("active")
+
+  let cont = document.getElementById("joypad-cont")
+
+  cont.classList.add("active")
+}
+
+export const openControlPanel = ()=>{
+    control_cont.classList.add("updating")
+    panel.classList.add("active")
+
+
+    updateBtn.innerText = "Save Controls"
 }
 
 

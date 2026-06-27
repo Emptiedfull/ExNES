@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await wait(500)
 
-
     updateRom()
 }); 
 

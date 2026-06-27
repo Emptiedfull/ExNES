@@ -95,7 +95,7 @@
 
                         </div>
                         <div class="port">
-                            <span class="controllerLabel"  >2</span>
+                            <span class="controllerLabel">2</span>
                             <div class="controller controller-corners" id="port-2"></div>
                         </div>
                     </div>
@@ -154,83 +154,95 @@
             </div>
         </div>
     </div>
-    <div class="Joypad Joypad-corners" id="joypad">
-        <div class="Joypad-inner">
-            <div class="movement-section">
-                <div class="dpad">
-                    <div class="dpad-cross">
-                        <div class="cross-vertical">
-                            <div class="cross-vertical-line"></div>
-                        </div>
-                        <div class="cross-horizontal">
-                            <div class="cross-horizontal-line"></div>
-                        </div>
-                    </div>
-                    <div class="dpad-main">
-                        <div class="main-vertical">
-                            <div class="main-vertical-line">
-                                <button class="dpad-up joypad-button" id="dpad-up"></button>
-                                <button class="joypad-button" id="dpad-down"></button>
+    <div class="control-container " id="joypad-cont">
+        <div class="update-panel update-corners" id="update-panel">
+            <div class="view-1">    
+              <h1> Click a button on the joypad or keyboard...</h1> 
+            </div>
+            <div class="view-2" style="display: none;">
+
+            </div>
+            
+        </div>
+        <div class="Joypad Joypad-corners " id="joypad">
+            <div class="Joypad-inner">
+                <div class="movement-section">
+                    <div class="dpad">
+                        <div class="dpad-cross">
+                            <div class="cross-vertical">
+                                <div class="cross-vertical-line"></div>
+                            </div>
+                            <div class="cross-horizontal">
+                                <div class="cross-horizontal-line"></div>
                             </div>
                         </div>
-                        <div class="main-horizontal">
-                            <div class="main-horizontal-line">
-                                <button class="joypad-button" id="dpad-left"></button>
-                                <button class="joypad-button" id="dpad-right"></button>
+                        <div class="dpad-main">
+                            <div class="main-vertical">
+                                <div class="main-vertical-line">
+                                    <button class="dpad-up joypad-button" id="dpad-up"></button>
+                                    <button class="joypad-button" id="dpad-down"></button>
+                                </div>
+                            </div>
+                            <div class="main-horizontal">
+                                <div class="main-horizontal-line">
+                                    <button class="joypad-button" id="dpad-left"></button>
+                                    <button class="joypad-button" id="dpad-right"></button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="control-section">
-                <div class="decoration">
-                    <div class="decobox" id="control-update">
-                        Update Controls
+                <div class="control-section">
+                    <div class="decoration">
+                        <button class="decobox" id="control-update">
+                            Update Controls
+                        </button>
+                        <div class="decobox"></div>
+                        <div class="decobox" id="control-label">
+                            <span>
+                                START
+                            </span>
+                            <span>
+                                SELECT
+                            </span>
+                        </div>
                     </div>
-                    <div class="decobox"></div>
-                    <div class="decobox" id="control-label">
-                        <span>
-                            START
-                        </span>
-                        <span>
-                            SELECT
-                        </span>
-                    </div>
-                </div>
-                <div class="control-buttons">
-                    <div class="control-buttons-inner">
-                        <button class="select control-button joypad-button" id="joypad-start">
-                            <button class="start control-button joypad-button" id="joypad-select">
-                    </div>
-                </div>
-            </div>
-            <div class="main-section">
-                <div class="main-buttons">
-                    <div class="main-button-cont ">
-                        <button class="joypad-button" id="joypad-A">A</button>
-                    </div>
-                    <div class="main-button-cont">
-                        <button class="joypad-button" id="joypad-B">B</button>
+                    <div class="control-buttons">
+                        <div class="control-buttons-inner">
+                            <button class="select control-button joypad-button" id="joypad-start">
+                                <button class="start control-button joypad-button" id="joypad-select">
+                        </div>
                     </div>
                 </div>
-                <div class="main-text">
-                    NONTENDO
+                <div class="main-section">
+                    <div class="main-buttons">
+                        <div class="main-button-cont ">
+                            <button class="joypad-button" id="joypad-A">A</button>
+                        </div>
+                        <div class="main-button-cont">
+                            <button class="joypad-button" id="joypad-B">B</button>
+                        </div>
+                    </div>
+                    <div class="main-text">
+                        NONTENDO
+                    </div>
                 </div>
-            </div>
 
 
+            </div>
         </div>
     </div>
-   
-    <div class="controller-cable controller-corners" id="cable-1"> </div>
-     <div class="cable-wire" id="wire-1"></div>
 
-      <div class="controller-cable controller-corners" id="cable-2"> </div>
-     <div class="cable-wire" id="wire-2"></div>
+    <div class="controller-cable controller-corners" id="cable-1"> </div>
+    <div class="cable-wire" id="wire-1"></div>
+
+    <div class="controller-cable controller-corners" id="cable-2"> </div>
+    <div class="cable-wire" id="wire-2"></div>
 
     <div class="moodle-bar">
-       
+
     </div>
 </body>
 <script src="/dist/nes.js" type="module"></script>
+
 </html>

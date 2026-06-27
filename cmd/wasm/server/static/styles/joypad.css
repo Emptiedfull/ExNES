@@ -1,10 +1,37 @@
-.Joypad {
+
+.control-container {
     position: absolute;
+    height: 100%;
+    width: 100%;
+    /* background-color: rebeccapurple; */
+    z-index: 988;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    pointer-events: none;
+    gap: 2rem;
+    right: -100%;
+    bottom: -15%;
+
+    transition: 1s ease-in-out all;
+}
+
+
+
+.control-container.active{
+    right: 0;
+}
+
+.control-container.updating {
+    right: 0;
+    bottom: 25%;
+}
+
+
+.Joypad {
+   
     height: 35%;
     aspect-ratio: 4.8/2;
-    bottom: -15%;
-    right:0;
-    transform: translateX(100%);
     align-self: center;
     z-index: 100;
     background-color: #B5AFA0;
@@ -26,20 +53,210 @@
       rgba(0, 0, 0, 0.12) 6px
     );
 
-    transition: all ease 1s;
+    pointer-events: all;
+
+    transition: all ease-in-out 1.2s;
 }
 
+.update-panel{
+    width: 52%;
+    height: 13%;
+    border-radius: 10px;
+    background-color: #FFEDD8;
+    align-self: center;
+    
+    opacity: 0;
+    transition: 1s ease opacity;
+}
+
+.view-1{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-1 h1{
+    font-size: 2rem;
+}
+
+.update-panel.active {
+    opacity: 100%;
+}
+
+.update-corners,
+.update-corners--wrapper {
+  clip-path: polygon(0px calc(100% - 20px),
+    4px calc(100% - 20px),
+    4px calc(100% - 12px),
+    8px calc(100% - 12px),
+    8px calc(100% - 8px),
+    12px calc(100% - 8px),
+    12px calc(100% - 4px),
+    20px calc(100% - 4px),
+    20px 100%,
+    calc(100% - 20px) 100%,
+    calc(100% - 20px) calc(100% - 4px),
+    calc(100% - 12px) calc(100% - 4px),
+    calc(100% - 12px) calc(100% - 8px),
+    calc(100% - 8px) calc(100% - 8px),
+    calc(100% - 8px) calc(100% - 12px),
+    calc(100% - 4px) calc(100% - 12px),
+    calc(100% - 4px) calc(100% - 20px),
+    100% calc(100% - 20px),
+    100% 20px,
+    calc(100% - 4px) 20px,
+    calc(100% - 4px) 12px,
+    calc(100% - 8px) 12px,
+    calc(100% - 8px) 8px,
+    calc(100% - 12px) 8px,
+    calc(100% - 12px) 4px,
+    calc(100% - 20px) 4px,
+    calc(100% - 20px) 0px,
+    20px 0px,
+    20px 4px,
+    12px 4px,
+    12px 8px,
+    8px 8px,
+    8px 12px,
+    4px 12px,
+    4px 20px,
+    0px 20px);
+  position: relative;
+}
+.update-corners {
+  border: 8px solid transparent;
+}
+.update-corners--wrapper {
+  width: fit-content;
+  height: fit-content;
+}
+.update-corners--wrapper .pixel-corners {
+  display: block;
+  clip-path: polygon(8px 24px,
+    12px 24px,
+    12px 16px,
+    16px 16px,
+    16px 12px,
+    24px 12px,
+    24px 8px,
+    calc(100% - 24px) 8px,
+    calc(100% - 24px) 12px,
+    calc(100% - 16px) 12px,
+    calc(100% - 16px) 16px,
+    calc(100% - 12px) 16px,
+    calc(100% - 12px) 24px,
+    calc(100% - 8px) 24px,
+    calc(100% - 8px) calc(100% - 24px),
+    calc(100% - 12px) calc(100% - 24px),
+    calc(100% - 12px) calc(100% - 16px),
+    calc(100% - 16px) calc(100% - 16px),
+    calc(100% - 16px) calc(100% - 12px),
+    calc(100% - 24px) calc(100% - 12px),
+    calc(100% - 24px) calc(100% - 8px),
+    24px calc(100% - 8px),
+    24px calc(100% - 12px),
+    16px calc(100% - 12px),
+    16px calc(100% - 16px),
+    12px calc(100% - 16px),
+    12px calc(100% - 24px),
+    8px calc(100% - 24px));
+}
+.update-corners::after,
+.update-corners--wrapper::after {
+  content: "";
+  position: absolute;
+  clip-path: polygon(0px calc(100% - 20px),
+    4px calc(100% - 20px),
+    4px calc(100% - 12px),
+    8px calc(100% - 12px),
+    8px calc(100% - 8px),
+    12px calc(100% - 8px),
+    12px calc(100% - 4px),
+    20px calc(100% - 4px),
+    20px 100%,
+    calc(100% - 20px) 100%,
+    calc(100% - 20px) calc(100% - 4px),
+    calc(100% - 12px) calc(100% - 4px),
+    calc(100% - 12px) calc(100% - 8px),
+    calc(100% - 8px) calc(100% - 8px),
+    calc(100% - 8px) calc(100% - 12px),
+    calc(100% - 4px) calc(100% - 12px),
+    calc(100% - 4px) calc(100% - 20px),
+    100% calc(100% - 20px),
+    100% 20px,
+    calc(100% - 4px) 20px,
+    calc(100% - 4px) 12px,
+    calc(100% - 8px) 12px,
+    calc(100% - 8px) 8px,
+    calc(100% - 12px) 8px,
+    calc(100% - 12px) 4px,
+    calc(100% - 20px) 4px,
+    calc(100% - 20px) 0px,
+    20px 0px,
+    20px 4px,
+    12px 4px,
+    12px 8px,
+    8px 8px,
+    8px 12px,
+    4px 12px,
+    4px 20px,
+    0px 20px,
+    0px 50%,
+    8px 50%,
+    8px 24px,
+    12px 24px,
+    12px 16px,
+    16px 16px,
+    16px 12px,
+    24px 12px,
+    24px 8px,
+    calc(100% - 24px) 8px,
+    calc(100% - 24px) 12px,
+    calc(100% - 16px) 12px,
+    calc(100% - 16px) 16px,
+    calc(100% - 12px) 16px,
+    calc(100% - 12px) 24px,
+    calc(100% - 8px) 24px,
+    calc(100% - 8px) calc(100% - 24px),
+    calc(100% - 12px) calc(100% - 24px),
+    calc(100% - 12px) calc(100% - 16px),
+    calc(100% - 16px) calc(100% - 16px),
+    calc(100% - 16px) calc(100% - 12px),
+    calc(100% - 24px) calc(100% - 12px),
+    calc(100% - 24px) calc(100% - 8px),
+    24px calc(100% - 8px),
+    24px calc(100% - 12px),
+    16px calc(100% - 12px),
+    16px calc(100% - 16px),
+    12px calc(100% - 16px),
+    12px calc(100% - 24px),
+    8px calc(100% - 24px),
+    8px 50%,
+    0px 50%);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #5F374B;
+  display: block;
+  pointer-events: none;
+}
+.update-corners::after {
+  margin: -8px;
+}
+
+
 .Joypad.active{
-    display: block;
-    right: 50%;
-    transform: translateX(50%);
+    /* display: block; */
+    transform: translateX(0) translateY(42%);
 }
 
 .Joypad.centered{
   display: block;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  align-self: center;
+/* transform: translate(0, -60%);  */
 }
 
 .Joypad-inner {
@@ -91,7 +308,7 @@
     align-items: center;
 }
 
-#control-update{
+#control-update {
     display: flex;
     flex-direction: column;
     text-align: center;
@@ -99,8 +316,30 @@
     justify-content: center;
     font-size: 1.8rem;
     
-      border: #8c1f1c 6px solid;
-      height: 30%;
+    border: #8c1f1c 6px solid;
+    height: 30%;
+
+   
+    background-color: #6b6664;
+    color: #000000;           
+    cursor: pointer;          
+    user-select: none;        
+    
+    
+    box-shadow: 0 6px 0 #54100e; 
+    
+    
+    transform: translateY(0);
+    transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+
+#control-update:hover {
+    filter: brightness(1.2);
+}
+
+#control-update:active {
+    box-shadow: 0 2px 0 #54100e;
+    transform: translateY(4px);
 }
 
 .control-buttons-inner {

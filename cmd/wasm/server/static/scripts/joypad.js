@@ -1,5 +1,7 @@
 import { state,UpdatePress,UpdateRelease } from "./driver.js"
+import { openControlPanel } from "./graphics.js"
 
+const updateBtn = document.getElementById("control-update")
 
 const keyMap = {
     'KeyZ': 'joypad-A',
@@ -10,6 +12,37 @@ const keyMap = {
     'ArrowDown': 'dpad-down',
     'ArrowLeft': 'dpad-left',
     'ArrowRight': 'dpad-right'
+}
+
+const getKeyNames = ()=>{
+    
+    let keys = Object.keys(keyMap)
+    let result = []
+    keys.forEach(element => {
+        result.push(keyMap[element])
+    });
+    return result
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    openControlPanel()
+   getKeyNames()
+   
+    updateBtn.addEventListener('click',()=>{
+        console.log("updating the control panel")
+        openControlPanel()
+
+    })
+})
+
+const handleUpdateListeners = ()=>{
+     const buttons = document.querySelectorAll(".joypad-button")
+    buttons.forEach(element => {
+        element.addEventListener("mousedown",async(e)=>{
+            console.log("clicked",element.id)
+            
+        })
+    });
 }
 
 window.addEventListener('keydown', (e) => {
@@ -33,19 +66,6 @@ window.addEventListener('keyup', (e) => {
 })
 
 
-document.addEventListener("DOMContentLoaded",async()=>{
-    
-    const toggle = document.getElementById("control-update")
-
-    const buttons = document.querySelectorAll(".joypad-button")
-    buttons.forEach(element => {
-        element.addEventListener("mousedown",async(e)=>{
-            
-            
-        })
-    });
-})
-
 const PressBtn = async (button)=>{ 
     button.classList.add("active")
 
@@ -58,4 +78,11 @@ const ReleaseBtn = async (button) =>{
 export function wait(ms) {
     return new Promise(r => setTimeout(r, ms));
 }
+
+const listeners = {
+    "arrow up":function(
+
+    ){},
+}
+
 
