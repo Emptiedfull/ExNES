@@ -1,5 +1,6 @@
 import { state,UpdatePress,UpdateRelease } from "./driver.js"
 import { openControlPanel } from "./graphics.js"
+import { addUpdatePanel } from "./graphics.js"
 
 const updateBtn = document.getElementById("control-update")
 
@@ -14,6 +15,15 @@ const keyMap = {
     'ArrowRight': 'dpad-right'
 }
 
+const reverseLookUp = {}
+
+const initReverse = ()=>{
+    let keys = Object.keys(keyMap)
+    keys.forEach(element=>{
+        reverseLookUp[keyMap[element]] = element
+    })
+}
+
 const getKeyNames = ()=>{
     
     let keys = Object.keys(keyMap)
@@ -26,7 +36,11 @@ const getKeyNames = ()=>{
 
 document.addEventListener("DOMContentLoaded",()=>{
     openControlPanel()
-   getKeyNames()
+
+    addUpdatePanel("up","Enter")
+
+   handleUpdateListeners()
+   initReverse()
    
     updateBtn.addEventListener('click',()=>{
         console.log("updating the control panel")
@@ -46,6 +60,7 @@ const handleUpdateListeners = ()=>{
 }
 
 window.addEventListener('keydown', (e) => {
+    console.log(e.code)
     if (keyMap[e.code] !== undefined  && state.romRunning) {
          UpdatePress(keyMap[e.code])
 

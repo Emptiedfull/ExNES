@@ -79,6 +79,51 @@
 
 .view-1 h1{
     font-size: 2rem;
+    text-align: center;
+}
+
+.view-2 {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    padding: 1rem;
+    align-items: center;
+    flex-direction: column;
+    justify-content: space-evenly;
+    gap: 0.3rem;
+}
+
+.update-text{
+    font-size: 2.5rem;
+    width: 80%;
+    text-align: center;
+    border-bottom: 5px solid burlywood;
+}
+
+.show-cont {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10%;
+}
+
+#show-key{
+    /* flex: 1; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#show-action{
+    font-size: 2rem;
+}
+
+#show-key svg {
+    fill: red  ;
+    height: 80%;
+    aspect-ratio: 1/1;
 }
 
 .update-panel.active {

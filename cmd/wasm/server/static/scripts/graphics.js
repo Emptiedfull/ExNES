@@ -43,6 +43,13 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 })
 
+export const addUpdatePanel = async (action,key)=>{
+  console.log(action,key)
+
+  let res = await fetch("./key_icons/"+key+".svg")
+  console.log(res)
+}
+
 const initCanvas = ()=>{
 
     screen.addEventListener("mouseenter",async ()=>{
