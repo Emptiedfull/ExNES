@@ -1,8 +1,14 @@
 import { state,UpdatePress,UpdateRelease } from "./driver.js"
-import { openControlPanel } from "./graphics.js"
-import { addUpdatePanel } from "./graphics.js"
+import { openControlPanel, updateKey } from "./graphics.js"
+import { addUpdatePanel,closeControlPanel } from "./graphics.js"
 
 const updateBtn = document.getElementById("control-update")
+const buttons = document.querySelectorAll(".joypad-button")
+
+
+let UpdatingKey = ""
+
+let updatingControls = false
 
 const keyMap = {
     'KeyZ': 'joypad-A',
@@ -15,17 +21,16 @@ const keyMap = {
     'ArrowRight': 'dpad-right'
 }
 
-const reverseLookUp = {}
+// const reverseLookUp = {}
 
-const initReverse = ()=>{
-    let keys = Object.keys(keyMap)
-    keys.forEach(element=>{
-        reverseLookUp[keyMap[element]] = element
-    })
-}
+// const initReverse = ()=>{
+//     let keys = Object.keys(keyMap)
+//     keys.forEach(element=>{
+//         reverseLookUp[keyMap[element]] = element
+//     })
+// }
 
 const getKeyNames = ()=>{
-    
     let keys = Object.keys(keyMap)
     let result = []
     keys.forEach(element => {
@@ -34,34 +39,68 @@ const getKeyNames = ()=>{
     return result
 }
 
-document.addEventListener("DOMContentLoaded",()=>{
-    openControlPanel()
 
- addUpdatePanel()
-    
-   handleUpdateListeners()
+document.addEventListener("DOMContentLoaded",()=>{
    initReverse()
    
     updateBtn.addEventListener('click',()=>{
-        console.log("updating the control panel")
-        openControlPanel()
-
+        if (updatingControls){
+             closeControlPanel()    
+             removeUpdateListeners()
+        }else{
+             openControlPanel()
+             handleUpdateListeners()
+        }
+        updatingControls = !updatingControls
+        UpdatingKey = ""
     })
 })
 
+let controller = null
 const handleUpdateListeners = ()=>{
-     const buttons = document.querySelectorAll(".joypad-button")
+
+    controller = new AbortController()
+    const {signal} = controller
+     
     buttons.forEach(element => {
         element.addEventListener("mousedown",async(e)=>{
             console.log("clicked",element.id)
-            
-        })
+            addUpdatePanel(element.id,getKeyFromAction(element.id))
+            UpdatingKey = element.id
+        },{signal})
     });
 }
 
+const getKeyFromAction = (action)=>{
+    let keys = Object.keys(keyMap)
+    keys.forEach((key)=>{
+        if (keyMap[key] == action){
+            return key
+        }
+    })
+}
+
+const removeUpdateListeners = ()=>{
+    if (controller){
+         controller.abort()
+    }
+}
+
+const updateBinding = (action,key) =>{
+    exsiting = getKeyFromAction(action)
+    keyMap[exsiting] = ""
+}
 
 
 window.addEventListener('keydown', (e) => {
+
+    if (UpdatingKey !== "" && updatingControls){
+
+
+        updateKey(e.code)
+        updateBinding(UpdatingKey,e.code)
+    }
+
     console.log(e.code)
     if (keyMap[e.code] !== undefined  && state.romRunning) {
          UpdatePress(keyMap[e.code])

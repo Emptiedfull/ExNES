@@ -18,8 +18,11 @@ const joypad = document.getElementById("joypad")
 
 const updateBtn = document.getElementById("control-update")
 const keyDisplay = document.getElementById("key-display")
+const keyText = document.getElementById("show-text")
 
 export const knobSettings = { "speed": { "angle": 0, "setting": 0 }, "sound": { "angle": 0, "setting": 0 } }
+
+const scaleFactor = 2
 
 function wait(ms) {
   return new Promise(r => setTimeout(r, ms));
@@ -44,28 +47,56 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 })
 
-export const addUpdatePanel = async (action,key)=>{
-  console.log(action,key)
+export const addUpdatePanel = async (action, key) => {
+  keyText.innerText = action + ":  "
 
-  keyDisplay.style.backgroundImage = `url('./dist/spritesheets/${key}.png')`
-
-  
-  console.log(res)
+  await updateKey(key)
+ 
 }
 
-const initCanvas = ()=>{
 
-    screen.addEventListener("mouseenter",async ()=>{
-      activateTip("fullscreen")
+export const updateKey = async (key) => {
+   const res = await fetch(`./dist/spritesheets/${key}.png`)
+
+  if (res.ok) {
+    const blob = await res.blob()
+    const qwn = await createImageBitmap(blob)
+
+    let h = qwn.height * scaleFactor
+    let wFull = (qwn.width - 2) * scaleFactor
+    let w = wFull / 2
+
+    keyDisplay.style.height = h + "px"
+    keyDisplay.style.width = w + "px"
+
+    keyDisplay.style.backgroundSize = `${wFull}px ${h}px `
+
+    keyDisplay.style.backgroundImage = `url('./dist/spritesheets/${key}.png')`
+
+    keyDisplay.animate([
+      { backgroundPosition: '0px 0px' },
+      { backgroundPosition: `-${wFull}px 0px` },
+    ], {
+      duration: 700,
+      easing: 'steps(2)',
+      iterations: Infinity,
     })
-  
-    screen.addEventListener("click",async()=>{
-      try {
-        await screen.requestFullscreen();
-      }catch(e){
-        await createModal("Unable to go fullscreen",e,true)
-      }
-    })
+  }
+}
+
+const initCanvas = () => {
+
+  screen.addEventListener("mouseenter", async () => {
+    activateTip("fullscreen")
+  })
+
+  screen.addEventListener("click", async () => {
+    try {
+      await screen.requestFullscreen();
+    } catch (e) {
+      await createModal("Unable to go fullscreen", e, true)
+    }
+  })
 }
 
 
@@ -153,12 +184,22 @@ export const activateJoypad = () => {
   cont.classList.add("active")
 }
 
-export const openControlPanel = ()=>{
-    control_cont.classList.add("updating")
-    panel.classList.add("active")
+export const openControlPanel = () => {
+  control_cont.classList.add("updating")
+  panel.classList.add("active")
 
+  panel.style.pointerEvents = "all"
 
-    updateBtn.innerText = "Save Controls"
+  updateBtn.innerText = "Save Controls"
+}
+
+export const closeControlPanel = ()=>{
+  control_cont.classList.remove("updating")
+  panel.classList.remove("active")
+
+  panel.style.pointerEvents = "none"
+
+  updateBtn.innerText = "Update Controls"
 }
 
 
@@ -174,8 +215,6 @@ const C = { //this color pallete was ai generated
   dot: '#1E1208',
   dotHi: '#3A2810',
 };
-
-
 
 function drawKnob(id, angleDeg) {
 
