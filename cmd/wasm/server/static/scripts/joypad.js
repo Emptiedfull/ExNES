@@ -37,8 +37,8 @@ const getKeyNames = ()=>{
 document.addEventListener("DOMContentLoaded",()=>{
     openControlPanel()
 
-    addUpdatePanel("up","Enter")
-
+ addUpdatePanel()
+    
    handleUpdateListeners()
    initReverse()
    
@@ -58,6 +58,8 @@ const handleUpdateListeners = ()=>{
         })
     });
 }
+
+
 
 window.addEventListener('keydown', (e) => {
     console.log(e.code)

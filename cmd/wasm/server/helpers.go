@@ -16,6 +16,7 @@ func bundleOutput() {
 		EntryPoints: []string{
 			"static/scripts/nes.js",
 		},
+		External:          []string{"*.png"},
 		MinifyWhitespace:  true,
 		MinifyIdentifiers: true,
 		MinifySyntax:      true,
@@ -66,6 +67,7 @@ func bundleOutput() {
 		EntryPoints: []string{
 			"static/styles/all.css",
 		},
+		External:          []string{"*.png"},
 		MinifyWhitespace:  true,
 		MinifyIdentifiers: true,
 		MinifySyntax:      true,

@@ -17,6 +17,7 @@ const panel = document.getElementById("update-panel")
 const joypad = document.getElementById("joypad")
 
 const updateBtn = document.getElementById("control-update")
+const keyDisplay = document.getElementById("key-display")
 
 export const knobSettings = { "speed": { "angle": 0, "setting": 0 }, "sound": { "angle": 0, "setting": 0 } }
 
@@ -46,7 +47,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 export const addUpdatePanel = async (action,key)=>{
   console.log(action,key)
 
-  let res = await fetch("./key_icons/"+key+".svg")
+  keyDisplay.style.backgroundImage = `url('./dist/spritesheets/${key}.png')`
+
+  
   console.log(res)
 }
 
