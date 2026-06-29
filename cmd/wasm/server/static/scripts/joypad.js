@@ -21,6 +21,8 @@ const keyMap = {
     'ArrowRight': 'dpad-right'
 }
 
+const neededControls = ['joypad-A','joypad-B','joypad-select','joypad-start','dpad-up','dpad-down','dpad-left','dpad-right']
+
 // const reverseLookUp = {}
 
 // const initReverse = ()=>{
@@ -41,7 +43,11 @@ const getKeyNames = ()=>{
 
 
 document.addEventListener("DOMContentLoaded",()=>{
-   initReverse()
+    openControlPanel()
+    updatingControls = true
+    handleUpdateListeners()
+
+    console.log("present:",!(keyMap["hello"] == undefined || keyMap["hello"] == ""))
    
     updateBtn.addEventListener('click',()=>{
         if (updatingControls){
@@ -64,7 +70,9 @@ const handleUpdateListeners = ()=>{
      
     buttons.forEach(element => {
         element.addEventListener("mousedown",async(e)=>{
-            console.log("clicked",element.id)
+            console.log(element.id,getKeyFromAction(element.id))
+            let x = getKeyFromAction(element.id)
+            console.log(x)
             addUpdatePanel(element.id,getKeyFromAction(element.id))
             UpdatingKey = element.id
         },{signal})
@@ -73,22 +81,69 @@ const handleUpdateListeners = ()=>{
 
 const getKeyFromAction = (action)=>{
     let keys = Object.keys(keyMap)
+    let res = ""
     keys.forEach((key)=>{
         if (keyMap[key] == action){
-            return key
+            res = key
         }
     })
+    return res
 }
 
 const removeUpdateListeners = ()=>{
     if (controller){
-         controller.abort()
+        controller.abort()
     }
 }
 
-const updateBinding = (action,key) =>{
-    exsiting = getKeyFromAction(action)
-    keyMap[exsiting] = ""
+const updateBinding = (action,newKey) =>{
+    let old = structuredClone(keyMap)
+    let Keys = Object.keys(keyMap)
+
+    Keys.forEach((a)=>{
+        if (keyMap[a] == action){
+            delete keyMap[a]
+        }
+    })
+
+    
+
+    keyMap[newKey] = action
+
+    checkForMissingKeys()
+}
+
+const checkForMissingKeys = ()=>{
+    let keys = Object.keys(keyMap)
+    let needed = structuredClone(neededControls)
+    let maped = []
+
+    keys.forEach((key)=>{
+        maped.push(keyMap[key])
+    })
+
+    needed.forEach((action)=>{
+        if (maped.includes(action)){
+            
+        }else{
+            console.log("missing:",action)
+        }
+    })
+}
+
+
+const checkJoypadBindings =()=> {
+   let keys = Object.keys(keyMap)
+   let present = []
+
+    keys.forEach((key)=>{
+        present.push(keyMap[key])
+    })
+
+    neededControls.forEach(element => {
+        console.log(element,present.includes(element))
+    });
+
 }
 
 
@@ -101,7 +156,6 @@ window.addEventListener('keydown', (e) => {
         updateBinding(UpdatingKey,e.code)
     }
 
-    console.log(e.code)
     if (keyMap[e.code] !== undefined  && state.romRunning) {
          UpdatePress(keyMap[e.code])
 

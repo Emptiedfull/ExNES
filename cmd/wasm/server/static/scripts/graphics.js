@@ -54,11 +54,34 @@ export const addUpdatePanel = async (action, key) => {
  
 }
 
+let flashAnim = keyDisplay.animate([
+  {opacity:1},
+  {opacity:0.2},
+  {opacity:1}
+],{
+  duration:1000,
+  iterations:Infinity
+})
+
+flashAnim.pause()
+
 
 export const updateKey = async (key) => {
+  if (key == undefined || key == ""){
+    
+
+    keyDisplay.style.backgroundImage = "none"
+    keyDisplay.innerText = "NA"
+    keyDisplay.removeAttribute('style')
+
+    flashAnim.play()
+    return
+  }
    const res = await fetch(`./dist/spritesheets/${key}.png`)
 
   if (res.ok) {
+    flashAnim.pause()
+    keyDisplay.innerText = ""
     const blob = await res.blob()
     const qwn = await createImageBitmap(blob)
 
@@ -82,6 +105,18 @@ export const updateKey = async (key) => {
       iterations: Infinity,
     })
   }
+}
+
+const setKeyMissing = (key) =>{
+  keyCap = document.getElementById(key)
+
+  keyCap.animate([
+    {opacity:1},
+    {opacity:0.2},
+    {opacity:1}
+  ],{
+    duration
+  })
 }
 
 const initCanvas = () => {

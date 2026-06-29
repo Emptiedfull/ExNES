@@ -137,7 +137,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--goodred);
+    color: rgb(160, 106, 40);
 
     gap: 5rem;
 
@@ -148,8 +148,13 @@
 }
 
 .show-key{
+    color: var(--goodred);
     background-image: url("./Spritesheets/B.png"); 
     background-repeat: no-repeat;
+
+    display: flex;
+    align-self: center;
+    justify-content: center;
 
     /* background-size: 64px 32px; */
 
@@ -158,6 +163,16 @@
 
 
     /* animation: flashkey 0.8s steps(2) infinite; */
+}
+
+.key-missing {
+    filter: sepia(1) saturate(5) hue-rotate(300deg) brightness(0.9);
+    animation: flashMissing 0.7s infinite;
+}
+
+@keyframes flashMissing {
+    0%,100% {opacity: 1;}
+    50% {opacity: 0.3;}
 }
 
 /* @keyframes flashkey {
