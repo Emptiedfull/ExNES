@@ -14,6 +14,13 @@ func (c *cpu) SetFlagNZ(val uint8) {
 	}
 }
 
+func BoolToUint16(b bool) uint16 {
+	if b {
+		return 1
+	}
+	return 0
+}
+
 func (c *cpu) pushStack(val uint8) {
 	stackAdrr := 0x0100 + uint16(c.S)
 	c.mem.Write(stackAdrr, val)

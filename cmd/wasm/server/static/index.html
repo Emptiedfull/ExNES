@@ -72,11 +72,15 @@
                                     <path d="M3 3v5h5" />
                                 </svg>
                             </button>
-                            <button class="button playbtn" disabled>
-                                <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5"
+                            <button class="button playbtn" id="pause">
+                                <!-- <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5"
                                     stroke-linecap="square">
                                     <polygon points="6,3 20,12 6,21" />
-                                </svg>
+                                </svg> -->
+                               <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5" stroke-linecap="square" xmlns="http://www.w3.org/2000/svg">
+  <rect x="4" y="3" width="4" height="18"/>
+  <rect x="16" y="3" width="4" height="18"/>
+</svg>
                             </button>
                         </div>
                         <div class="led-grid">
@@ -169,7 +173,7 @@
                 </div>
                 <div class="show-cont">
                     <span id="show-action">
-                        <span id="show-text">Joypad_Start:</span>  
+                        <span id="show-text"></span>  
                        <span class="show-key" id="key-display"></span>
                     </span>
 
@@ -193,7 +197,7 @@
                         <div class="dpad-main">
                             <div class="main-vertical">
                                 <div class="main-vertical-line">
-                                    <button class="dpad-up joypad-button key-missing" id="dpad-up"></button>
+                                    <button class="dpad-up joypad-button " id="dpad-up"></button>
                                     <button class="joypad-button" id="dpad-down"></button>
                                 </div>
                             </div>

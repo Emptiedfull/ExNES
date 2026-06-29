@@ -1,5 +1,5 @@
 import { openCap,closeCap,slotCart,activateJoypad,alignCable,pushbtn,turnKnob,wiggleKnob,knobSettings } from "./graphics.js"
-import { initConsole,loadRom,state,updateVolume,UpdateSpeed,PauseAudio,ResumeAudio} from "./driver.js"
+import { initConsole,loadRom,state,updateVolume,UpdateSpeed,PauseGame,ResumeGame} from "./driver.js"
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
 import { activateTip,startRandomTipEngine } from "./tooltips.js"
@@ -18,6 +18,9 @@ const cap = document.getElementById("cartridge")
 const GamesArray = []
 
 const powerLed = document.getElementById("power")
+
+ const powerBtn = document.getElementById("start")
+ const pauseBtn = document.getElementById("pause")
 
 let romLoaded = ""
 let power = false
@@ -144,7 +147,23 @@ function updateRom() {
 }
 
 const setUpButtons = async () => {
-    const powerBtn = document.getElementById("start")
+
+    console.log("setting up buttons",pauseBtn)
+
+    pauseBtn.addEventListener("click",async ()=>{
+        console.log("trying to pause")
+        if (pauseBtn.classList.contains("paused")){
+            pauseBtn.classList.remove("paused")
+            pauseBtn.classList.add("unpaused")
+            await ResumeGame()
+        }else{
+            pauseBtn.classList.remove("unpaused")
+            pauseBtn.classList.add("paused")
+           await PauseGame()
+        }
+      
+    })
+   
     powerBtn.addEventListener("click", async () => {
         power = true
 
@@ -193,7 +212,7 @@ const setUpButtons = async () => {
 
     cap.addEventListener("click", async () => {
 
-        await PauseAudio()
+        await PauseGame()
         
         await openCap(cap)
         await wait(200)

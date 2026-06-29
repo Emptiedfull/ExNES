@@ -1,8 +1,6 @@
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
 
-console.log(import.meta.url)
-
 const worker = new Worker(new URL('./emuWorker.js', import.meta.url))
 let fBytes = null
 
@@ -50,10 +48,9 @@ const setUpAudio = async (audioBufS, SIZE) => {
     node.connect(gain)
     gain.connect(audioCtx.destination)
 
-    console.log("audio started")
 }
 
-export const PauseAudio = async ()=>{
+export const PauseGame = async ()=>{
 
     if (audioCtx == null) {
         return
@@ -64,7 +61,7 @@ export const PauseAudio = async ()=>{
     Atomics.notify(control,2)
 }
 
-export const ResumeAudio = async ()=>{
+export const ResumeGame = async ()=>{
     console.log("playing")
     if (audioCtx == null){
         return

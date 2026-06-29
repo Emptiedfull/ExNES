@@ -23,15 +23,6 @@ const keyMap = {
 
 const neededControls = ['joypad-A','joypad-B','joypad-select','joypad-start','dpad-up','dpad-down','dpad-left','dpad-right']
 
-// const reverseLookUp = {}
-
-// const initReverse = ()=>{
-//     let keys = Object.keys(keyMap)
-//     keys.forEach(element=>{
-//         reverseLookUp[keyMap[element]] = element
-//     })
-// }
-
 const getKeyNames = ()=>{
     let keys = Object.keys(keyMap)
     let result = []
@@ -43,11 +34,6 @@ const getKeyNames = ()=>{
 
 
 document.addEventListener("DOMContentLoaded",()=>{
-    openControlPanel()
-    updatingControls = true
-    handleUpdateListeners()
-
-    console.log("present:",!(keyMap["hello"] == undefined || keyMap["hello"] == ""))
    
     updateBtn.addEventListener('click',()=>{
         if (updatingControls){
@@ -123,10 +109,13 @@ const checkForMissingKeys = ()=>{
     })
 
     needed.forEach((action)=>{
+         let x = document.getElementById(action)
         if (maped.includes(action)){
-            
+            if (x.classList.contains("key-missing")){
+                x.classList.remove("key-missing")
+            }
         }else{
-            console.log("missing:",action)
+            x.classList.add("key-missing")
         }
     })
 }

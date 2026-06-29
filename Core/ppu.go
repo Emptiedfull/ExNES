@@ -64,6 +64,7 @@ type ppu_mem struct {
 	Vblank_flag bool
 }
 
+// I wrote all of these pain stakingly and THEY WERE NEEDED SO FUCK OFF AI LARPERS
 type registersFlags struct {
 
 	// $2000 WRITE PPUCONTROL bit, meaning
@@ -108,25 +109,18 @@ func (p *ppu) MirrorNameTable(addr uint16) uint16 {
 	table := addr / 0x400
 	offset := addr % 0x400
 
-	// m := p.mem.mapper.getMirroring()
 	m := p.mirroring
 
-	switch m {
+	case0 := offset & -uint16(BoolToUint16(m == 0))
+	case1 := (0x400 + offset) & -uint16(BoolToUint16(m == 1))
+	case2 := ((table%2)*0x400 + offset) & -uint16(BoolToUint16(m == 2))
 
-	case 0:
-		return offset
-	case 1:
-		return 0x400 + offset
-	case 2:
-		return (table%2)*0x400 + offset
-	case 3:
-		if table < 2 {
-			return offset
-		}
-		return 0x400 + offset
-	default:
-		return addr
-	}
+	lt := BoolToUint16(table < 2)
+	case3a := offset & -uint16(BoolToUint16(m == 3)&lt)
+	case3b := (0x400 + offset) & -uint16(BoolToUint16(m == 3)&(1-lt))
+
+	def := addr & -uint16(BoolToUint16(m > 3))
+	return case0 | case1 | case2 | case3a | case3b | def
 }
 
 func (p *ppu) read(addr uint16) uint8 {
@@ -142,9 +136,9 @@ func (p *ppu) read(addr uint16) uint8 {
 	case addr <= 0x3FFF:
 		palleteAddr := (addr - 0x3F00) % 32
 
-		if palleteAddr >= 16 && palleteAddr%4 == 0 {
-			palleteAddr -= 16
-		}
+		// isSpriteMirror := BoolToUint16(palleteAddr >= 16) & BoolToUint16(palleteAddr%4 == 0)
+		// palleteAddr -= 16 * isSpriteMirror
+		// fmt.Println("accesing pallete mem")
 
 		return p.mem.Pallete[palleteAddr]
 	}
@@ -176,12 +170,6 @@ func (p *ppu) Write(addr uint16, val uint8) {
 func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 	switch reg {
 	case 2:
-
-		// if p.mem.Vblank_flag {
-		// 	fmt.Printf("$2002 read CAUGHT VBLANK at CPU cycle %d PC=%04X\n",
-		// 		p.console.Cpu.TotalCycles, p.console.Cpu.PC)
-		// }
-
 		var result uint8
 		result |= (openBusVal & 0x1F)
 

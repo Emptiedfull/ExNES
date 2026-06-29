@@ -38,13 +38,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   drawKnob("sound", 0)
   drawKnob("speed", 0)
 
-  // activateJoypad()
-
-  await wait(1000)
-
-  // openControlPanel()
-
-
 })
 
 export const addUpdatePanel = async (action, key) => {
@@ -80,7 +73,7 @@ export const updateKey = async (key) => {
    const res = await fetch(`./dist/spritesheets/${key}.png`)
 
   if (res.ok) {
-    flashAnim.pause()
+    flashAnim.cancel()
     keyDisplay.innerText = ""
     const blob = await res.blob()
     const qwn = await createImageBitmap(blob)
@@ -107,17 +100,6 @@ export const updateKey = async (key) => {
   }
 }
 
-const setKeyMissing = (key) =>{
-  keyCap = document.getElementById(key)
-
-  keyCap.animate([
-    {opacity:1},
-    {opacity:0.2},
-    {opacity:1}
-  ],{
-    duration
-  })
-}
 
 const initCanvas = () => {
 
