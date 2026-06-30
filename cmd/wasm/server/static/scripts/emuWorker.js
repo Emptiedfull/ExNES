@@ -2,11 +2,14 @@
 
 let wasm_up = false
 let rom_loaded = false
+let instance = null
 importScripts('/wasm_exec.js')
 const init = async ()=>{
     const go = new Go()
     const result = await WebAssembly.instantiateStreaming(fetch("/nes.wasm"),go.importObject)
     go.run(result.instance)
+
+    instance = result.instance
 
     self.postMessage({"type":"wasm"})
 
@@ -54,6 +57,11 @@ self.onmessage = async ({data}) =>{
            
             reset()
             break
+
+        case 'getsnap':
+            console.log("getting snapshot list")
+            requestSnapshotList()
+            break
         
         case 'input':
             update(data.action,data.pressed)
@@ -63,7 +71,20 @@ self.onmessage = async ({data}) =>{
     }
 }
 
+const requestSnapshotList = async ()=>{
+    const headerPTR = getSnapshotList()
+    const header = new Uint32Array(instance.exports.memory.buffer, headerPTR, 2)
 
+    const snapshotPTR = header[0]
+    const len = header[1]
+
+    const snapshotBYTES = new Uint8Array(instance.exports.memory.buffer, snapshotPTR,len)
+    const snapshots = JSON.parse(new TextDecoder().decode(snapshotBYTES))
+
+    console.log(snapshots)
+
+    console.log("first",snapshots[0])
+}
 
 const pump = ()=>{
    

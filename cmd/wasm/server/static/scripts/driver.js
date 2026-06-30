@@ -28,12 +28,7 @@ let gain = null
 
 window.addEventListener("keydown",async (e)=>{
     if (e.code == "KeyL"){
-        PauseGame()
-        worker.postMessage({type:"reset"})
-
-        await wait(200)
-        ResumeGame()
-        console.log("sending request for cpu reset")
+        await getSnapList()
     }
 })
 
@@ -83,6 +78,14 @@ export const ResumeGame = async ()=>{
     Atomics.notify(control,2)
 
     worker.postMessage({"type":"pump"})
+}
+
+export const getSnapList = async ()=>{
+    await PauseGame()
+
+    worker.postMessage({type:"getsnap"})
+
+    await ResumeGame()
 }
 
 export const updateVolume = (intensity) =>{

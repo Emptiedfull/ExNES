@@ -4,10 +4,13 @@ package main
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"exnes/Core"
 	"fmt"
+	"log"
 	"math"
 	"syscall/js"
+	"unsafe"
 )
 
 var currentSpeed js.Value
@@ -22,7 +25,7 @@ func main() {
 }
 
 func startFrameDriver() {
-	fmt.Println("new version loaded:", 2)
+	fmt.Println("new version loaded:", 3)
 	var emu *Core.Console
 	var jsScreen js.Value
 
@@ -77,6 +80,13 @@ func startFrameDriver() {
 		return nil
 	}))
 
+	js.Global().Set("getSnapshotList", js.FuncOf(func(this js.Value, args []js.Value) any {
+		ptr := makeSnapList(emu.Snapshots)
+
+		return ptr
+
+	}))
+
 	js.Global().Set("reset", js.FuncOf(func(this js.Value, args []js.Value) any {
 
 		if emu != nil {
@@ -127,8 +137,32 @@ func startFrameDriver() {
 }
 
 type SnapInfo struct {
-	Frame_no int
-	Index    int
+	Frameno int `json:"frame"`
+	Index   int `json:"index"`
+}
+
+var outHeader [2]uint32
+
+func makeSnapList(B Core.SnapshotBuffer) uintptr {
+	res := make([]SnapInfo, len(B.Data))
+
+	for x, snap := range B.Data {
+		res[x] = SnapInfo{
+			Frameno: snap.Frame_no,
+			Index:   x,
+		}
+	}
+
+	b, err := json.Marshal(res)
+	if err != nil {
+		log.Fatalf("FICK")
+	}
+
+	outHeader[0] = uint32(uintptr(unsafe.Pointer(&b[0])))
+	outHeader[1] = uint32(len(b))
+
+	return uintptr(unsafe.Pointer(&outHeader[0]))
+
 }
 
 func getSpeed(speedBuf js.Value) float32 {
