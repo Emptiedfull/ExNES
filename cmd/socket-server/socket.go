@@ -56,8 +56,10 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 
 func (c *client) runReciever(ctx context.Context) {
 
-	debugConsole.Console.RunDisplayUpdates()
-	c.conn.Write(ctx, websocket.MessageBinary, debugConsole.Console.Ppu.FrontBuffer[:])
+	// debugConsole.Console.RunDisplayUpdates()
+	// c.conn.Write(ctx, websocket.MessageBinary, debugConsole.Console.Ppu.BackBuffer[:])
+	fmt.Println("opening conn:", c.ID)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -75,7 +77,6 @@ func HandleScreenUpdates() {
 		for _, client := range connectedClients {
 			client.Output <- s
 		}
-
 	}
 }
 

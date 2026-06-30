@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -21,7 +22,7 @@ type Console struct {
 
 	ScreenChannel chan ScreenInfo
 
-	RecentHistory SnapshotBuffer
+	Snapshots SnapshotBuffer
 
 	ready bool
 
@@ -30,6 +31,8 @@ type Console struct {
 
 	DebugMode int
 	Debugger  Debugger
+
+	mapper Mapper
 }
 
 func (c *Console) Pause() {
@@ -100,13 +103,10 @@ func (c *Console) InitRom(data io.Reader) error {
 			return fmt.Errorf("failed to read mem: %w", err)
 		}
 	}
-	// fmt.Println("prg banks:", prgBanks)
-	// fmt.Println("prg size:", len(prgData))
-	// fmt.Println("chr banks:", chrBanks)
-	// fmt.Println("chr size:", len(chrData))
-	// fmt.Println("Mapper id:", mapper)
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
+
+	c.SetUpSnapshots()
 
 	return nil
 }
@@ -186,16 +186,16 @@ func (c *Console) StartConsoleCycle() {
 
 }
 
-// func (c *Console) RunDisplayUpdates() {
-// 	if c.Ppu.screenChanged {
-// 		S := ScreenInfo{
-// 			Buffer: &c.Ppu.FrontBuffer,
-// 		}
-// 		c.Ppu.screenChanged = false
-// 		c.ScreenChannel <- S
-// 	}
+func (c *Console) RunDisplayUpdates() {
+	if c.Ppu.ScreenChanged {
+		S := ScreenInfo{
+			Buffer: &c.Ppu.BackBuffer,
+		}
+		c.Ppu.ScreenChanged = false
+		c.ScreenChannel <- S
+	}
 
-// }
+}
 
 func (c *Console) tick() {
 	// c.RunDisplayUpdates()
@@ -211,10 +211,6 @@ func (c *Console) tick() {
 
 	c.Apu.tick()
 
-	// if c.Apu.HasSample() {
-	// 	c.Apu.ExposedBuf.pushBuffer([]float32{c.Apu.PopSample()})
-	// }
-
 	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
 		c.Cpu.triggerIRQ()
 	}
@@ -228,17 +224,14 @@ func (c *Console) RunFrame() {
 		c.tick()
 	}
 
-	// samples := c.Apu.DrainSamples()
-
-	// c.Apu.ExposedBuf.pushBuffer(samples)
-
 }
 
 func Quickstart(filepath string) *Console {
 	c := InitializeConsole()
 	file, err := c.OpenRomFile(filepath)
+	fmt.Println(filepath)
 	if err != nil {
-		fmt.Println("error reading file data")
+		log.Fatalln("error reading file data", err)
 	}
 	c.InitRom(file)
 	c.Cpu.Reset()

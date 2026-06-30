@@ -22,6 +22,17 @@ func (a *APU) DriveSamples(output []byte, samplesNeeded uint32) {
 		output[i*4+2] = byte(bits >> 16)
 		output[i*4+3] = byte(bits >> 24)
 	}
+
+	if a.Console.Ppu.ScreenChanged {
+		a.Console.RunDisplayUpdates()
+
+		if a.Console.Ppu.Frame%20 == 0 {
+
+			a.Console.TakeSnapshot()
+		}
+
+	}
+
 }
 func (c *Console) TickNoAudio() {
 	if c.Cpu.Stall > 0 {
@@ -39,7 +50,5 @@ func (c *Console) TickNoAudio() {
 	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
 		c.Cpu.triggerIRQ()
 	}
-
-	// c.RunDisplayUpdates()
 
 }

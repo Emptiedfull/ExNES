@@ -15,7 +15,7 @@ type ppu struct {
 	mirroring       int
 	mirroringChange bool
 
-	screenChanged bool
+	ScreenChanged bool
 
 	DebugBuffer []uint8
 }
@@ -47,7 +47,6 @@ type RGB struct {
 }
 
 type ppu_mem struct {
-	mapper    Mapper
 	CHR_isRam bool
 
 	Vram    [2048]uint8
@@ -127,7 +126,7 @@ func (p *ppu) read(addr uint16) uint8 {
 
 	switch {
 	case addr <= 0x1FFF:
-		return p.mem.mapper.ReadCHR(addr)
+		return p.console.mapper.ReadCHR(addr)
 	case addr <= 0x3EFF:
 
 		mirrored := p.MirrorNameTable(addr)
@@ -149,7 +148,7 @@ func (p *ppu) Write(addr uint16, val uint8) {
 
 	switch {
 	case addr <= 0x1FFF:
-		p.mem.mapper.WriteCHR(addr, val)
+		p.console.mapper.WriteCHR(addr, val)
 	case addr <= 0x3EFF:
 		mirroredaddr := p.MirrorNameTable(addr)
 

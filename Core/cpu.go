@@ -177,27 +177,14 @@ type temp struct {
 type bus struct {
 	cpu      *cpu
 	internal [2048]byte
-	external []byte
-
-	mapper Mapper
 }
 
 func (b *bus) returnInternal() [2048]byte {
 	return b.internal
 }
 
-func (b *bus) returnExternal() []byte {
-	dst := make([]byte, len(b.external))
-	copy(dst, b.external)
-	return dst
-}
-
 func (b *bus) loadInternal(x [2048]byte) {
 	b.internal = x
-}
-
-func (b *bus) loadExternal(x []byte) {
-	copy(b.external, x)
 }
 
 func (b *bus) Read(addr uint16) uint8 {
@@ -217,7 +204,7 @@ func (b *bus) Read(addr uint16) uint8 {
 		RegIndex := (addr - 0x2000) % 8
 		val = b.cpu.console.Ppu.ReadReg(RegIndex, b.cpu.console.OpenBusVal)
 	case addr >= 0x6000:
-		val = b.mapper.ReadPRG(addr)
+		val = b.cpu.console.mapper.ReadPRG(addr)
 	}
 
 	b.cpu.console.OpenBusVal = val
@@ -242,7 +229,7 @@ func (b *bus) Write(addr uint16, val uint8) {
 		b.cpu.console.Ppu.WriteReg(RegIndex, val)
 
 	case addr >= 0x6000:
-		b.mapper.WritePRG(addr, val)
+		b.cpu.console.mapper.WritePRG(addr, val)
 	case addr <= 0x7FFF:
 	default:
 

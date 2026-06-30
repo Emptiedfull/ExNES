@@ -31,7 +31,7 @@ func (p *ppu) cycleTick() {
 			p.Scanline = 0
 			p.Frame++
 
-			p.screenChanged = true
+			p.ScreenChanged = true
 		}
 	}
 

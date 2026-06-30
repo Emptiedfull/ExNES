@@ -7,6 +7,7 @@ type snapshot struct {
 	Cycles   int
 	CpuState CpuSnapshot
 	PpuState PpuSnapshot
+	ApuState ApuSnapshot
 
 	mapperState MapperScreenShot
 }
@@ -15,6 +16,24 @@ type SnapshotBuffer struct {
 	Frame int
 	Data  [100]snapshot
 	Index int
+}
+
+type ApuSnapshot struct {
+	Pulse1 PulseChannel
+	Pulse2 PulseChannel
+
+	Tri Triangle
+
+	Noise NoiseChannel
+
+	DMC DMC
+
+	counter frameCounter
+
+	CycleAcc       float64
+	timerTickLatch bool
+
+	IRGPending bool
 }
 
 type CpuSnapshot struct {
@@ -60,15 +79,64 @@ type PpuSnapshot struct {
 	screenChanged bool
 }
 
-func (p *ppu) TakePpuSnapshot() PpuSnapshot {
-	S := PpuSnapshot{}
+func (c *Console) SetUpSnapshots() {
+	for range len(c.Snapshots.Data) {
+		c.AddSnapshot(c.createEmptySnapshot())
+	}
+
+}
+
+func (a *APU) TakeSnapshot(s *ApuSnapshot) {
+	s.Pulse1 = *a.Pulse1
+	s.Pulse2 = *a.Pulse2
+
+	s.Tri = *a.Triangle
+	s.Noise = *a.Noise
+	s.DMC = *a.Dmc
+
+	s.counter = a.Counter
+	s.CycleAcc = a.CycleAcc
+
+	s.timerTickLatch = a.timerTickLatch
+
+	s.IRGPending = a.IRGPending
+}
+
+func (a *APU) LoadSnapshot(s *ApuSnapshot) {
+	a.Pulse1 = &s.Pulse1
+	a.Pulse2 = &s.Pulse2
+
+	a.Triangle = &s.Tri
+
+	a.Noise = &s.Noise
+	a.Dmc = &s.DMC
+
+	a.Counter = s.counter
+	a.CycleAcc = s.CycleAcc
+	a.timerTickLatch = s.timerTickLatch
+	a.IRGPending = s.IRGPending
+}
+
+func (c *Console) TakeSnapshot() {
+	c.PopulateSnapshot(&c.Snapshots.Data[c.Snapshots.Index])
+	c.AddSnapshot(c.Snapshots.Data[c.Snapshots.Index])
+}
+
+func (c *Console) createEmptySnapshot() snapshot {
+	return snapshot{
+		Frame_no:    0,
+		Cycles:      0,
+		mapperState: c.mapper.CreateEmptySnapshot(),
+		CpuState:    CpuSnapshot{},
+		PpuState:    PpuSnapshot{},
+		ApuState:    ApuSnapshot{},
+	}
+
+}
+
+func (p *ppu) TakePpuSnapshot(S *PpuSnapshot) {
 
 	S.mem = p.mem
-
-	// orignal_chrRom := p.mem.mapper.extractCHR()
-
-	// S.mem.chrRom_WARNING = make([]uint8, len(orignal_chrRom))
-	// copy(S.mem.chrRom_WARNING, orignal_chrRom)
 
 	S.Dot = p.Dot
 	S.Scanline = p.Scanline
@@ -76,9 +144,8 @@ func (p *ppu) TakePpuSnapshot() PpuSnapshot {
 
 	S.BackBuffer = p.BackBuffer
 
-	S.screenChanged = p.screenChanged
+	S.screenChanged = p.ScreenChanged
 
-	return S
 }
 
 func (b *SnapshotBuffer) AddSnapshot(shot snapshot) {
@@ -87,8 +154,7 @@ func (b *SnapshotBuffer) AddSnapshot(shot snapshot) {
 
 }
 
-func (c cpu) TakeCpuSnapshot() CpuSnapshot {
-	S := CpuSnapshot{}
+func (c cpu) TakeCpuSnapshot(S *CpuSnapshot) {
 
 	S.PC = c.PC
 	S.S = c.S
@@ -98,7 +164,6 @@ func (c cpu) TakeCpuSnapshot() CpuSnapshot {
 
 	S.mem = cpu_mem{
 		internal: c.mem.returnInternal(),
-		external: c.mem.returnExternal(),
 	}
 
 	S.t = c.console.Cpu.temp
@@ -110,32 +175,31 @@ func (c cpu) TakeCpuSnapshot() CpuSnapshot {
 	S.currentOp = c.currentOp
 	S.currentstep = c.currentstep
 	S.totalCycles = c.TotalCycles
+
 	S.Stall = c.Stall
 
 	S.isJamming = c.isJamming
 
-	return S
 }
 
-func (c *Console) TakeSnapshot() snapshot {
-	S := snapshot{
-		CpuState: c.Cpu.TakeCpuSnapshot(),
-		PpuState: c.Ppu.TakePpuSnapshot(),
-		Cycles:   c.Cpu.TotalCycles,
-	}
+func (c *Console) PopulateSnapshot(s *snapshot) {
 
-	return S
+	c.Cpu.TakeCpuSnapshot(&s.CpuState)
+	c.Ppu.TakePpuSnapshot(&s.PpuState)
+	c.Apu.TakeSnapshot(&s.ApuState)
+	c.mapper.TakeSnapshot(&s.mapperState)
+	s.Frame_no = c.Ppu.Frame
+	s.Cycles = c.Cpu.TotalCycles
 }
 
-func (c *Console) AddSnapshot() {
-	s := c.TakeSnapshot()
-	s.Frame_no = c.RecentHistory.Frame
-	c.RecentHistory.Frame++
-	c.RecentHistory.AddSnapshot(s)
+func (c *Console) AddSnapshot(s snapshot) {
+	s.Frame_no = c.Snapshots.Frame
+	c.Snapshots.Frame++
+	c.Snapshots.AddSnapshot(s)
 }
 
 func (c *Console) LoadSnapshot(snap snapshot) {
-	c.Pause()
+
 	c.Cpu.LoadCpuSnapshot(snap.CpuState)
 	c.Ppu.LoadPpuSnapshot(snap.PpuState)
 }
@@ -143,16 +207,13 @@ func (c *Console) LoadSnapshot(snap snapshot) {
 func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
 	p.mem = snap.mem
 
-	// p.mem.mapper.loadCHR(snap.mem.chrRom_WARNING)
-
 	p.Dot = snap.Dot
 	p.Scanline = snap.Scanline
 	p.Frame = snap.Frame
 
-	// copy(p.backBuffer, snap.backBuffer)
-	// copy(p.FrontBuffer, snap.frontBuffer)
+	p.BackBuffer = snap.BackBuffer
 
-	p.screenChanged = snap.screenChanged
+	p.ScreenChanged = snap.screenChanged
 }
 
 func (c *cpu) LoadCpuSnapshot(snap CpuSnapshot) {
@@ -162,7 +223,6 @@ func (c *cpu) LoadCpuSnapshot(snap CpuSnapshot) {
 	c.X = snap.X
 	c.Y = snap.Y
 
-	c.mem.loadExternal(snap.mem.external)
 	c.mem.loadInternal(snap.mem.internal)
 
 	c.nmiPending = snap.nmiPending

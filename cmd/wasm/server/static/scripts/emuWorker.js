@@ -40,7 +40,9 @@ self.onmessage = async ({data}) =>{
             break
 
         case 'loadRom':
+             console.log("loading rom")
             await loadRom(data.rom)
+           
             pump()
             break
         case 'pump':

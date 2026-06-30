@@ -3,9 +3,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"time"
 
 	"github.com/gen2brain/malgo"
 )
@@ -28,15 +26,6 @@ func setUpAudioDriver() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	go func() {
-		ticker := time.NewTicker(1 * time.Second)
-		i := 1
-		for range ticker.C {
-			fmt.Println(debugConsole.Console.Ppu.Frame / i)
-			i++
-		}
-	}()
 
 	device.Start()
 }

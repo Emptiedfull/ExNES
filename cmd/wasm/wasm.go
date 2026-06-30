@@ -59,7 +59,7 @@ func startFrameDriver() {
 	}))
 
 	js.Global().Set("initRom", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-
+		fmt.Println("ininting rom")
 		Arr := args[0]
 		romData := make([]byte, Arr.Get("length").Int())
 		js.CopyBytesToGo(romData, Arr)
@@ -110,12 +110,21 @@ func startFrameDriver() {
 			S_Arr[i*4+3] = byte(bits >> 24)
 		}
 
-		js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
+		if emu.Ppu.ScreenChanged {
+			js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
+			fmt.Println(emu.Snapshots.Index)
+		}
+
 		js.CopyBytesToJS(JS_Arr, S_Arr)
 
 		return nil
 	}))
 
+}
+
+type SnapInfo struct {
+	Frame_no int
+	Index    int
 }
 
 func getSpeed(speedBuf js.Value) float32 {

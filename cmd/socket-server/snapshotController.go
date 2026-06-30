@@ -29,7 +29,7 @@ func loadSnapshot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	debugConsole.Console.LoadSnapshot(debugConsole.Console.RecentHistory.Data[index])
+	debugConsole.Console.LoadSnapshot(debugConsole.Console.Snapshots.Data[index])
 
 	w.WriteHeader(http.StatusOK)
 
@@ -38,9 +38,9 @@ func loadSnapshot(w http.ResponseWriter, r *http.Request) {
 func fetchSnapshots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	snapshots := make([]snapshotInfo, len(debugConsole.Console.RecentHistory.Data))
+	snapshots := make([]snapshotInfo, len(debugConsole.Console.Snapshots.Data))
 
-	for i, snap := range debugConsole.Console.RecentHistory.Data {
+	for i, snap := range debugConsole.Console.Snapshots.Data {
 		snapshots[i].Frame_no = snap.Frame_no
 		snapshots[i].Index = i
 		snapshots[i].Cycles = snap.Cycles

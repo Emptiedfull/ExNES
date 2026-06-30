@@ -13,7 +13,8 @@ type Mapper interface {
 	WriteCHR(addr uint16, val uint8)
 
 	getMirroring() uint8
-	TakeSnapshot() MapperScreenShot
+	TakeSnapshot(*MapperScreenShot)
+	CreateEmptySnapshot() MapperScreenShot
 }
 
 type MapperScreenShot interface {
@@ -36,21 +37,21 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			CHRROM:     chrData,
 			Mirrroring: mirroring,
 		}
-	case 1:
-		m = &Mapper1{
-			PRGROM:        prgData,
-			CHRROM:        chrData,
-			control:       0x0F,
-			shiftRegister: 0x10,
-			isRam:         c.Ppu.mem.CHR_isRam,
-		}
-	case 2:
-		m = &Mapper2{
-			PRGROM:     prgData,
-			CHRROM:     chrData,
-			Mirroring:  mirroring,
-			BankSelect: 0,
-		}
+		// case 1:
+		// 	m = &Mapper1{
+		// 		PRGROM:        prgData,
+		// 		CHRROM:        chrData,
+		// 		control:       0x0F,
+		// 		shiftRegister: 0x10,
+		// 		isRam:         c.Ppu.mem.CHR_isRam,
+		// 	}
+		// case 2:
+		// 	m = &Mapper2{
+		// 		PRGROM:     prgData,
+		// 		CHRROM:     chrData,
+		// 		Mirroring:  mirroring,
+		// 		BankSelect: 0,
+		// 	}
 		// case 4:
 		// 	m = &Mapper4{
 		// 		PRGROM:    prgData,
@@ -69,8 +70,7 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 
 	// }
 
-	c.Cpu.mem.mapper = m
-	c.Ppu.mem.mapper = m
+	c.mapper = m
 }
 
 //MAPPER 0
@@ -86,6 +86,14 @@ type Mapper0SS struct {
 	PRGROM    []uint8
 	CHRROM    []uint8
 	Mirroring uint8
+}
+
+func (m *Mapper0) CreateEmptySnapshot() MapperScreenShot {
+	res := Mapper0SS{
+		CHRROM: make([]uint8, len(m.CHRROM)),
+		PRGROM: make([]uint8, len(m.PRGROM)),
+	}
+	return res
 }
 
 func (m *Mapper0) ReadPRG(addr uint16) uint8 {
@@ -105,7 +113,7 @@ func (m *Mapper0) WriteCHR(addr uint16, val uint8) {
 
 }
 
-func (m *Mapper0) TakeSnapshot() MapperScreenShot {
+func (m *Mapper0) TakeSnapshot(s *MapperScreenShot) {
 	res := Mapper0SS{
 		PRGROM:    make([]uint8, len(m.PRGROM)),
 		CHRROM:    make([]uint8, len(m.CHRROM)),
@@ -115,7 +123,6 @@ func (m *Mapper0) TakeSnapshot() MapperScreenShot {
 	copy(res.CHRROM, m.CHRROM)
 	copy(res.PRGROM, m.PRGROM)
 
-	return res
 }
 
 func (s Mapper0SS) LoadSS(m Mapper) {
@@ -158,7 +165,13 @@ type Mapper2SS struct {
 	Mirroring  uint8
 }
 
-func (m Mapper2) TakeSnapshot() MapperScreenShot {
+func (m *Mapper2) CreateEmptySnapshot() MapperScreenShot {
+	res := Mapper2SS{}
+
+	return res
+}
+
+func (m Mapper2) TakeSnapshot(s *MapperScreenShot) {
 	res := Mapper2SS{
 		PRGRAM: make([]uint8, len(m.PRGROM)),
 		CHRROM: make([]uint8, len(m.CHRROM)),
@@ -170,7 +183,6 @@ func (m Mapper2) TakeSnapshot() MapperScreenShot {
 	copy(res.CHRROM, m.CHRROM)
 	copy(res.PRGRAM, m.PRGROM)
 
-	return res
 }
 
 func (s Mapper2SS) LoadSS(m Mapper) {
@@ -248,14 +260,14 @@ type Mapper1SS struct {
 	isRam bool
 }
 
-func (m *Mapper1) TakeSnapshot() MapperScreenShot {
-
-	res := Mapper1SS{
-		PRGROM: make([]uint8, len(m.CHRROM)),
-		CHRROM: make([]uint8, len(m.PRGROM)),
-	}
+func (m *Mapper1) CreateEmptySnapshot() MapperScreenShot {
+	res := Mapper1SS{}
 
 	return res
+}
+
+func (m *Mapper1) TakeSnapshot(s *MapperScreenShot) {
+
 }
 
 func (s Mapper1SS) LoadSS(m Mapper) {

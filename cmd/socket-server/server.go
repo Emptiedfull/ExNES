@@ -134,9 +134,7 @@ func startConsole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// go debugConsole.StartDebugConsole()
 	setUpAudioDriver()
-	// go debugConsole.Console.Apu.LogAudioStats()
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -213,7 +211,7 @@ func getDebugScreen(w http.ResponseWriter, r *http.Request) {
 
 func quickStart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	debugConsole.Console = Core.Quickstart("C:/Users/user/ExNES/emulatorCore/games/Mapper2/contra.nes")
+	debugConsole.Console = Core.Quickstart("/Users/test/Projects/ExNES/games/Mapper2/contra.nes")
 
 	go HandleScreenUpdates()
 
@@ -223,7 +221,7 @@ func quickStart(w http.ResponseWriter, r *http.Request) {
 
 func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	debugConsole.Console = Core.Quickstart("C:/Users/user/ExNES/games/Mapper2/contra.nes")
+	debugConsole.Console = Core.Quickstart("/Users/test/Projects/ExNES/games/NROM/mario.nes")
 	// c.LoadROM()
 
 	//c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper1/ff.nes")
@@ -234,6 +232,8 @@ func startDebugger(w http.ResponseWriter, r *http.Request) {
 	debugConsole.Console.Ppu.DebugBuffer = make([]uint8, 512*64)
 
 	go HandleScreenUpdates()
+
+	setUpAudioDriver()
 
 	w.WriteHeader(http.StatusOK)
 
