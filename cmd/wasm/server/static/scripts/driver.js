@@ -26,6 +26,17 @@ export const state = {
 let audioCtx = null
 let gain = null
 
+window.addEventListener("keydown",async (e)=>{
+    if (e.code == "KeyL"){
+        PauseGame()
+        worker.postMessage({type:"reset"})
+
+        await wait(200)
+        ResumeGame()
+        console.log("sending request for cpu reset")
+    }
+})
+
 const setUpAudio = async (audioBufS, SIZE) => {
 
     if (audioCtx !== null && gain !== null){

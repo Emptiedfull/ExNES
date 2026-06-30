@@ -1,6 +1,9 @@
 package Core
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 type Mapper interface {
 	ReadPRG(addr uint16) uint8
@@ -9,10 +12,12 @@ type Mapper interface {
 	ReadCHR(addr uint16) uint8
 	WriteCHR(addr uint16, val uint8)
 
-	extractCHR() []uint8
-	loadCHR([]uint8)
-
 	getMirroring() uint8
+	TakeSnapshot() MapperScreenShot
+}
+
+type MapperScreenShot interface {
+	LoadSS(m Mapper)
 }
 
 func getMapper(header []byte) int {
@@ -31,14 +36,6 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			CHRROM:     chrData,
 			Mirrroring: mirroring,
 		}
-
-	case 2:
-		m = &Mapper2{
-			PRGROM:     prgData,
-			CHRROM:     chrData,
-			Mirroring:  mirroring,
-			BankSelect: 0,
-		}
 	case 1:
 		m = &Mapper1{
 			PRGROM:        prgData,
@@ -47,14 +44,30 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			shiftRegister: 0x10,
 			isRam:         c.Ppu.mem.CHR_isRam,
 		}
-	case 4:
-		m = &Mapper4{
-			PRGROM:    prgData,
-			CHRROM:    chrData,
-			Mirroring: mirroring,
+	case 2:
+		m = &Mapper2{
+			PRGROM:     prgData,
+			CHRROM:     chrData,
+			Mirroring:  mirroring,
+			BankSelect: 0,
 		}
+		// case 4:
+		// 	m = &Mapper4{
+		// 		PRGROM:    prgData,
+		// 		CHRROM:    chrData,
+		// 		Mirroring: mirroring,
+		// 	}
 
 	}
+
+	// case 4:
+	// 	m = &Mapper4{
+	// 		PRGROM:    prgData,
+	// 		CHRROM:    chrData,
+	// 		Mirroring: mirroring,
+	// 	}
+
+	// }
 
 	c.Cpu.mem.mapper = m
 	c.Ppu.mem.mapper = m
@@ -67,6 +80,12 @@ type Mapper0 struct {
 	CHRROM []uint8
 
 	Mirrroring uint8
+}
+
+type Mapper0SS struct {
+	PRGROM    []uint8
+	CHRROM    []uint8
+	Mirroring uint8
 }
 
 func (m *Mapper0) ReadPRG(addr uint16) uint8 {
@@ -84,6 +103,30 @@ func (m *Mapper0) ReadCHR(addr uint16) uint8 {
 
 func (m *Mapper0) WriteCHR(addr uint16, val uint8) {
 
+}
+
+func (m *Mapper0) TakeSnapshot() MapperScreenShot {
+	res := Mapper0SS{
+		PRGROM:    make([]uint8, len(m.PRGROM)),
+		CHRROM:    make([]uint8, len(m.CHRROM)),
+		Mirroring: m.Mirrroring,
+	}
+
+	copy(res.CHRROM, m.CHRROM)
+	copy(res.PRGROM, m.PRGROM)
+
+	return res
+}
+
+func (s Mapper0SS) LoadSS(m Mapper) {
+	safe, ok := m.(*Mapper0)
+	if !ok {
+		log.Fatalf("FUCK FUCK SMTH RLLY WRONG HAPPENED SHUT DOWN")
+	}
+
+	copy(s.CHRROM, safe.CHRROM)
+	copy(s.PRGROM, safe.PRGROM)
+	safe.Mirrroring = s.Mirroring
 }
 
 func (m *Mapper0) extractCHR() []uint8 {
@@ -105,6 +148,44 @@ type Mapper2 struct {
 
 	BankSelect uint8
 	Mirroring  uint8
+}
+
+type Mapper2SS struct {
+	PRGRAM []uint8
+	CHRROM []uint8
+
+	BankSelect uint8
+	Mirroring  uint8
+}
+
+func (m Mapper2) TakeSnapshot() MapperScreenShot {
+	res := Mapper2SS{
+		PRGRAM: make([]uint8, len(m.PRGROM)),
+		CHRROM: make([]uint8, len(m.CHRROM)),
+
+		BankSelect: m.BankSelect,
+		Mirroring:  m.Mirroring,
+	}
+
+	copy(res.CHRROM, m.CHRROM)
+	copy(res.PRGRAM, m.PRGROM)
+
+	return res
+}
+
+func (s Mapper2SS) LoadSS(m Mapper) {
+
+	safe, ok := m.(*Mapper2)
+
+	if !ok {
+		log.Fatal("doie")
+	}
+
+	copy(safe.CHRROM, s.CHRROM)
+	copy(safe.PRGROM, s.PRGRAM)
+
+	safe.Mirroring = s.Mirroring
+	safe.BankSelect = s.BankSelect
 }
 
 func (m *Mapper2) ReadPRG(addr uint16) uint8 {
@@ -132,14 +213,6 @@ func (m *Mapper2) WriteCHR(addr uint16, val uint8) {
 	m.CHRROM[addr] = val
 }
 
-func (m *Mapper2) extractCHR() []uint8 {
-	return m.CHRROM
-}
-
-func (m *Mapper2) loadCHR(data []uint8) {
-	m.CHRROM = data
-}
-
 func (m *Mapper2) getMirroring() uint8 {
 	return m.Mirroring
 }
@@ -160,6 +233,50 @@ type Mapper1 struct {
 	isRam bool
 }
 
+type Mapper1SS struct {
+	PRGROM []uint8
+	CHRROM []uint8
+	PRGRAM [0x2000]uint8
+
+	shiftRegister uint8
+
+	control  uint8
+	PrgBank  uint8
+	ChrBank0 uint8
+	ChrRank1 uint8
+
+	isRam bool
+}
+
+func (m *Mapper1) TakeSnapshot() MapperScreenShot {
+
+	res := Mapper1SS{
+		PRGROM: make([]uint8, len(m.CHRROM)),
+		CHRROM: make([]uint8, len(m.PRGROM)),
+	}
+
+	return res
+}
+
+func (s Mapper1SS) LoadSS(m Mapper) {
+	safe, ok := m.(*Mapper1)
+	if !ok {
+		log.Fatal("im dead bro")
+	}
+
+	safe.CHRROM = s.CHRROM
+	safe.PRGRAM = s.PRGRAM
+	safe.PRGRAM = s.PRGRAM
+
+	safe.shiftRegister = s.shiftRegister
+	safe.control = s.control
+	safe.PrgBank = s.PrgBank
+	safe.ChrBank0 = s.ChrBank0
+	safe.ChrBank1 = s.ChrRank1
+
+	safe.isRam = s.isRam
+}
+
 func (m *Mapper1) WritePRG(addr uint16, val uint8) {
 
 	if addr < 0x8000 {
@@ -174,7 +291,7 @@ func (m *Mapper1) WritePRG(addr uint16, val uint8) {
 	}
 
 	if val&0x80 != 0 {
-		//reset
+
 		m.shiftRegister = 0x10
 		m.control |= 0x0C
 	} else {

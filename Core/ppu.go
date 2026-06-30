@@ -10,8 +10,7 @@ type ppu struct {
 	Scanline int
 	Frame    int
 
-	BackBuffer  [245760]uint8
-	FrontBuffer [245760]uint8
+	BackBuffer [245760]uint8
 
 	mirroring       int
 	mirroringChange bool
@@ -59,7 +58,7 @@ type ppu_mem struct {
 	internal PPUInternal
 	temp     TempPPU
 
-	chrRom_WARNING []uint8 //THIS IS ONLY TO BE USED FOR SNAPSHOT PURPOSES NO USE IN MAIN CPU I BEG YOU
+	// chrRom_WARNING []uint8 //THIS IS ONLY TO BE USED FOR SNAPSHOT PURPOSES NO USE IN MAIN CPU I BEG YOU
 
 	Vblank_flag bool
 }
@@ -136,9 +135,8 @@ func (p *ppu) read(addr uint16) uint8 {
 	case addr <= 0x3FFF:
 		palleteAddr := (addr - 0x3F00) % 32
 
-		// isSpriteMirror := BoolToUint16(palleteAddr >= 16) & BoolToUint16(palleteAddr%4 == 0)
-		// palleteAddr -= 16 * isSpriteMirror
-		// fmt.Println("accesing pallete mem")
+		isSpriteMirror := BoolToUint16(palleteAddr >= 16) & BoolToUint16(palleteAddr%4 == 0)
+		palleteAddr -= 16 * isSpriteMirror
 
 		return p.mem.Pallete[palleteAddr]
 	}
@@ -223,7 +221,7 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 func (p *ppu) WriteReg(reg uint16, val uint8) {
 	switch reg {
 	case 0: //PPUCTRL
-		// fmt.Printf("PPUCTRL write: %02X at CPU cycle %d\n", val, p.console.Cpu.TotalCycles)
+
 		p.mem.register.NmiEnable = getbitBool(val, 7)
 		p.mem.register.SpriteSize = getbitBool(val, 5)
 		p.mem.register.BgPattern = getbitBool(val, 4)

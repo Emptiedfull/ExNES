@@ -154,6 +154,7 @@ window.addEventListener('keydown', (e) => {
 })
 
 window.addEventListener('keyup', (e) => {
+
     if (keyMap[e.code] !== undefined && state.romRunning) {
         
         UpdateRelease(keyMap[e.code])

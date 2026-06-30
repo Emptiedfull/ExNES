@@ -1,7 +1,6 @@
 package Core
 
 import (
-	"fmt"
 	"math"
 	"sync"
 )
@@ -100,7 +99,6 @@ var pulseTable [31]float32
 var tndTable [203]float32
 
 func init() {
-	fmt.Println("initing audio")
 	for i := range 31 {
 		if i == 0 {
 			continue
@@ -258,7 +256,7 @@ func (a *APU) tick() {
 		a.CycleAcc -= a.CyclesPerSample
 
 		a.SampleBuffer = append(a.SampleBuffer, a.mix())
-		AudioStats.SamplesCreated.Add(1)
+
 	}
 }
 

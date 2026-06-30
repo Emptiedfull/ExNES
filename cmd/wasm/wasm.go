@@ -22,6 +22,7 @@ func main() {
 }
 
 func startFrameDriver() {
+	fmt.Println("new version loaded")
 	var emu *Core.Console
 	var jsScreen js.Value
 
@@ -72,7 +73,17 @@ func startFrameDriver() {
 		}
 
 		emu.Cpu.Reset()
-		fmt.Println("rom loaded")
+
+		return nil
+	}))
+
+	js.Global().Set("reset", js.FuncOf(func(this js.Value, args []js.Value) any {
+
+		if emu != nil {
+			emu.Cpu.Reset()
+			fmt.Println("resetting the console")
+			return nil
+		}
 
 		return nil
 	}))

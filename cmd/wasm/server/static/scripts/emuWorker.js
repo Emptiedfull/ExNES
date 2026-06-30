@@ -1,4 +1,5 @@
 
+
 let wasm_up = false
 let rom_loaded = false
 importScripts('/wasm_exec.js')
@@ -8,6 +9,8 @@ const init = async ()=>{
     go.run(result.instance)
 
     self.postMessage({"type":"wasm"})
+
+      reset()
 }
 
 init()
@@ -26,9 +29,9 @@ const S_size = 1024
 const S_buf = new Float32Array(S_size)
 
 self.onmessage = async ({data}) =>{
+    console.log(data)
     switch (data.type){
         case 'init':
-            console.log("restarting emulator")
             startEmulator()
             initBuffer(new Uint8Array(S_buf.buffer))
             initInput(new Int32Array(data.inputBuf))
@@ -42,6 +45,12 @@ self.onmessage = async ({data}) =>{
             break
         case 'pump':
             pump()
+            break
+        
+        case 'reset':
+            console.log("Recieved reset request")
+           
+            reset()
             break
         
         case 'input':

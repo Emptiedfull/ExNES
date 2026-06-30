@@ -1,8 +1,8 @@
-import { openCap,closeCap,slotCart,activateJoypad,alignCable,pushbtn,turnKnob,wiggleKnob,knobSettings } from "./graphics.js"
-import { initConsole,loadRom,state,updateVolume,UpdateSpeed,PauseGame,ResumeGame} from "./driver.js"
+import { openCap, closeCap, slotCart, activateJoypad, alignCable, pushbtn, turnKnob, wiggleKnob, knobSettings } from "./graphics.js"
+import { initConsole, loadRom, state, updateVolume, UpdateSpeed, PauseGame, ResumeGame } from "./driver.js"
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
-import { activateTip,startRandomTipEngine } from "./tooltips.js"
+import { activateTip, startRandomTipEngine } from "./tooltips.js"
 
 
 let currentIndex = 3
@@ -19,8 +19,8 @@ const GamesArray = []
 
 const powerLed = document.getElementById("power")
 
- const powerBtn = document.getElementById("start")
- const pauseBtn = document.getElementById("pause")
+const powerBtn = document.getElementById("start")
+const pauseBtn = document.getElementById("pause")
 
 let romLoaded = ""
 let power = false
@@ -28,6 +28,8 @@ let power = false
 const roms = [left, middle, right]
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+
     startRandomTipEngine()
     await setUpKnobs()
     await setUpButtons()
@@ -36,56 +38,56 @@ document.addEventListener("DOMContentLoaded", async () => {
     await wait(500)
 
     updateRom()
-}); 
+});
 
-const BeginKnobs = async ()=>{
+const BeginKnobs = async () => {
     knobSettings["sound"].setting = 4
     knobSettings["angle"] = 180
 
-    await turnKnob("sound",180)
-    await turnKnob("speed",180)
+    await turnKnob("sound", 180)
+    await turnKnob("speed", 180)
 }
 
 
-const setUpKnobs = async ()=>{
+const setUpKnobs = async () => {
     const soundKnob = document.getElementById("sound")
-    const soundIncrements = [0,45,90,135,180,225,270,315,360]
-    soundKnob.addEventListener("click",async ()=>{
+    const soundIncrements = [0, 45, 90, 135, 180, 225, 270, 315, 360]
+    soundKnob.addEventListener("click", async () => {
 
-        if (romLoaded == "" || power == false){
-            await wiggleKnob("sound",45)
-            await turnKnob("sound",0)
-            return 
+        if (romLoaded == "" || power == false) {
+            await wiggleKnob("sound", 45)
+            await turnKnob("sound", 0)
+            return
         }
 
         knobSettings["sound"].setting = knobSettings["sound"].setting + 1
 
-        if (knobSettings["sound"].setting >= soundIncrements.length - 1){
+        if (knobSettings["sound"].setting >= soundIncrements.length - 1) {
             knobSettings["sound"].setting = 0
         }
 
         let targetAngle = soundIncrements[knobSettings["sound"].setting]
-        if (targetAngle == 0){
+        if (targetAngle == 0) {
             updateVolume(0)
-        }else{
-            updateVolume(targetAngle/180)
+        } else {
+            updateVolume(targetAngle / 180)
         }
-        await turnKnob("sound",targetAngle)
+        await turnKnob("sound", targetAngle)
     })
 
     const speedKnob = document.getElementById("speed")
-    const speedIncrements = [45,90,135,180,225,270,315,360]
+    const speedIncrements = [45, 90, 135, 180, 225, 270, 315, 360]
 
-    speedKnob.addEventListener("click",async ()=>{
-        if (romLoaded == "" || power == false){
-            await wiggleKnob("speed",45)
-            await turnKnob("speed",0)
+    speedKnob.addEventListener("click", async () => {
+        if (romLoaded == "" || power == false) {
+            await wiggleKnob("speed", 45)
+            await turnKnob("speed", 0)
             return
         }
 
         knobSettings["speed"].setting = knobSettings["speed"].setting + 1
 
-        if (knobSettings["speed"].setting >= speedIncrements.length - 1){
+        if (knobSettings["speed"].setting >= speedIncrements.length - 1) {
             knobSettings["speed"].setting = 0
         }
 
@@ -94,38 +96,38 @@ const setUpKnobs = async ()=>{
 
         UpdateSpeed(1000 * targetAngle / 180)
 
-        await turnKnob("speed",targetAngle)
+        await turnKnob("speed", targetAngle)
     })
 
 
 }
 
 
-const initGames = async ()=>{
+const initGames = async () => {
     let response = await fetch("./games")
 
-    if (response.ok){
+    if (response.ok) {
         let data = await response.json()
 
         data.forEach(element => {
             GamesArray.push(element)
         });
-       
+
     }
 }
 
 
 
 function updateRom() {
-     let romSelection = GamesArray.slice(currentIndex - 1, currentIndex + 2)
+    let romSelection = GamesArray.slice(currentIndex - 1, currentIndex + 2)
 
-    if (currentIndex == 0){
-        
-         romSelection = [GamesArray.at(-1),GamesArray[0],GamesArray[1]]
+    if (currentIndex == 0) {
+
+        romSelection = [GamesArray.at(-1), GamesArray[0], GamesArray[1]]
     }
 
-    if (currentIndex == GamesArray.length - 1){
-        romSelection = [GamesArray.at(-2),GamesArray.at(-1),GamesArray[0]]
+    if (currentIndex == GamesArray.length - 1) {
+        romSelection = [GamesArray.at(-2), GamesArray.at(-1), GamesArray[0]]
     }
 
     if (romSelection.length == 3) {
@@ -148,22 +150,31 @@ function updateRom() {
 
 const setUpButtons = async () => {
 
-    console.log("setting up buttons",pauseBtn)
-
-    pauseBtn.addEventListener("click",async ()=>{
-        console.log("trying to pause")
-        if (pauseBtn.classList.contains("paused")){
+    pauseBtn.addEventListener("click", async () => {
+        if (pauseBtn.classList.contains("paused")) {
             pauseBtn.classList.remove("paused")
             pauseBtn.classList.add("unpaused")
+
+              pauseBtn.innerHTML = `   <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5" stroke-linecap="square" xmlns="http://www.w3.org/2000/svg">
+                                     <rect x="4" y="3" width="4" height="18"/>
+                                     <rect x="16" y="3" width="4" height="18"/></svg>`
+
             await ResumeGame()
-        }else{
+        } else {
             pauseBtn.classList.remove("unpaused")
             pauseBtn.classList.add("paused")
-           await PauseGame()
+
+              pauseBtn.innerHTML = ` <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5"
+                                    stroke-linecap="square">
+                                    <polygon points="6,3 20,12 6,21" />
+                                </svg>`
+
+               
+            await PauseGame()
         }
-      
+
     })
-   
+
     powerBtn.addEventListener("click", async () => {
         power = true
 
@@ -182,13 +193,13 @@ const setUpButtons = async () => {
     })
 
     const nav_back = document.getElementById("nav-back")
-    nav_back.addEventListener("click",async()=>{
+    nav_back.addEventListener("click", async () => {
         move(-1)
         pushbtn("canvas-back")
     })
 
     const nav_front = document.getElementById("nav-front")
-    nav_front.addEventListener("click",async()=>{
+    nav_front.addEventListener("click", async () => {
         move(1)
         pushbtn("canvas-next")
     })
@@ -213,7 +224,7 @@ const setUpButtons = async () => {
     cap.addEventListener("click", async () => {
 
         await PauseGame()
-        
+
         await openCap(cap)
         await wait(200)
         overlay.style.display = "flex"
@@ -227,7 +238,7 @@ const setUpButtons = async () => {
 async function begin(game) {
     initConsole()
     await loadRom(game)
-    
+
     await BeginKnobs()
 
 
@@ -241,15 +252,15 @@ async function begin(game) {
 function move(direction) {
     let newIdx = currentIndex + direction
 
-    if (newIdx < 0 ){
-       
+    if (newIdx < 0) {
+
         currentIndex = GamesArray.length - 1
         updateRom()
         return
     }
 
-    if (newIdx >= GamesArray.length){
-        
+    if (newIdx >= GamesArray.length) {
+
         currentIndex = newIdx - GamesArray.length
         updateRom()
         return

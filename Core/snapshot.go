@@ -7,12 +7,13 @@ type snapshot struct {
 	Cycles   int
 	CpuState CpuSnapshot
 	PpuState PpuSnapshot
+
+	mapperState MapperScreenShot
 }
 
 type SnapshotBuffer struct {
 	Frame int
-
-	Data  [200]snapshot
+	Data  [100]snapshot
 	Index int
 }
 
@@ -51,8 +52,10 @@ type PpuSnapshot struct {
 	Scanline int
 	Frame    int
 
-	backBuffer  []uint8
-	frontBuffer []uint8
+	mirroring       int
+	mirroringChange bool
+
+	BackBuffer [245760]uint8
 
 	screenChanged bool
 }
@@ -62,17 +65,16 @@ func (p *ppu) TakePpuSnapshot() PpuSnapshot {
 
 	S.mem = p.mem
 
-	orignal_chrRom := p.mem.mapper.extractCHR()
+	// orignal_chrRom := p.mem.mapper.extractCHR()
 
-	S.mem.chrRom_WARNING = make([]uint8, len(orignal_chrRom))
-	copy(S.mem.chrRom_WARNING, orignal_chrRom)
+	// S.mem.chrRom_WARNING = make([]uint8, len(orignal_chrRom))
+	// copy(S.mem.chrRom_WARNING, orignal_chrRom)
 
 	S.Dot = p.Dot
 	S.Scanline = p.Scanline
 	S.Frame = p.Frame
 
-	// copy(S.backBuffer, p.backBuffer)
-	// copy(S.frontBuffer, p.FrontBuffer)
+	S.BackBuffer = p.BackBuffer
 
 	S.screenChanged = p.screenChanged
 
@@ -141,7 +143,7 @@ func (c *Console) LoadSnapshot(snap snapshot) {
 func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
 	p.mem = snap.mem
 
-	p.mem.mapper.loadCHR(snap.mem.chrRom_WARNING)
+	// p.mem.mapper.loadCHR(snap.mem.chrRom_WARNING)
 
 	p.Dot = snap.Dot
 	p.Scanline = snap.Scanline

@@ -10,7 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-func startWatcher(restartChan chan bool) {
+func startWatcher(restartChan chan int) {
 	watcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
@@ -23,6 +23,7 @@ func startWatcher(restartChan chan bool) {
 	time.Sleep(1 * time.Second)
 
 	addPaths(watcher, "./")
+	watcher.Add("../wasm.go")
 
 	for {
 		select {
@@ -32,7 +33,12 @@ func startWatcher(restartChan chan bool) {
 			}
 			if event.Has(fsnotify.Write) {
 				fmt.Println("detected changes on:", event.Name)
-				restartChan <- true
+
+				if event.Name == "../wasm.go" {
+					restartChan <- 2
+				}
+
+				restartChan <- 1
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {

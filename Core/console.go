@@ -27,6 +27,9 @@ type Console struct {
 
 	Paused   bool
 	pausedMu sync.Mutex
+
+	DebugMode int
+	Debugger  Debugger
 }
 
 func (c *Console) Pause() {
@@ -128,6 +131,13 @@ func InitializeConsole() *Console {
 	c.Cpu.fetchNew = true
 	c.ScreenChannel = make(chan ScreenInfo, 100)
 
+	d := Debugger{
+		Console:     c,
+		Disassembly: make(map[uint16]AssemblyLine),
+	}
+
+	c.Debugger = d
+
 	// fmt.Println(len(c.Ppu.backBuffer))
 
 	c.Cpu.mem = &bus{
@@ -176,16 +186,16 @@ func (c *Console) StartConsoleCycle() {
 
 }
 
-func (c *Console) RunDisplayUpdates() {
-	if c.Ppu.screenChanged {
-		S := ScreenInfo{
-			Buffer: &c.Ppu.FrontBuffer,
-		}
-		c.Ppu.screenChanged = false
-		c.ScreenChannel <- S
-	}
+// func (c *Console) RunDisplayUpdates() {
+// 	if c.Ppu.screenChanged {
+// 		S := ScreenInfo{
+// 			Buffer: &c.Ppu.FrontBuffer,
+// 		}
+// 		c.Ppu.screenChanged = false
+// 		c.ScreenChannel <- S
+// 	}
 
-}
+// }
 
 func (c *Console) tick() {
 	// c.RunDisplayUpdates()

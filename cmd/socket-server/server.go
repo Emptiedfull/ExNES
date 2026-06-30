@@ -48,8 +48,8 @@ func run_server() {
 	mux.HandleFunc("/snapshots/fetch", fetchSnapshots)
 	mux.HandleFunc("/snapshots/load", loadSnapshot)
 
-	mux.HandleFunc("/ppu/debugCHR", runChrViewer)
-	mux.HandleFunc("/ppu/debugNameTable", runNameTableViewer)
+	// mux.HandleFunc("/ppu/debugCHR", runChrViewer)
+	// mux.HandleFunc("/ppu/debugNameTable", runNameTableViewer)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
@@ -67,19 +67,19 @@ func getConsoleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func runChrViewer(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+// func runChrViewer(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	debugConsole.Console.DebugChrRom()
-	fmt.Fprint(w, "Success")
-}
+// 	debugConsole.Console.DebugChrRom()
+// 	fmt.Fprint(w, "Success")
+// }
 
-func runNameTableViewer(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	debugConsole.Console.DebugNameTable()
-	fmt.Fprintf(w, "Success")
+// func runNameTableViewer(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Access-Control-Allow-Origin", "*")
+// 	debugConsole.Console.DebugNameTable()
+// 	fmt.Fprintf(w, "Success")
 
-}
+// }
 
 func getExecStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -102,7 +102,7 @@ func runSingleCycle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	debugConsole.DebugTick()
-	debugConsole.Console.RunDisplayUpdates()
+	// debugConsole.Console.RunDisplayUpdates()
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -114,7 +114,7 @@ func run30frame(w http.ResponseWriter, r *http.Request) {
 		debugConsole.DebugTick()
 	}
 
-	debugConsole.Console.RunDisplayUpdates()
+	// debugConsole.Console.RunDisplayUpdates()
 
 	w.WriteHeader(http.StatusOK)
 }

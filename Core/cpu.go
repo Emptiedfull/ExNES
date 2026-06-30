@@ -264,4 +264,5 @@ func (c *cpu) Reset() {
 	c.console.ready = true
 	c.isJamming = false
 	c.temp = temp{}
+
 }

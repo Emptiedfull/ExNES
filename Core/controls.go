@@ -42,9 +42,7 @@ func (J *joyPad) readState() uint8 {
 	}
 
 	state := J.latched[J.index]
-	// if state == 1 {
-	// 	fmt.Println(J.index)
-	// }
+
 	J.index++
 
 	return 0x40 | state

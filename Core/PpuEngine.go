@@ -32,15 +32,12 @@ func (p *ppu) cycleTick() {
 			p.Frame++
 
 			p.screenChanged = true
-			// copy(p.FrontBuffer, p.backBuffer)
-			p.FrontBuffer = p.BackBuffer
 		}
 	}
 
 }
 
 func (p *ppu) step() {
-	// p.cycleTick()
 
 	rendering := p.mem.register.ShowBG || p.mem.register.ShowSprites
 	if p.Scanline == 0 && p.Dot == 0 && p.Frame%2 == 1 && rendering {

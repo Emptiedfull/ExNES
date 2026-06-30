@@ -41,18 +41,18 @@ var compressibleList = map[string]bool{
 
 func main() {
 	PrepareGameList()
-	compileWasm("../main.go", "./static/nes.wasm")
+	compileWasm("../wasm.go", "./static/nes.wasm")
 
 	fmt.Println("Wasm compiled")
 
-	restartChan := make(chan bool)
+	restartChan := make(chan int)
 
 	go StartServer(restartChan)
 
 	startWatcher(restartChan)
 }
 
-func StartServer(restartChan chan bool) {
+func StartServer(restartChan chan int) {
 
 	fmt.Println("building assests...")
 	bundleOutput()
@@ -73,12 +73,22 @@ func StartServer(restartChan chan bool) {
 	server := &http.Server{Handler: mux, Addr: ":8070"}
 
 	go func() {
-		for range restartChan {
+		for x := range restartChan {
 
-			fmt.Print("building assests...")
-			bundleOutput()
-			globalCache.clear()
-			fmt.Println(" completed build")
+			switch x {
+			case 1:
+				fmt.Print("building assests...")
+				bundleOutput()
+				globalCache.clear()
+				fmt.Println(" completed build")
+			case 2:
+				fmt.Print("compiling wasm...")
+				compileWasm("../wasm.go", "./static/nes.wasm")
+				delete(globalCache.data, "../wasm.go")
+				globalCache.get("../wasm.go")
+				fmt.Println("completed")
+
+			}
 
 		}
 	}()
