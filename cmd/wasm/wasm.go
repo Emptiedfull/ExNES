@@ -22,7 +22,7 @@ func main() {
 }
 
 func startFrameDriver() {
-	fmt.Println("new version loaded")
+	fmt.Println("new version loaded:", 2)
 	var emu *Core.Console
 	var jsScreen js.Value
 
@@ -112,7 +112,11 @@ func startFrameDriver() {
 
 		if emu.Ppu.ScreenChanged {
 			js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
-			fmt.Println(emu.Snapshots.Index)
+
+			if emu.Ppu.Frame%20 == 0 {
+				emu.TakeSnapshot()
+			}
+
 		}
 
 		js.CopyBytesToJS(JS_Arr, S_Arr)

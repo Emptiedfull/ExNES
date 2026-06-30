@@ -66,7 +66,7 @@ func (c *client) runReciever(ctx context.Context) {
 			fmt.Println("closing connection", c.ID)
 			return
 		case info := <-c.Output:
-			c.conn.Write(ctx, websocket.MessageBinary, (*info.Buffer)[:])
+			c.conn.Write(ctx, websocket.MessageBinary, info.Buffer)
 		}
 	}
 

@@ -120,6 +120,8 @@ func InitializeConsole() *Console {
 		OpenBusVal: 0,
 	}
 
+	c.Ppu.BackBuffer = make([]uint8, 245760)
+
 	c.Player1 = &joyPad{}
 	c.Player2 = &joyPad{}
 
@@ -131,14 +133,7 @@ func InitializeConsole() *Console {
 	c.Cpu.fetchNew = true
 	c.ScreenChannel = make(chan ScreenInfo, 100)
 
-	d := Debugger{
-		Console:     c,
-		Disassembly: make(map[uint16]AssemblyLine),
-	}
-
-	c.Debugger = d
-
-	// fmt.Println(len(c.Ppu.backBuffer))
+	c.Snapshots.Data = make([]snapshot, 100)
 
 	c.Cpu.mem = &bus{
 		cpu: c.Cpu,
@@ -189,7 +184,7 @@ func (c *Console) StartConsoleCycle() {
 func (c *Console) RunDisplayUpdates() {
 	if c.Ppu.ScreenChanged {
 		S := ScreenInfo{
-			Buffer: &c.Ppu.BackBuffer,
+			Buffer: c.Ppu.BackBuffer,
 		}
 		c.Ppu.ScreenChanged = false
 		c.ScreenChannel <- S

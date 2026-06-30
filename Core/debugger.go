@@ -31,7 +31,7 @@ type Debugger struct {
 }
 
 type ScreenInfo struct {
-	Buffer *[245760]uint8
+	Buffer []uint8
 }
 
 type cpustate struct {

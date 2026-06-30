@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 // Contains utility for the snapshot function
 
 type snapshot struct {
@@ -14,7 +16,10 @@ type snapshot struct {
 
 type SnapshotBuffer struct {
 	Frame int
-	Data  [100]snapshot
+	// Data  [100]snapshot
+
+	Data []snapshot
+
 	Index int
 }
 
@@ -74,13 +79,14 @@ type PpuSnapshot struct {
 	mirroring       int
 	mirroringChange bool
 
-	BackBuffer [245760]uint8
+	BackBuffer []uint8
 
 	screenChanged bool
 }
 
 func (c *Console) SetUpSnapshots() {
 	for range len(c.Snapshots.Data) {
+		fmt.Println("creating empty snapshots ")
 		c.AddSnapshot(c.createEmptySnapshot())
 	}
 
@@ -103,13 +109,13 @@ func (a *APU) TakeSnapshot(s *ApuSnapshot) {
 }
 
 func (a *APU) LoadSnapshot(s *ApuSnapshot) {
-	a.Pulse1 = &s.Pulse1
-	a.Pulse2 = &s.Pulse2
+	*a.Pulse1 = s.Pulse1
+	*a.Pulse2 = s.Pulse2
 
-	a.Triangle = &s.Tri
+	*a.Triangle = s.Tri
 
-	a.Noise = &s.Noise
-	a.Dmc = &s.DMC
+	*a.Noise = s.Noise
+	*a.Dmc = s.DMC
 
 	a.Counter = s.counter
 	a.CycleAcc = s.CycleAcc
@@ -119,7 +125,7 @@ func (a *APU) LoadSnapshot(s *ApuSnapshot) {
 
 func (c *Console) TakeSnapshot() {
 	c.PopulateSnapshot(&c.Snapshots.Data[c.Snapshots.Index])
-	c.AddSnapshot(c.Snapshots.Data[c.Snapshots.Index])
+	c.Snapshots.Index++
 }
 
 func (c *Console) createEmptySnapshot() snapshot {
@@ -142,7 +148,7 @@ func (p *ppu) TakePpuSnapshot(S *PpuSnapshot) {
 	S.Scanline = p.Scanline
 	S.Frame = p.Frame
 
-	S.BackBuffer = p.BackBuffer
+	copy(S.BackBuffer, p.BackBuffer)
 
 	S.screenChanged = p.ScreenChanged
 
@@ -184,6 +190,10 @@ func (c cpu) TakeCpuSnapshot(S *CpuSnapshot) {
 
 func (c *Console) PopulateSnapshot(s *snapshot) {
 
+	if c.mapper == nil || c.Cpu == nil || c.Ppu == nil || c.Apu == nil {
+		return
+	}
+
 	c.Cpu.TakeCpuSnapshot(&s.CpuState)
 	c.Ppu.TakePpuSnapshot(&s.PpuState)
 	c.Apu.TakeSnapshot(&s.ApuState)
@@ -202,6 +212,7 @@ func (c *Console) LoadSnapshot(snap snapshot) {
 
 	c.Cpu.LoadCpuSnapshot(snap.CpuState)
 	c.Ppu.LoadPpuSnapshot(snap.PpuState)
+	snap.mapperState.LoadSS(c.mapper)
 }
 
 func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
@@ -211,7 +222,7 @@ func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
 	p.Scanline = snap.Scanline
 	p.Frame = snap.Frame
 
-	p.BackBuffer = snap.BackBuffer
+	copy(p.BackBuffer, snap.BackBuffer)
 
 	p.ScreenChanged = snap.screenChanged
 }
