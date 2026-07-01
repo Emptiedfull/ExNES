@@ -60,7 +60,13 @@ self.onmessage = async ({data}) =>{
 
         case 'getsnap':
             console.log("getting snapshot list")
-            requestSnapshotList()
+            let snapshots = await requestSnapshotList()
+            self.postMessage({type:"snaps",snaps: snapshots})
+            break
+
+        case 'loadSnapshot':
+            console.log("loading snpashots:",data.index)
+            loadSnapshot(data.index)
             break
         
         case 'input':
@@ -70,6 +76,7 @@ self.onmessage = async ({data}) =>{
 
     }
 }
+
 
 const requestSnapshotList = async ()=>{
     const headerPTR = getSnapshotList()
@@ -81,9 +88,7 @@ const requestSnapshotList = async ()=>{
     const snapshotBYTES = new Uint8Array(instance.exports.memory.buffer, snapshotPTR,len)
     const snapshots = JSON.parse(new TextDecoder().decode(snapshotBYTES))
 
-    console.log(snapshots)
-
-    console.log("first",snapshots[0])
+    return snapshots
 }
 
 const pump = ()=>{

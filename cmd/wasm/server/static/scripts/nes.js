@@ -3,6 +3,7 @@ import { initConsole, loadRom, state, updateVolume, UpdateSpeed, PauseGame, Resu
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
 import { activateTip, startRandomTipEngine } from "./tooltips.js"
+import { createTiles } from "./rewind.js"
 
 
 let currentIndex = 3
@@ -28,6 +29,8 @@ let power = false
 const roms = [left, middle, right]
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+    await createTiles()
 
 
     startRandomTipEngine()

@@ -87,6 +87,13 @@ func startFrameDriver() {
 
 	}))
 
+	js.Global().Set("loadSnapshot", js.FuncOf(func(this js.Value, args []js.Value) any {
+		index := args[0].Int()
+
+		emu.LoadSnapshot(emu.Snapshots.Data[index])
+		return nil
+	}))
+
 	js.Global().Set("reset", js.FuncOf(func(this js.Value, args []js.Value) any {
 
 		if emu != nil {

@@ -29,6 +29,9 @@ let gain = null
 window.addEventListener("keydown",async (e)=>{
     if (e.code == "KeyL"){
         await getSnapList()
+    } else if (e.code == "KeyP"){
+        console.log("hello")
+        await loadSnap(0)
     }
 })
 
@@ -88,6 +91,14 @@ export const getSnapList = async ()=>{
     await ResumeGame()
 }
 
+export const loadSnap = async(index)=>{
+     await PauseGame()
+    worker.postMessage({type:"loadSnapshot",index})
+
+    await wait(100)
+    await ResumeGame()
+}
+
 export const updateVolume = (intensity) =>{
     if (gain !== null){
            gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
@@ -113,6 +124,9 @@ worker.onmessage = async ({ data }) => {
         case "wasm":
             createModal("Console Ready!!","Press the power button to start the console")
             worker.postMessage({ type: "init", inputBuf,speedBuf })
+            break
+        case 'snaps':
+            console.log(data)
             break
         case 'frameUp':
             imageData.data.set(fBytes)

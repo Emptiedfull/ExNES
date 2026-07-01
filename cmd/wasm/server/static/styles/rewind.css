@@ -1,0 +1,107 @@
+.rewind-overlay{
+    background-color: rgba(0, 0, 0, 0.6);
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.rewind-container{
+    
+    width: 100%;
+    background-color: pink;
+}
+
+.tape-container {
+    
+    width: 100%;
+    background-color: #161412;
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    justify-content: center;
+
+    background-position: 0 0, 8px 8px;
+    
+ 
+}
+
+.decorative-tape {
+  height: 3.5rem;
+  width: 100%;
+  
+
+  background-image:
+    
+    radial-gradient(circle, rgba(255,255,255,0.18) 6px, transparent 7px),
+    
+    radial-gradient(circle, #2d0d0a 0 5.5px,rgb(86, 42, 42) 6.5px, transparent 8px);
+
+  background-size: 32px 32px;
+  background-position: center, center;
+}
+.items-container{
+    width: 100%;
+    height: 90%;
+
+    
+    padding-bottom:1rem;
+    background-color: #161412;
+    
+    display: flex;
+    flex-direction: row;
+    white-space: nowrap;
+    gap: 2.5rem;
+    overflow-x: auto;
+}
+
+.items-container::-webkit-scrollbar {
+  height: 4px;           
+  width: 6px;            
+}
+/* 
+.items-container::-webkit-scrollbar-track {
+  background: #2a2420;
+  border-radius: 3px;
+} */
+
+
+.items-container::-webkit-scrollbar-thumb {
+  background: #544639;
+  border-radius: 6px;
+}
+
+.items-container::-webkit-scrollbar-thumb:hover {
+  background: #e8b04b;
+}
+
+.tape-item{
+    width: 8%;
+    /* min-width: 100px; */
+    aspect-ratio: 4/3;
+    flex: 0 0 auto;
+   
+    
+}
+
+.tape-item img{
+    height: 100%;
+    width: 100%;
+    object-fit: fill;
+    opacity: 0.5;
+}
+
+.tape-item img:hover{
+    opacity: 1;
+}
+
+.tape-item:hover{
+    background-color: red;
+    transform: scale(1.2);
+    opacity: 1;
+    z-index: 20000;
+}
