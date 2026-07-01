@@ -1,6 +1,884 @@
-var I=new Worker(new URL("./emuWorker.js",import.meta.url)),ct=null,$=new SharedArrayBuffer(4),pt=new Int32Array($),_t=document.getElementById("screen"),ut=_t.getContext("2d"),rt=ut.createImageData(256,240),J=new SharedArrayBuffer(4),yt=new Int32Array(J),mt=null,C=null;Atomics.store(yt,0,1e3);var j={romRunning:!1},y=null,E=null;window.addEventListener("keydown",async t=>{t.code=="KeyL"?await Gt():t.code=="KeyP"&&(console.log("hello"),await Ft(0))});var Dt=async(t,e)=>{if(y!==null&&E!==null)return;y=new AudioContext({sampleRate:44100}),await y.audioWorklet.addModule(new URL("./driverWorklet.js",import.meta.url));let n=new AudioWorkletNode(y,"apu-proc",{outputChannelCount:[1]});E=y.createGain(),n.port.postMessage({audioBufS:t,SIZE:e}),n.connect(E),E.connect(y.destination)},K=async()=>{y!=null&&(await y.suspend(),Atomics.store(C,2,2),Atomics.notify(C,2))},O=async()=>{console.log("playing"),y!=null&&(await y.resume(),Atomics.store(C,2,1),Atomics.notify(C,2),I.postMessage({type:"pump"}))},Gt=async()=>{await K(),I.postMessage({type:"getsnap"}),await O()},Ft=async t=>{await K(),I.postMessage({type:"loadSnapshot",index:t}),await w(100),await O()},Z=t=>{E!==null&&(E.gain.setValueAtTime(E.gain.value,y.currentTime),E.gain.linearRampToValueAtTime(t,y.currentTime+1))},gt=()=>{I.postMessage({type:"init",speedBuf:J,inputBuf:$})};I.onmessage=async({data:t})=>{switch(t.type){case"init":ct=new Uint8Array(t.FBuf),mt=t.audioBufS,C=new Int32Array(mt,t.SIZE*4,3),await Dt(t.audioBufS,t.SIZE);break;case"wasm":b("Console Ready!!","Press the power button to start the console"),I.postMessage({type:"init",inputBuf:$,speedBuf:J});break;case"snaps":console.log(t);break;case"frameUp":rt.data.set(ct),ut.putImageData(rt,0,0);break}};var ft={"joypad-A":0,"joypad-B":1,"joypad-select":2,"joypad-start":3,"dpad-up":4,"dpad-down":5,"dpad-left":6,"dpad-right":7},ht=t=>{Atomics.store(C,2,1),Atomics.notify(C,2),y.resume(),I.postMessage({type:"loadRom",rom:t})},wt=t=>{Atomics.store(yt,0,t)},xt=t=>{Atomics.or(pt,0,1<<ft[t])},vt=t=>{Atomics.and(pt,0,~(1<<ft[t]))};var Ht=document.getElementById("control-update"),Vt=document.querySelectorAll(".joypad-button"),D="",_=!1,u={KeyZ:"joypad-A",KeyX:"joypad-B",ShiftLeft:"joypad-select",Enter:"joypad-start",ArrowUp:"dpad-up",ArrowDown:"dpad-down",ArrowLeft:"dpad-left",ArrowRight:"dpad-right"},Wt=["joypad-A","joypad-B","joypad-select","joypad-start","dpad-up","dpad-down","dpad-left","dpad-right"];document.addEventListener("DOMContentLoaded",()=>{Ht.addEventListener("click",()=>{_?(Et(),$t()):(bt(),Nt()),_=!_,D=""})});var G=null,Nt=()=>{G=new AbortController;let{signal:t}=G;Vt.forEach(e=>{e.addEventListener("mousedown",async n=>{console.log(e.id,z(e.id));let o=z(e.id);console.log(o),kt(e.id,z(e.id)),D=e.id},{signal:t})})},z=t=>{let e=Object.keys(u),n="";return e.forEach(o=>{u[o]==t&&(n=o)}),n},$t=()=>{G&&G.abort()},Jt=(t,e)=>{let n=structuredClone(u);Object.keys(u).forEach(s=>{u[s]==t&&delete u[s]}),u[e]=t,Zt()},Zt=()=>{let t=Object.keys(u),e=structuredClone(Wt),n=[];t.forEach(o=>{n.push(u[o])}),e.forEach(o=>{let s=document.getElementById(o);n.includes(o)?s.classList.contains("key-missing")&&s.classList.remove("key-missing"):s.classList.add("key-missing")})};window.addEventListener("keydown",t=>{if(D!==""&&_&&(X(t.code),Jt(D,t.code)),u[t.code]!==void 0&&j.romRunning){xt(u[t.code]);let e=document.getElementById(u[t.code]);zt(e)}});window.addEventListener("keyup",t=>{if(u[t.code]!==void 0&&j.romRunning){vt(u[t.code]);let e=document.getElementById(u[t.code]);Xt(e)}});var zt=async t=>{t.classList.add("active")},Xt=async t=>{t.classList.remove("active")};function w(t){return new Promise(e=>setTimeout(e,t))}var b=async(t,e,n=!1,o=!0)=>{let s=document.querySelector(".moodle-bar"),a=document.createElement("div");a.classList.add("modal","modal-corners");let d=document.createElement("h1");n?d.classList.add("error"):d.classList.add("info"),d.textContent=t,a.appendChild(d);let r=document.createElement("p");return r.classList.add("modal-text"),r.textContent=e,a.appendChild(r),s.appendChild(a),o&&te(a),Yt(a),a},Yt=t=>{t.classList.add("active")},Qt=async t=>{t.classList.remove("active"),t.classList.add("inactive"),await w(400),t.remove()},te=async t=>{await w(3500),t.classList.contains("active")?await Qt(t):console.log("bro alr failed")};var Lt=t=>{U[t].state&&(U[t].function(),U[t].state=!1)},It=()=>{Ct()},Ct=()=>{let t=Math.random()*5e4+1e4;setTimeout(()=>{let e=Bt[Math.floor(Math.random()*Bt.length)];U[e].function(),Ct()},t)},ee=()=>{b("Go big or go home","click on the tv screen to go fullscreen mode (resolution not garunteed)")},ne=()=>{b("Play with the dials!!","Adjust the dials on the television to control the sound and speed levels")},oe=()=>{b("You dont need to reload(prolly)","Click the cartridge slot to change games while the console is running")},se=()=>{b("Have suggestions or found errors?","Dm emptiedfull on slack please")};var U={fullscreen:{state:!0,function:ee},knobs:{state:!0,function:ne},hotswap:{state:!0,function:oe},feedback:{state:!0,function:se},controls:{}},Bt=Object.keys(U);var ae=document.querySelector("body"),Q=document.getElementById("middle"),ie=document.getElementById("rom"),F=document.getElementById("cartridge"),Y=document.getElementById("screen"),Tt=document.getElementById("joypad-cont"),H=document.getElementById("update-panel"),qe=document.getElementById("joypad"),Rt=document.getElementById("control-update"),x=document.getElementById("key-display"),de=document.getElementById("show-text"),m={speed:{angle:0,setting:0},sound:{angle:0,setting:0}},Mt=2;function v(t){return new Promise(e=>setTimeout(e,t))}window.addEventListener("DOMContentLoaded",async()=>{ce(),ue(),le(),V("sound",0),V("speed",0)});var kt=async(t,e)=>{de.innerText=t+":  ",await X(e)},tt=x.animate([{opacity:1},{opacity:.2},{opacity:1}],{duration:1e3,iterations:1/0});tt.pause();var X=async t=>{if(t==null||t==""){x.style.backgroundImage="none",x.innerText="NA",x.removeAttribute("style"),tt.play();return}let e=await fetch(`./dist/spritesheets/${t}.png`);if(e.ok){tt.cancel(),x.innerText="";let n=await e.blob(),o=await createImageBitmap(n),s=o.height*Mt,a=(o.width-2)*Mt,d=a/2;x.style.height=s+"px",x.style.width=d+"px",x.style.backgroundSize=`${a}px ${s}px `,x.style.backgroundImage=`url('./dist/spritesheets/${t}.png')`,x.animate([{backgroundPosition:"0px 0px"},{backgroundPosition:`-${a}px 0px`}],{duration:700,easing:"steps(2)",iterations:1/0})}},le=()=>{Y.addEventListener("mouseenter",async()=>{Lt("fullscreen")}),Y.addEventListener("click",async()=>{try{await Y.requestFullscreen()}catch(t){await b("Unable to go fullscreen",t,!0)}})},ce=()=>{let t=document.getElementById("cable-1"),e=document.getElementById("port-1"),n=document.getElementById("wire-1"),o=document.getElementById("cable-2"),s=document.getElementById("port-2"),a=document.getElementById("wire-2");St(t,e,n),St(o,s,a)},jt=t=>{if(t==1){let e=document.getElementById("cable-1"),n=document.getElementById("port-1"),o=document.getElementById("wire-1");At(e,n,o)}else if(t==2){let e=document.getElementById("cable-2"),n=document.getElementById("port-2"),o=document.getElementById("wire-2");At(e,n,o)}},At=(t,e,n)=>{let o=e.getBoundingClientRect();t.style.top=o.top+"px",t.style.left=o.left+"px";let a=ae.getBoundingClientRect().bottom-o.bottom+200,d=o.width/4;n.style.height=a+"px",n.style.top=o.top+o.height/2+"px",n.style.left=o.left+o.width/4+"px",n.style.width=d+"px"},St=(t,e,n)=>{let o=e.getBoundingClientRect(),s=document.querySelector("body").getBoundingClientRect();t.style.position="absolute",t.style.width=o.width+"px",t.style.height=o.height+"px",t.style.left=o.left+"px",t.style.top=s.bottom+"px",n.style.position="absolute";let a=s.bottom-o.bottom+200,d=o.width/4;n.style.height=a+"px",n.style.top=s.bottom+o.height/2+"px",n.style.left=o.left+o.width/4+"px"},Kt=()=>{document.getElementById("joypad-cont").classList.add("active")},bt=()=>{Tt.classList.add("updating"),H.classList.add("active"),H.style.pointerEvents="all",Rt.innerText="Save Controls"},Et=()=>{Tt.classList.remove("updating"),H.classList.remove("active"),H.style.pointerEvents="none",Rt.innerText="Update Controls"},f={body:"#8B6F4E",bodyMid:"#7A5F3E",hi:"#C4A882",hiTop:"#D9C4A0",shadow:"#4A3522",shadowD:"#332614",rim:"#3B2A16",rimHi:"#6B5030",dot:"#1E1208",dotHi:"#3A2810"};function V(t,e){m[t].angle=e;let n=document.getElementById(t),o=n.getContext("2d"),s=n.width,a=n.height,d=Math.floor(s/2),r=Math.floor(a/2),i=Math.floor(s/2)-1,p=(l,c,k)=>{l<0||c<0||l>=s||c>=a||(o.fillStyle=k,o.fillRect(l,c,1,1))};for(let l=-i;l<=i;l++)for(let c=-i;c<=i;c++){let k=Math.sqrt(c*c+l*l);if(k>i+.5)continue;let M=d+c,q=r+l;if(k>i-1){c<0&&l<0?p(M,q,f.rimHi):p(M,q,f.rim);continue}let A=f.body;c<=-Math.floor(i*.1)&&l<=-Math.floor(i*.1)&&k<i*.75&&(A=f.hi),c<=-Math.floor(i*.3)&&l<=-Math.floor(i*.3)&&k<i*.45&&(A=f.hiTop),c>=Math.floor(i*.2)&&l>=Math.floor(i*.2)&&(A=f.bodyMid),c>=Math.floor(i*.45)&&l>=Math.floor(i*.45)&&(A=f.shadow),c>=Math.floor(i*.65)&&l>=Math.floor(i*.65)&&(A=f.shadowD),p(M,q,A)}let P=(e-90)*Math.PI/180,at=i-3,it=Math.round(d+Math.cos(P)*at),dt=Math.round(r+Math.sin(P)*at),lt=Math.max(Math.abs(it-d),Math.abs(dt-r));for(let l=1;l<=lt;l++){let c=l/lt,k=Math.round(d+(it-d)*c),M=Math.round(r+(dt-r)*c);Math.sqrt((k-d)**2+(M-r)**2)<i-1&&p(k,M,l<2?f.dotHi:f.dot)}p(d,r,f.dot)}async function h(t,e,n=400,o=20){let s=m[t].angle,a=e-s,d=n/o;for(let r=1;r<=o;r++){let i=r/o,p=i<.5?2*i*i:-1+(4-2*i)*i,P=s+a*p;V(t,P),await v(d)}V(t,e)}async function et(t,e=15){let n=m[t].angle;await h(t,n+e,80,6),await h(t,n-e,100,8),await h(t,n+e*.5,70,5),await h(t,n,80,6)}var re=async()=>{F.style.transition="all ease 1s",F.classList.remove("open"),await v(200)};function nt(t){let e=document.getElementById(t);e.style.filter="brightness(2)",e.style.transform="scale(0.85)",setTimeout(()=>{e.style.filter="brightness(1.3)",e.style.transform="scale(1.1)"},150),setTimeout(()=>{e.style.filter="",e.style.transform="scale(1)"},280)}var ot=async()=>{F.style.transition="all ease 1s",F.classList.add("open"),await await 200},Ut=async()=>{await v(800),overlay.style.opacity=0;let t=Q.querySelector(".rom-spine"),e=t.getBoundingClientRect(),n=t.cloneNode(!0),o=window.getComputedStyle(t);n.style.font=o.font,n.style.color=o.color,n.style.letterSpacing=o.letterSpacing,n.style.textTransform=o.textTransform,n.style.position="fixed",n.style.top=e.top+"px",n.style.left=e.left+"px",n.style.width=e.width+"px",n.style.height=slot.height+"px",n.style.transform="none",n.style.margin="0",n.style.zIndex="99",document.body.appendChild(n);let s=slot.getBoundingClientRect(),d=strip.getBoundingClientRect().left-s.left;n.style.transition="all 1s ease",n.style.top=s.top+"px",n.style.left=s.left+"px",n.style.width=d+"px",await v(1e3),n.style.transition="all 0.25s ease-in",n.style.transform=" scale(0.88)",n.style.transformOrigin="center top",await v(500),n.style.transition="all 0.15s ease-out",n.style.transform="scale(0.9)",me(ie),await v(500),await re(),pe()},me=async t=>{t.classList.remove("off"),await v(60),t.classList.add("off"),await v(80),t.classList.remove("off"),await v(150),t.classList.add("off"),await v(120),t.classList.remove("off")},pe=()=>{overlay.style.display="none",Q.classList.remove("rotated"),Q.classList.add("active")},ue=()=>{for(var o=document.getElementById("canvas-back"),s=o.getContext("2d"),a=16,d=14,r=14,i={hi:"#ffc040",md:"#b05000",dk:"#3a1400"},p=[0,0,0,0,0,0,0,"hi","hi","hi","hi","hi","hi",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","md",0,0,0,0,0,0,0,0,"dk","md","md","md","md","md",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"dk","dk","dk","dk","dk","hi",0],t=0;t<p.length;t++)if(p[t]){var e=Math.floor(t/d),n=t%d;s.fillStyle=i[p[t]],s.fillRect(n*a,e*a,a,a)}for(var o=document.getElementById("canvas-next"),s=o.getContext("2d"),a=16,d=14,r=14,i={hi:"#ffc040",md:"#b05000",dk:"#3a1400"},p=[0,"hi","hi","hi","hi","hi","hi",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"dk","md","md","md","md","hi",0,0,0,0,0,0,0,0,0,"md","md","md","md","md","hi",0,0,0,0,0,0,0,0,"md","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","md","md","md","md","dk",0,0,0,0,0,0,0,"hi","dk","dk","dk","dk","dk",0,0,0,0,0,0,0],t=0;t<p.length;t++)if(p[t]){var e=Math.floor(t/d),n=t%d;s.fillStyle=i[p[t]],s.fillRect(n*a,e*a,a,a)}};var Pt=async()=>{let t=document.getElementById("items-container"),e=null;for(let n=0;n<100;n++){let o=document.createElement("div"),s=new Image;s.src="./rom_images/tets.png",o.appendChild(s),o.classList.add("tape-item"),t.appendChild(o),n==99&&(e=o)}e.scrollIntoView({behavior:"smooth",inline:"nearest",block:"center"}),ye()},ye=()=>{console.log("hello");let t=new AudioContext,e=t.createOscillator(),n=t.createGain();e.connect(n),n.connect(t.destination),e.frequency.value=500,n.gain.setValueAtTime(.9,t.currentTime),n.gain.exponentialRampToValueAtTime(.001,t.currentTime+.03),e.start(),e.stop(t.currentTime+.03)};var L=3,T=document.getElementById("middle"),ge=document.getElementById("left"),fe=document.getElementById("right"),Xe=document.getElementById("slot"),S=document.getElementById("overlay"),Ye=document.getElementById("strip"),st=document.getElementById("cartridge"),g=[],he=document.getElementById("power"),we=document.getElementById("start"),B=document.getElementById("pause"),R="",N=!1,xe=[ge,T,fe];document.addEventListener("DOMContentLoaded",async()=>{await Pt(),It(),await ke(),await Ee(),await be(),await w(500),W()});var ve=async()=>{m.sound.setting=4,m.angle=180,await h("sound",180),await h("speed",180)},ke=async()=>{let t=document.getElementById("sound"),e=[0,45,90,135,180,225,270,315,360];t.addEventListener("click",async()=>{if(R==""||N==!1){await et("sound",45),await h("sound",0);return}m.sound.setting=m.sound.setting+1,m.sound.setting>=e.length-1&&(m.sound.setting=0);let s=e[m.sound.setting];s==0?Z(0):Z(s/180),await h("sound",s)});let n=document.getElementById("speed"),o=[45,90,135,180,225,270,315,360];n.addEventListener("click",async()=>{if(R==""||N==!1){await et("speed",45),await h("speed",0);return}m.speed.setting=m.speed.setting+1,m.speed.setting>=o.length-1&&(m.speed.setting=0);let s=o[m.speed.setting];wt(1e3*s/180),await h("speed",s)})},be=async()=>{let t=await fetch("./games");t.ok&&(await t.json()).forEach(n=>{g.push(n)})};function W(){let t=g.slice(L-1,L+2);if(L==0&&(t=[g.at(-1),g[0],g[1]]),L==g.length-1&&(t=[g.at(-2),g.at(-1),g[0]]),t.length==3)for(let e=0;e<3;e++){let n=t[e],o=xe[e];o.id=n.ID;let s=o.querySelector("span"),a=o.querySelector("img");a.src="/rom_images/"+n.ID+".webp";let d=o.querySelector(".rom-spine");d.innerText=n.name,s.innerText=n.name}}var Ee=async()=>{B.addEventListener("click",async()=>{B.classList.contains("paused")?(B.classList.remove("paused"),B.classList.add("unpaused"),B.innerHTML=`   <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5" stroke-linecap="square" xmlns="http://www.w3.org/2000/svg">
+// static/scripts/driver.js
+var worker = new Worker(new URL("./emuWorker.js", import.meta.url));
+var fBytes = null;
+var inputBuf = new SharedArrayBuffer(4);
+var inputState = new Int32Array(inputBuf);
+var canvas = document.getElementById("screen");
+var ctx = canvas.getContext("2d");
+var imageData = ctx.createImageData(256, 240);
+var speedBuf = new SharedArrayBuffer(4);
+var speedNum = new Int32Array(speedBuf);
+var audioBufS = null;
+var control = null;
+Atomics.store(speedNum, 0, 1e3);
+var state = {
+  romRunning: false
+};
+var audioCtx = null;
+var gain = null;
+var startTime = null;
+window.addEventListener("keydown", async (e) => {
+  if (e.code == "KeyL") {
+    startTime = performance.now();
+    await getSnapList();
+  } else if (e.code == "KeyP") {
+    console.log("hello");
+    await loadSnap(0);
+  }
+});
+var setUpAudio = async (audioBufS2, SIZE) => {
+  if (audioCtx !== null && gain !== null) {
+    return;
+  }
+  audioCtx = new AudioContext({ sampleRate: 44100 });
+  await audioCtx.audioWorklet.addModule(new URL("./driverWorklet.js", import.meta.url));
+  const node = new AudioWorkletNode(audioCtx, "apu-proc", {
+    outputChannelCount: [1]
+  });
+  gain = audioCtx.createGain();
+  node.port.postMessage({ audioBufS: audioBufS2, SIZE });
+  node.connect(gain);
+  gain.connect(audioCtx.destination);
+};
+var PauseGame = async () => {
+  if (audioCtx == null) {
+    return;
+  }
+  await audioCtx.suspend();
+  Atomics.store(control, 2, 2);
+  Atomics.notify(control, 2);
+};
+var ResumeGame = async () => {
+  console.log("playing");
+  if (audioCtx == null) {
+    return;
+  }
+  await audioCtx.resume();
+  Atomics.store(control, 2, 1);
+  Atomics.notify(control, 2);
+  worker.postMessage({ "type": "pump" });
+};
+var getSnapList = async () => {
+  await PauseGame();
+  worker.postMessage({ type: "getsnap" });
+};
+var loadSnap = async (index) => {
+  await PauseGame();
+  worker.postMessage({ type: "loadSnapshot", index });
+  await wait(100);
+  await ResumeGame();
+};
+var updateVolume = (intensity) => {
+  if (gain !== null) {
+    gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(intensity, audioCtx.currentTime + 1);
+  }
+};
+var initConsole = () => {
+  worker.postMessage({ type: "init", speedBuf, inputBuf });
+};
+worker.onmessage = async ({ data }) => {
+  switch (data.type) {
+    case "init":
+      fBytes = new Uint8Array(data.FBuf);
+      audioBufS = data.audioBufS;
+      control = new Int32Array(audioBufS, data.SIZE * 4, 3);
+      await setUpAudio(data.audioBufS, data.SIZE);
+      break;
+    case "wasm":
+      createModal("Console Ready!!", "Press the power button to start the console");
+      worker.postMessage({ type: "init", inputBuf, speedBuf });
+      break;
+    case "snaps":
+      console.log(data);
+      console.log(performance.now() - startTime);
+      await ResumeGame();
+      break;
+    case "frameUp":
+      imageData.data.set(fBytes);
+      ctx.putImageData(imageData, 0, 0);
+      break;
+  }
+};
+var ControlMap = {
+  "joypad-A": 0,
+  "joypad-B": 1,
+  "joypad-select": 2,
+  "joypad-start": 3,
+  "dpad-up": 4,
+  "dpad-down": 5,
+  "dpad-left": 6,
+  "dpad-right": 7
+};
+var loadRom = (game) => {
+  Atomics.store(control, 2, 1);
+  Atomics.notify(control, 2);
+  audioCtx.resume();
+  worker.postMessage({ type: "loadRom", rom: game });
+};
+var UpdateSpeed = (speed) => {
+  Atomics.store(speedNum, 0, speed);
+};
+var UpdatePress = (btn) => {
+  Atomics.or(inputState, 0, 1 << ControlMap[btn]);
+};
+var UpdateRelease = (btn) => {
+  Atomics.and(inputState, 0, ~(1 << ControlMap[btn]));
+};
+
+// static/scripts/joypad.js
+var updateBtn = document.getElementById("control-update");
+var buttons = document.querySelectorAll(".joypad-button");
+var UpdatingKey = "";
+var updatingControls = false;
+var keyMap = {
+  "KeyZ": "joypad-A",
+  "KeyX": "joypad-B",
+  "ShiftLeft": "joypad-select",
+  "Enter": "joypad-start",
+  "ArrowUp": "dpad-up",
+  "ArrowDown": "dpad-down",
+  "ArrowLeft": "dpad-left",
+  "ArrowRight": "dpad-right"
+};
+var neededControls = ["joypad-A", "joypad-B", "joypad-select", "joypad-start", "dpad-up", "dpad-down", "dpad-left", "dpad-right"];
+document.addEventListener("DOMContentLoaded", () => {
+  updateBtn.addEventListener("click", () => {
+    if (updatingControls) {
+      closeControlPanel();
+      removeUpdateListeners();
+    } else {
+      openControlPanel();
+      handleUpdateListeners();
+    }
+    updatingControls = !updatingControls;
+    UpdatingKey = "";
+  });
+});
+var controller = null;
+var handleUpdateListeners = () => {
+  controller = new AbortController();
+  const { signal } = controller;
+  buttons.forEach((element) => {
+    element.addEventListener("mousedown", async (e) => {
+      console.log(element.id, getKeyFromAction(element.id));
+      let x = getKeyFromAction(element.id);
+      console.log(x);
+      addUpdatePanel(element.id, getKeyFromAction(element.id));
+      UpdatingKey = element.id;
+    }, { signal });
+  });
+};
+var getKeyFromAction = (action) => {
+  let keys = Object.keys(keyMap);
+  let res = "";
+  keys.forEach((key) => {
+    if (keyMap[key] == action) {
+      res = key;
+    }
+  });
+  return res;
+};
+var removeUpdateListeners = () => {
+  if (controller) {
+    controller.abort();
+  }
+};
+var updateBinding = (action, newKey) => {
+  let old = structuredClone(keyMap);
+  let Keys = Object.keys(keyMap);
+  Keys.forEach((a) => {
+    if (keyMap[a] == action) {
+      delete keyMap[a];
+    }
+  });
+  keyMap[newKey] = action;
+  checkForMissingKeys();
+};
+var checkForMissingKeys = () => {
+  let keys = Object.keys(keyMap);
+  let needed = structuredClone(neededControls);
+  let maped = [];
+  keys.forEach((key) => {
+    maped.push(keyMap[key]);
+  });
+  needed.forEach((action) => {
+    let x = document.getElementById(action);
+    if (maped.includes(action)) {
+      if (x.classList.contains("key-missing")) {
+        x.classList.remove("key-missing");
+      }
+    } else {
+      x.classList.add("key-missing");
+    }
+  });
+};
+window.addEventListener("keydown", (e) => {
+  if (UpdatingKey !== "" && updatingControls) {
+    updateKey(e.code);
+    updateBinding(UpdatingKey, e.code);
+  }
+  if (keyMap[e.code] !== void 0 && state.romRunning) {
+    UpdatePress(keyMap[e.code]);
+    let btn = document.getElementById(keyMap[e.code]);
+    PressBtn(btn);
+  }
+});
+window.addEventListener("keyup", (e) => {
+  if (keyMap[e.code] !== void 0 && state.romRunning) {
+    UpdateRelease(keyMap[e.code]);
+    let btn = document.getElementById(keyMap[e.code]);
+    ReleaseBtn(btn);
+  }
+});
+var PressBtn = async (button) => {
+  button.classList.add("active");
+};
+var ReleaseBtn = async (button) => {
+  button.classList.remove("active");
+};
+function wait(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+// static/scripts/modal.js
+var createModal = async (head, body2, error = false, fleeting = true) => {
+  let modalList = document.querySelector(".moodle-bar");
+  const modal = document.createElement("div");
+  modal.classList.add("modal", "modal-corners");
+  const title = document.createElement("h1");
+  if (error) {
+    title.classList.add("error");
+  } else {
+    title.classList.add("info");
+  }
+  title.textContent = head;
+  modal.appendChild(title);
+  const para = document.createElement("p");
+  para.classList.add("modal-text");
+  para.textContent = body2;
+  modal.appendChild(para);
+  modalList.appendChild(modal);
+  if (fleeting) {
+    setUpForFailure(modal);
+  }
+  activateModal(modal);
+  return modal;
+};
+var activateModal = (modal) => {
+  modal.classList.add("active");
+};
+var deactivateModal = async (modal) => {
+  modal.classList.remove("active");
+  modal.classList.add("inactive");
+  await wait(400);
+  modal.remove();
+};
+var setUpForFailure = async (modal) => {
+  await wait(3500);
+  if (modal.classList.contains("active")) {
+    await deactivateModal(modal);
+  } else {
+    console.log("bro alr failed");
+  }
+};
+
+// static/scripts/tooltips.js
+var activateTip = (tip) => {
+  if (TipsState[tip]["state"]) {
+    TipsState[tip]["function"]();
+    TipsState[tip]["state"] = false;
+  }
+};
+var startRandomTipEngine = () => {
+  scheduleTip();
+};
+var scheduleTip = () => {
+  let delay = Math.random() * (6e4 - 1e4) + 1e4;
+  setTimeout(() => {
+    let tip = tips[Math.floor(Math.random() * tips.length)];
+    TipsState[tip]["function"]();
+    scheduleTip();
+  }, delay);
+};
+var tip_fullscreen = () => {
+  createModal("Go big or go home", "click on the tv screen to go fullscreen mode (resolution not garunteed)");
+};
+var tip_knobs = () => {
+  createModal("Play with the dials!!", "Adjust the dials on the television to control the sound and speed levels");
+};
+var tip_swap = () => {
+  createModal("You dont need to reload(prolly)", "Click the cartridge slot to change games while the console is running");
+};
+var tip_feedback = () => {
+  createModal("Have suggestions or found errors?", "Dm emptiedfull on slack please");
+};
+var TipsState = {
+  "fullscreen": { "state": true, "function": tip_fullscreen },
+  "knobs": { "state": true, "function": tip_knobs },
+  "hotswap": { "state": true, "function": tip_swap },
+  "feedback": { "state": true, "function": tip_feedback },
+  "controls": {}
+};
+var tips = Object.keys(TipsState);
+
+// static/scripts/graphics.js
+var body = document.querySelector("body");
+var middle = document.getElementById("middle");
+var romled = document.getElementById("rom");
+var cap = document.getElementById("cartridge");
+var screen = document.getElementById("screen");
+var control_cont = document.getElementById("joypad-cont");
+var panel = document.getElementById("update-panel");
+var joypad = document.getElementById("joypad");
+var updateBtn2 = document.getElementById("control-update");
+var keyDisplay = document.getElementById("key-display");
+var keyText = document.getElementById("show-text");
+var knobSettings = { "speed": { "angle": 0, "setting": 0 }, "sound": { "angle": 0, "setting": 0 } };
+var scaleFactor = 2;
+function wait2(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+window.addEventListener("DOMContentLoaded", async () => {
+  initCables();
+  drawNav();
+  initCanvas();
+  drawKnob("sound", 0);
+  drawKnob("speed", 0);
+});
+var addUpdatePanel = async (action, key) => {
+  keyText.innerText = action + ":  ";
+  await updateKey(key);
+};
+var flashAnim = keyDisplay.animate([
+  { opacity: 1 },
+  { opacity: 0.2 },
+  { opacity: 1 }
+], {
+  duration: 1e3,
+  iterations: Infinity
+});
+flashAnim.pause();
+var updateKey = async (key) => {
+  if (key == void 0 || key == "") {
+    keyDisplay.style.backgroundImage = "none";
+    keyDisplay.innerText = "NA";
+    keyDisplay.removeAttribute("style");
+    flashAnim.play();
+    return;
+  }
+  const res = await fetch(`./dist/spritesheets/${key}.png`);
+  if (res.ok) {
+    flashAnim.cancel();
+    keyDisplay.innerText = "";
+    const blob = await res.blob();
+    const qwn = await createImageBitmap(blob);
+    let h = qwn.height * scaleFactor;
+    let wFull = (qwn.width - 2) * scaleFactor;
+    let w = wFull / 2;
+    keyDisplay.style.height = h + "px";
+    keyDisplay.style.width = w + "px";
+    keyDisplay.style.backgroundSize = `${wFull}px ${h}px `;
+    keyDisplay.style.backgroundImage = `url('./dist/spritesheets/${key}.png')`;
+    keyDisplay.animate([
+      { backgroundPosition: "0px 0px" },
+      { backgroundPosition: `-${wFull}px 0px` }
+    ], {
+      duration: 700,
+      easing: "steps(2)",
+      iterations: Infinity
+    });
+  }
+};
+var initCanvas = () => {
+  screen.addEventListener("mouseenter", async () => {
+    activateTip("fullscreen");
+  });
+  screen.addEventListener("click", async () => {
+    try {
+      await screen.requestFullscreen();
+    } catch (e) {
+      await createModal("Unable to go fullscreen", e, true);
+    }
+  });
+};
+var initCables = () => {
+  let cable1 = document.getElementById("cable-1");
+  let port1 = document.getElementById("port-1");
+  let wire1 = document.getElementById("wire-1");
+  let cable2 = document.getElementById("cable-2");
+  let port2 = document.getElementById("port-2");
+  let wire2 = document.getElementById("wire-2");
+  startCable(cable1, port1, wire1);
+  startCable(cable2, port2, wire2);
+};
+var alignCable = (cableID) => {
+  if (cableID == 1) {
+    let cable1 = document.getElementById("cable-1");
+    let port1 = document.getElementById("port-1");
+    let wire1 = document.getElementById("wire-1");
+    alignCables(cable1, port1, wire1);
+  } else if (cableID == 2) {
+    let cable2 = document.getElementById("cable-2");
+    let port2 = document.getElementById("port-2");
+    let wire2 = document.getElementById("wire-2");
+    alignCables(cable2, port2, wire2);
+  }
+};
+var alignCables = (cable, port, wire) => {
+  let portBox = port.getBoundingClientRect();
+  cable.style.top = portBox.top + "px";
+  cable.style.left = portBox.left + "px";
+  let bodyBox = body.getBoundingClientRect();
+  let dy = bodyBox.bottom - portBox.bottom + 200;
+  let dx = portBox.width / 4;
+  wire.style.height = dy + "px";
+  wire.style.top = portBox.top + portBox.height / 2 + "px";
+  wire.style.left = portBox.left + portBox.width / 4 + "px";
+  wire.style.width = dx + "px";
+};
+var startCable = (cable, port, wire) => {
+  let portBox = port.getBoundingClientRect();
+  let bodyBox = document.querySelector("body").getBoundingClientRect();
+  cable.style.position = "absolute";
+  cable.style.width = portBox.width + "px";
+  cable.style.height = portBox.height + "px";
+  cable.style.left = portBox.left + "px";
+  cable.style.top = bodyBox.bottom + "px";
+  wire.style.position = "absolute";
+  let dy = bodyBox.bottom - portBox.bottom + 200;
+  let dx = portBox.width / 4;
+  wire.style.height = dy + "px";
+  wire.style.top = bodyBox.bottom + portBox.height / 2 + "px";
+  wire.style.left = portBox.left + portBox.width / 4 + "px";
+};
+var activateJoypad = () => {
+  let cont = document.getElementById("joypad-cont");
+  cont.classList.add("active");
+};
+var openControlPanel = () => {
+  control_cont.classList.add("updating");
+  panel.classList.add("active");
+  panel.style.pointerEvents = "all";
+  updateBtn2.innerText = "Save Controls";
+};
+var closeControlPanel = () => {
+  control_cont.classList.remove("updating");
+  panel.classList.remove("active");
+  panel.style.pointerEvents = "none";
+  updateBtn2.innerText = "Update Controls";
+};
+var C = {
+  //this color pallete was ai generated
+  body: "#8B6F4E",
+  bodyMid: "#7A5F3E",
+  hi: "#C4A882",
+  hiTop: "#D9C4A0",
+  shadow: "#4A3522",
+  shadowD: "#332614",
+  rim: "#3B2A16",
+  rimHi: "#6B5030",
+  dot: "#1E1208",
+  dotHi: "#3A2810"
+};
+function drawKnob(id, angleDeg) {
+  knobSettings[id].angle = angleDeg;
+  const canvas2 = document.getElementById(id);
+  const ctx3 = canvas2.getContext("2d");
+  const width = canvas2.width;
+  const height = canvas2.height;
+  const cx = Math.floor(width / 2);
+  const cy = Math.floor(height / 2);
+  const r = Math.floor(width / 2) - 1;
+  const fill = (x, y, col) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    ctx3.fillStyle = col;
+    ctx3.fillRect(x, y, 1, 1);
+  };
+  for (let py = -r; py <= r; py++) {
+    for (let px = -r; px <= r; px++) {
+      const dist = Math.sqrt(px * px + py * py);
+      if (dist > r + 0.5) continue;
+      const x = cx + px;
+      const y = cy + py;
+      if (dist > r - 1) {
+        if (px < 0 && py < 0) {
+          fill(x, y, C.rimHi);
+        } else {
+          fill(x, y, C.rim);
+        }
+        continue;
+      }
+      let col = C.body;
+      if (px <= -Math.floor(r * 0.1) && py <= -Math.floor(r * 0.1) && dist < r * 0.75) {
+        col = C.hi;
+      }
+      if (px <= -Math.floor(r * 0.3) && py <= -Math.floor(r * 0.3) && dist < r * 0.45) {
+        col = C.hiTop;
+      }
+      if (px >= Math.floor(r * 0.2) && py >= Math.floor(r * 0.2)) {
+        col = C.bodyMid;
+      }
+      if (px >= Math.floor(r * 0.45) && py >= Math.floor(r * 0.45)) {
+        col = C.shadow;
+      }
+      if (px >= Math.floor(r * 0.65) && py >= Math.floor(r * 0.65)) {
+        col = C.shadowD;
+      }
+      fill(x, y, col);
+    }
+  }
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  const len = r - 3;
+  const ex = Math.round(cx + Math.cos(rad) * len);
+  const ey = Math.round(cy + Math.sin(rad) * len);
+  const steps = Math.max(Math.abs(ex - cx), Math.abs(ey - cy));
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const px = Math.round(cx + (ex - cx) * t);
+    const py = Math.round(cy + (ey - cy) * t);
+    const d = Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
+    if (d < r - 1) fill(px, py, i < 2 ? C.dotHi : C.dot);
+  }
+  fill(cx, cy, C.dot);
+}
+async function turnKnob(id, targetAngle, durationMs = 400, steps = 20) {
+  const startAngle = knobSettings[id].angle;
+  const diff = targetAngle - startAngle;
+  const stepTime = durationMs / steps;
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    const angle = startAngle + diff * eased;
+    drawKnob(id, angle);
+    await wait2(stepTime);
+  }
+  drawKnob(id, targetAngle);
+}
+async function wiggleKnob(id, intensity = 15) {
+  const current = knobSettings[id].angle;
+  await turnKnob(id, current + intensity, 80, 6);
+  await turnKnob(id, current - intensity, 100, 8);
+  await turnKnob(id, current + intensity * 0.5, 70, 5);
+  await turnKnob(id, current, 80, 6);
+}
+var closeCap = async () => {
+  cap.style.transition = "all ease 1s";
+  cap.classList.remove("open");
+  await wait2(200);
+};
+function pushbtn(canvasId) {
+  const c = document.getElementById(canvasId);
+  c.style.filter = "brightness(2)";
+  c.style.transform = "scale(0.85)";
+  setTimeout(() => {
+    c.style.filter = "brightness(1.3)";
+    c.style.transform = "scale(1.1)";
+  }, 150);
+  setTimeout(() => {
+    c.style.filter = "";
+    c.style.transform = "scale(1)";
+  }, 280);
+}
+var openCap = async () => {
+  cap.style.transition = "all ease 1s";
+  cap.classList.add("open");
+  await await 200;
+};
+var slotCart = async () => {
+  await wait2(800);
+  overlay.style.opacity = 0;
+  const spine = middle.querySelector(".rom-spine");
+  const spineRect = spine.getBoundingClientRect();
+  const clone = spine.cloneNode(true);
+  const computedStyle = window.getComputedStyle(spine);
+  clone.style.font = computedStyle.font;
+  clone.style.color = computedStyle.color;
+  clone.style.letterSpacing = computedStyle.letterSpacing;
+  clone.style.textTransform = computedStyle.textTransform;
+  clone.style.position = "fixed";
+  clone.style.top = spineRect.top + "px";
+  clone.style.left = spineRect.left + "px";
+  clone.style.width = spineRect.width + "px";
+  clone.style.height = slot.height + "px";
+  clone.style.transform = "none";
+  clone.style.margin = "0";
+  clone.style.zIndex = "99";
+  document.body.appendChild(clone);
+  const slotRect = slot.getBoundingClientRect();
+  const stripRect = strip.getBoundingClientRect();
+  let dy = stripRect.left - slotRect.left;
+  clone.style.transition = "all 1s ease";
+  clone.style.top = slotRect.top + "px";
+  clone.style.left = slotRect.left + "px";
+  clone.style.width = dy + "px";
+  await wait2(1e3);
+  clone.style.transition = "all 0.25s ease-in";
+  clone.style.transform = " scale(0.88)";
+  clone.style.transformOrigin = "center top";
+  await wait2(500);
+  clone.style.transition = "all 0.15s ease-out";
+  clone.style.transform = "scale(0.9)";
+  flickerLed(romled);
+  await wait2(500);
+  await closeCap();
+  cleapUpOverlay();
+};
+var flickerLed = async (led) => {
+  led.classList.remove("off");
+  await wait2(60);
+  led.classList.add("off");
+  await wait2(80);
+  led.classList.remove("off");
+  await wait2(150);
+  led.classList.add("off");
+  await wait2(120);
+  led.classList.remove("off");
+};
+var cleapUpOverlay = () => {
+  overlay.style.display = "none";
+  middle.classList.remove("rotated");
+  middle.classList.add("active");
+};
+var drawNav = () => {
+  var c = document.getElementById("canvas-back");
+  var ctx3 = c.getContext("2d");
+  var PS = 16, COLS = 14, ROWS = 14;
+  var T = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
+  var G = [0, 0, 0, 0, 0, 0, 0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "dk", "dk", "dk", "dk", "hi", 0];
+  for (var i = 0; i < G.length; i++) {
+    if (!G[i]) continue;
+    var r = Math.floor(i / COLS), col = i % COLS;
+    ctx3.fillStyle = T[G[i]];
+    ctx3.fillRect(col * PS, r * PS, PS, PS);
+  }
+  var c = document.getElementById("canvas-next");
+  var ctx3 = c.getContext("2d");
+  var PS = 16, COLS = 14, ROWS = 14;
+  var T = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
+  var G = [0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "dk", "dk", "dk", "dk", "dk", 0, 0, 0, 0, 0, 0, 0];
+  for (var i = 0; i < G.length; i++) {
+    if (!G[i]) continue;
+    var r = Math.floor(i / COLS), col = i % COLS;
+    ctx3.fillStyle = T[G[i]];
+    ctx3.fillRect(col * PS, r * PS, PS, PS);
+  }
+};
+
+// static/scripts/rewind.js
+var track = document.getElementById("items-containers");
+var preview_img = document.getElementById("preview-img");
+var rewind_overlay = document.getElementById("rewind-overlay");
+var clicker = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        clickSound();
+      }
+    });
+  },
+  {
+    root: track,
+    rootMargin: "0px -45% 0px -45%",
+    threshold: 0.1
+  }
+);
+var ctx2 = null;
+var clickSound = () => {
+  if (ctx2 == null) return;
+  const osc = ctx2.createOscillator();
+  const gain2 = ctx2.createGain();
+  osc.connect(gain2);
+  gain2.connect(ctx2.destination);
+  osc.frequency.value = 900;
+  gain2.gain.setValueAtTime(0.4, ctx2.currentTime);
+  gain2.gain.exponentialRampToValueAtTime(1e-3, ctx2.currentTime + 0.02);
+  osc.start();
+  osc.stop(ctx2.currentTime + 0.02);
+};
+
+// static/scripts/nes.js
+var currentIndex = 3;
+var middle2 = document.getElementById("middle");
+var left = document.getElementById("left");
+var right = document.getElementById("right");
+var slot2 = document.getElementById("slot");
+var overlay2 = document.getElementById("overlay");
+var strip2 = document.getElementById("strip");
+var cap2 = document.getElementById("cartridge");
+var GamesArray = [];
+var powerLed = document.getElementById("power");
+var powerBtn = document.getElementById("start");
+var pauseBtn = document.getElementById("pause");
+var romLoaded = "";
+var power = false;
+var roms = [left, middle2, right];
+document.addEventListener("DOMContentLoaded", async () => {
+  startRandomTipEngine();
+  await setUpKnobs();
+  await setUpButtons();
+  await initGames();
+  await wait(500);
+  updateRom();
+});
+var BeginKnobs = async () => {
+  knobSettings["sound"].setting = 4;
+  knobSettings["angle"] = 180;
+  await turnKnob("sound", 180);
+  await turnKnob("speed", 180);
+};
+var setUpKnobs = async () => {
+  const soundKnob = document.getElementById("sound");
+  const soundIncrements = [0, 45, 90, 135, 180, 225, 270, 315, 360];
+  soundKnob.addEventListener("click", async () => {
+    if (romLoaded == "" || power == false) {
+      await wiggleKnob("sound", 45);
+      await turnKnob("sound", 0);
+      return;
+    }
+    knobSettings["sound"].setting = knobSettings["sound"].setting + 1;
+    if (knobSettings["sound"].setting >= soundIncrements.length - 1) {
+      knobSettings["sound"].setting = 0;
+    }
+    let targetAngle = soundIncrements[knobSettings["sound"].setting];
+    if (targetAngle == 0) {
+      updateVolume(0);
+    } else {
+      updateVolume(targetAngle / 180);
+    }
+    await turnKnob("sound", targetAngle);
+  });
+  const speedKnob = document.getElementById("speed");
+  const speedIncrements = [45, 90, 135, 180, 225, 270, 315, 360];
+  speedKnob.addEventListener("click", async () => {
+    if (romLoaded == "" || power == false) {
+      await wiggleKnob("speed", 45);
+      await turnKnob("speed", 0);
+      return;
+    }
+    knobSettings["speed"].setting = knobSettings["speed"].setting + 1;
+    if (knobSettings["speed"].setting >= speedIncrements.length - 1) {
+      knobSettings["speed"].setting = 0;
+    }
+    let targetAngle = speedIncrements[knobSettings["speed"].setting];
+    UpdateSpeed(1e3 * targetAngle / 180);
+    await turnKnob("speed", targetAngle);
+  });
+};
+var initGames = async () => {
+  let response = await fetch("./games");
+  if (response.ok) {
+    let data = await response.json();
+    data.forEach((element) => {
+      GamesArray.push(element);
+    });
+  }
+};
+function updateRom() {
+  let romSelection = GamesArray.slice(currentIndex - 1, currentIndex + 2);
+  if (currentIndex == 0) {
+    romSelection = [GamesArray.at(-1), GamesArray[0], GamesArray[1]];
+  }
+  if (currentIndex == GamesArray.length - 1) {
+    romSelection = [GamesArray.at(-2), GamesArray.at(-1), GamesArray[0]];
+  }
+  if (romSelection.length == 3) {
+    for (let i = 0; i < 3; i++) {
+      const element = romSelection[i];
+      const rom = roms[i];
+      rom.id = element.ID;
+      const rom_title = rom.querySelector("span");
+      const img = rom.querySelector("img");
+      img.src = "/rom_images/" + element.ID + ".webp";
+      const spine = rom.querySelector(".rom-spine");
+      spine.innerText = element.name;
+      rom_title.innerText = element.name;
+    }
+  }
+}
+var setUpButtons = async () => {
+  pauseBtn.addEventListener("click", async () => {
+    if (pauseBtn.classList.contains("paused")) {
+      pauseBtn.classList.remove("paused");
+      pauseBtn.classList.add("unpaused");
+      pauseBtn.innerHTML = `   <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5" stroke-linecap="square" xmlns="http://www.w3.org/2000/svg">
                                      <rect x="4" y="3" width="4" height="18"/>
-                                     <rect x="16" y="3" width="4" height="18"/></svg>`,await O()):(B.classList.remove("unpaused"),B.classList.add("paused"),B.innerHTML=` <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5"
+                                     <rect x="16" y="3" width="4" height="18"/></svg>`;
+      await ResumeGame();
+    } else {
+      pauseBtn.classList.remove("unpaused");
+      pauseBtn.classList.add("paused");
+      pauseBtn.innerHTML = ` <svg viewBox="0 0 24 24" fill="#5a3a1a" stroke="#5a3a1a" stroke-width="1.5"
                                     stroke-linecap="square">
                                     <polygon points="6,3 20,12 6,21" />
-                                </svg>`,await K())}),we.addEventListener("click",async()=>{if(N=!0,R!=""){qt(R);return}he.classList.remove("off"),await ot(st),await w(200),S.style.display="flex",S.style.transition="all ease 1",S.style.opacity=1}),document.getElementById("nav-back").addEventListener("click",async()=>{Ot(-1),nt("canvas-back")}),document.getElementById("nav-front").addEventListener("click",async()=>{Ot(1),nt("canvas-next")}),T.addEventListener("click",async()=>{T.classList.remove("active"),await w(50);let n=T.querySelector("span");n.style.display="none",T.classList.add("rotated"),R=T.id,await Ut(),N&&(Kt(),await qt(R))}),st.addEventListener("click",async()=>{await K(),await ot(st),await w(200),S.style.display="flex",S.style.transition="all ease 1",S.style.opacity=1})};async function qt(t){gt(),await ht(t),await ve(),jt(1),j.romRunning=!0}function Ot(t){let e=L+t;if(e<0){L=g.length-1,W();return}if(e>=g.length){L=e-g.length,W();return}L=e,W()}
+                                </svg>`;
+      await PauseGame();
+    }
+  });
+  powerBtn.addEventListener("click", async () => {
+    power = true;
+    if (romLoaded != "") {
+      begin(romLoaded);
+      return;
+    }
+    powerLed.classList.remove("off");
+    await openCap(cap2);
+    await wait(200);
+    overlay2.style.display = "flex";
+    overlay2.style.transition = "all ease 1";
+    overlay2.style.opacity = 1;
+  });
+  const nav_back = document.getElementById("nav-back");
+  nav_back.addEventListener("click", async () => {
+    move(-1);
+    pushbtn("canvas-back");
+  });
+  const nav_front = document.getElementById("nav-front");
+  nav_front.addEventListener("click", async () => {
+    move(1);
+    pushbtn("canvas-next");
+  });
+  middle2.addEventListener("click", async () => {
+    middle2.classList.remove("active");
+    await wait(50);
+    let span = middle2.querySelector("span");
+    span.style.display = "none";
+    middle2.classList.add("rotated");
+    romLoaded = middle2.id;
+    await slotCart();
+    if (power) {
+      activateJoypad();
+      await begin(romLoaded);
+    }
+  });
+  cap2.addEventListener("click", async () => {
+    await PauseGame();
+    await openCap(cap2);
+    await wait(200);
+    overlay2.style.display = "flex";
+    overlay2.style.transition = "all ease 1";
+    overlay2.style.opacity = 1;
+  });
+};
+async function begin(game) {
+  initConsole();
+  await loadRom(game);
+  await BeginKnobs();
+  alignCable(1);
+  state.romRunning = true;
+}
+function move(direction) {
+  let newIdx = currentIndex + direction;
+  if (newIdx < 0) {
+    currentIndex = GamesArray.length - 1;
+    updateRom();
+    return;
+  }
+  if (newIdx >= GamesArray.length) {
+    currentIndex = newIdx - GamesArray.length;
+    updateRom();
+    return;
+  }
+  currentIndex = newIdx;
+  updateRom();
+}

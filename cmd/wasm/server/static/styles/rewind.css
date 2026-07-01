@@ -8,6 +8,8 @@
     left: 0;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 3rem;
 }
 
 .rewind-container{
@@ -92,7 +94,7 @@
     height: 100%;
     width: 100%;
     object-fit: fill;
-    opacity: 0.5;
+    opacity: 0.4;
 }
 
 .tape-item img:hover{
@@ -101,7 +103,29 @@
 
 .tape-item:hover{
     background-color: red;
-    transform: scale(1.2);
-    opacity: 1;
+    transform: scale(1.05);
+    opacity: 0.8;
     z-index: 20000;
 }
+
+.rewind-preview{
+    width: 50%;
+    aspect-ratio: 1.2/1;
+    background-color: rebeccapurple;
+}
+
+#preview-img{
+    height: 100%;
+    width: 100%;
+    object-fit: fill;
+}
+
+.tape-active{
+    opacity: 1 !important; 
+    transform: scale(1.2) !important;
+}
+
+.tape-active img{
+     opacity: 1 !important; 
+}
+

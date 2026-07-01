@@ -25,7 +25,7 @@ func main() {
 }
 
 func startFrameDriver() {
-	fmt.Println("new version loaded:", 3)
+	fmt.Println("new version loaded:", 30)
 	var emu *Core.Console
 	var jsScreen js.Value
 
@@ -81,7 +81,9 @@ func startFrameDriver() {
 	}))
 
 	js.Global().Set("getSnapshotList", js.FuncOf(func(this js.Value, args []js.Value) any {
-		ptr := makeSnapList(emu.Snapshots)
+		ptr := makeSnapshotList(emu.Snapshots)
+
+		fmt.Println("length:", emu.Snapshots.GetLength())
 
 		return ptr
 
@@ -130,7 +132,8 @@ func startFrameDriver() {
 		if emu.Ppu.ScreenChanged {
 			js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
 
-			if emu.Ppu.Frame%20 == 0 {
+			if emu.Ppu.Frame%10 == 0 {
+
 				emu.TakeSnapshot()
 			}
 
@@ -148,29 +151,79 @@ type SnapInfo struct {
 	Index   int `json:"index"`
 }
 
-var outHeader [2]uint32
+var outHeader [3]uint32
+var snapshotExport []uint8
 
-func makeSnapList(B Core.SnapshotBuffer) uintptr {
-	res := make([]SnapInfo, len(B.Data))
+// func makeSnapList(B Core.SnapshotBuffer) uintptr {
+// 	res := make([]SnapInfo, len(B.Data))
 
-	for x, snap := range B.Data {
-		res[x] = SnapInfo{
-			Frameno: snap.Frame_no,
-			Index:   x,
+// 	for x, snap := range B.Data {
+// 		res[x] = SnapInfo{
+// 			Frameno: snap.Frame_no,
+// 			Index:   x,
+// 		}
+// 	}
+
+// 	b, err := json.Marshal(res)
+// 	if err != nil {
+// 		log.Fatalf("FICK")
+// 	}
+
+// 	outHeader[0] = uint32(uintptr(unsafe.Pointer(&b[0])))
+// 	outHeader[1] = uint32(len(b))
+// 	outHeader[2] = uint32(uintptr(unsafe.Pointer(&snapshotExport[0])))
+
+// 	return uintptr(unsafe.Pointer(&outHeader[0]))
+
+// }
+
+func makeSnapshotList(B Core.SnapshotBuffer) uintptr {
+	length := B.GetLength()
+
+	res := make([]SnapInfo, length)
+	snapshotExport = make([]uint8, length*size)
+
+	fmt.Println("the length of our list is:", length)
+
+	for i := range length - 1 {
+		res[i] = SnapInfo{
+			Frameno: B.Data[i].Frame_no,
+			Index:   i,
 		}
+
+		copy(snapshotExport[i*size:], B.Data[i].PpuState.BackBuffer)
 	}
 
 	b, err := json.Marshal(res)
 	if err != nil {
-		log.Fatalf("FICK")
+		log.Fatalf("FUCK FUCK FUCK")
 	}
 
 	outHeader[0] = uint32(uintptr(unsafe.Pointer(&b[0])))
 	outHeader[1] = uint32(len(b))
+	outHeader[2] = uint32(uintptr(unsafe.Pointer(&snapshotExport[0])))
 
 	return uintptr(unsafe.Pointer(&outHeader[0]))
-
 }
+
+const size = 256 * 240 * 4
+
+// func prepareSnapshotImages(B Core.SnapshotBuffer) uintptr {
+
+// 	total := B.GetLength()
+
+// 	snapshotExport = make([]uint8, total*size)
+
+// 	for i := range total {
+// 		copy(snapshotExport[i*size:], B.Data[i].PpuState.BackBuffer)
+// 	}
+
+// 	// for i, snapshot := range B.Data {
+// 	// 	copy(snapshotExport[i*size:], snapshot.PpuState.BackBuffer)
+// 	// }
+
+// 	return uintptr(unsafe.Pointer(&snapshotExport[0]))
+// }
 
 func getSpeed(speedBuf js.Value) float32 {
 	bytes := make([]byte, 4)

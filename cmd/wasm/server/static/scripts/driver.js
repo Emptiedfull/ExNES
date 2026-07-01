@@ -26,8 +26,11 @@ export const state = {
 let audioCtx = null
 let gain = null
 
+let startTime = null
+
 window.addEventListener("keydown",async (e)=>{
     if (e.code == "KeyL"){
+        startTime = performance.now()
         await getSnapList()
     } else if (e.code == "KeyP"){
         console.log("hello")
@@ -87,8 +90,7 @@ export const getSnapList = async ()=>{
     await PauseGame()
 
     worker.postMessage({type:"getsnap"})
-
-    await ResumeGame()
+    
 }
 
 export const loadSnap = async(index)=>{
@@ -127,6 +129,8 @@ worker.onmessage = async ({ data }) => {
             break
         case 'snaps':
             console.log(data)
+            console.log(performance.now() - startTime)
+            await ResumeGame()
             break
         case 'frameUp':
             imageData.data.set(fBytes)

@@ -1,1 +1,42 @@
-(()=>{var r=class extends AudioWorkletProcessor{constructor(){super(),this.samples=null,this.control=null,this.SIZE=0,this.port.onmessage=({data:s})=>{this.SIZE=s.SIZE,this.samples=new Float32Array(s.audioBufS,0,this.SIZE),this.control=new Int32Array(s.audioBufS,this.SIZE*4,3)}}process(s,n){let t=n[0][0];if(!this.control)return t.fill(0),!0;let e=Atomics.load(this.control,0),i=Atomics.load(this.control,1),l=e-i;if(l<t.length)return Atomics.store(this.control,2,1),Atomics.notify(this.control,2),t.fill(0),!0;for(let o=0;o<t.length;o++)t[o]=this.samples[(i+o)%this.SIZE];return Atomics.store(this.control,1,i+t.length),l-t.length<this.SIZE/2&&(Atomics.store(this.control,2,1),Atomics.notify(this.control,2)),!0}};registerProcessor("apu-proc",r);})();
+(() => {
+  // static/scripts/driverWorklet.js
+  var ConsoleDriver = class extends AudioWorkletProcessor {
+    constructor() {
+      super();
+      this.samples = null;
+      this.control = null;
+      this.SIZE = 0;
+      this.port.onmessage = ({ data }) => {
+        this.SIZE = data.SIZE;
+        this.samples = new Float32Array(data.audioBufS, 0, this.SIZE);
+        this.control = new Int32Array(data.audioBufS, this.SIZE * 4, 3);
+      };
+    }
+    process(inputs, outputs) {
+      const output = outputs[0][0];
+      if (!this.control) {
+        output.fill(0);
+        return true;
+      }
+      const wp = Atomics.load(this.control, 0);
+      const rp = Atomics.load(this.control, 1);
+      const available = wp - rp;
+      if (available < output.length) {
+        Atomics.store(this.control, 2, 1);
+        Atomics.notify(this.control, 2);
+        output.fill(0);
+        return true;
+      }
+      for (let i = 0; i < output.length; i++) {
+        output[i] = this.samples[(rp + i) % this.SIZE];
+      }
+      Atomics.store(this.control, 1, rp + output.length);
+      if (available - output.length < this.SIZE / 2) {
+        Atomics.store(this.control, 2, 1);
+        Atomics.notify(this.control, 2);
+      }
+      return true;
+    }
+  };
+  registerProcessor("apu-proc", ConsoleDriver);
+})();

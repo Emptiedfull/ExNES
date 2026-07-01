@@ -16,14 +16,12 @@ func bundleOutput() {
 		EntryPoints: []string{
 			"static/scripts/nes.js",
 		},
-		External:          []string{"*.png"},
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		Bundle:            true,
-		Splitting:         true,
-		Format:            api.FormatESModule,
-		Outdir:            "static/dist",
+		External: []string{"*.png"},
+
+		Bundle:    true,
+		Splitting: true,
+		Format:    api.FormatESModule,
+		Outdir:    "static/dist",
 		// Outfile:           "app.js",
 		Write: true,
 	})
@@ -36,12 +34,10 @@ func bundleOutput() {
 		EntryPoints: []string{
 			"static/scripts/emuWorker.js",
 		},
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		Bundle:            true,
-		Outdir:            "static/dist",
-		Write:             true,
+
+		Bundle: true,
+		Outdir: "static/dist",
+		Write:  true,
 	})
 
 	for _, err := range res.Errors {
@@ -52,12 +48,10 @@ func bundleOutput() {
 		EntryPoints: []string{
 			"static/scripts/driverWorklet.js",
 		},
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		Bundle:            true,
-		Outdir:            "static/dist",
-		Write:             true,
+
+		Bundle: true,
+		Outdir: "static/dist",
+		Write:  true,
 	})
 	for _, err := range res.Errors {
 		log.Fatalln(err)
@@ -82,7 +76,8 @@ func bundleOutput() {
 }
 
 func compileWasm(src, dst string) (error, string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	start := time.Now()
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "tinygo", "build", "-o", dst, "-target", "wasm", "-opt", "z", src)
@@ -91,6 +86,7 @@ func compileWasm(src, dst string) (error, string) {
 	cmd.Stdout = os.Stdout
 
 	if err := cmd.Run(); err != nil {
+		fmt.Println(time.Since(start))
 		return fmt.Errorf("Error compiling wasm: %w", err), "0"
 	}
 

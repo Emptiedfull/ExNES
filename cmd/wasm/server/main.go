@@ -41,7 +41,11 @@ var compressibleList = map[string]bool{
 
 func main() {
 	PrepareGameList()
-	compileWasm("../wasm.go", "./static/nes.wasm")
+	err, _ := compileWasm("../wasm.go", "./static/nes.wasm")
+
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println("Wasm compiled")
 

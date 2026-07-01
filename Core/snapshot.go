@@ -1,7 +1,5 @@
 package Core
 
-import "fmt"
-
 // Contains utility for the snapshot function
 
 type snapshot struct {
@@ -84,9 +82,22 @@ type PpuSnapshot struct {
 	screenChanged bool
 }
 
+func (b *SnapshotBuffer) GetLength() int {
+	accum := 0
+	for _, snap := range b.Data {
+		if snap.Frame_no != 0 {
+
+			accum += 1
+
+		}
+	}
+
+	return accum
+}
+
 func (c *Console) SetUpSnapshots() {
 	for range len(c.Snapshots.Data) {
-		fmt.Println("creating empty snapshots ")
+
 		c.AddSnapshot(c.createEmptySnapshot())
 	}
 
@@ -125,7 +136,8 @@ func (a *APU) LoadSnapshot(s *ApuSnapshot) {
 
 func (c *Console) TakeSnapshot() {
 	c.PopulateSnapshot(&c.Snapshots.Data[c.Snapshots.Index])
-	c.Snapshots.Index++
+
+	c.Snapshots.Index = (c.Snapshots.Index + 1) % (len(c.Snapshots.Data) - 1)
 }
 
 func (c *Console) createEmptySnapshot() snapshot {
@@ -204,7 +216,7 @@ func (c *Console) PopulateSnapshot(s *snapshot) {
 
 func (c *Console) AddSnapshot(s snapshot) {
 	s.Frame_no = c.Snapshots.Frame
-	c.Snapshots.Frame++
+
 	c.Snapshots.AddSnapshot(s)
 }
 

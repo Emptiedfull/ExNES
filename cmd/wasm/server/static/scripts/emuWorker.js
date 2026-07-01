@@ -32,7 +32,7 @@ const S_size = 1024
 const S_buf = new Float32Array(S_size)
 
 self.onmessage = async ({data}) =>{
-    console.log(data)
+    
     switch (data.type){
         case 'init':
             startEmulator()
@@ -61,11 +61,12 @@ self.onmessage = async ({data}) =>{
         case 'getsnap':
             console.log("getting snapshot list")
             let snapshots = await requestSnapshotList()
+            
             self.postMessage({type:"snaps",snaps: snapshots})
             break
 
         case 'loadSnapshot':
-            console.log("loading snpashots:",data.index)
+            
             loadSnapshot(data.index)
             break
         
@@ -86,7 +87,10 @@ const requestSnapshotList = async ()=>{
     const len = header[1]
 
     const snapshotBYTES = new Uint8Array(instance.exports.memory.buffer, snapshotPTR,len)
+    console.log(new TextDecoder().decode(snapshotBYTES))
     const snapshots = JSON.parse(new TextDecoder().decode(snapshotBYTES))
+
+   
 
     return snapshots
 }
