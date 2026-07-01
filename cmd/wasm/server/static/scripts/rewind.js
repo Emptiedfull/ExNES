@@ -1,6 +1,6 @@
 import { wait } from "./joypad"
 
-const track = document.getElementById("items-containers")
+const track = document.getElementById("items-container")
 const preview_img = document.getElementById("preview-img")
 const rewind_overlay = document.getElementById("rewind-overlay")
 
@@ -28,6 +28,34 @@ let ctx = null
 //     }   
 // })
 
+export const createTilesFromSnapshots = async (snapshots)=>{
+    rewind_overlay.style.display = "flex"
+    console.log(snapshots)
+    for (let i = 0; i < snapshots.length;i++){
+        let snapshot = snapshots[i]
+        let tile = document.createElement("div")
+
+         tile.classList.add("tape-item")
+
+        let img = document.createElement("canvas")
+
+        img.height = snapshot.image.height
+        img.width = snapshot.image.width
+
+        tile.addEventListener("mousedown",()=>{
+            makeActive(tile)
+        })
+
+
+
+        img.getContext('2d').drawImage(snapshot.image,0,0)
+
+
+        tile.append(img)
+        track.append(tile)
+    }
+    
+}
 
 export const createTiles = async ()=>{
     const cont = document.getElementById("items-container")
@@ -86,6 +114,8 @@ const makeActive = (el)=>{
         inline:"nearest",
         block:"center"
     })
+
+    tile.classList.add("tape-active")
 
     lastactive = el
 }

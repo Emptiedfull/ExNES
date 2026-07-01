@@ -77,22 +77,54 @@ self.onmessage = async ({data}) =>{
 
     }
 }
-
+const frameSize = 256 * 240 * 4
 
 const requestSnapshotList = async ()=>{
     const headerPTR = getSnapshotList()
-    const header = new Uint32Array(instance.exports.memory.buffer, headerPTR, 2)
+    const mem = instance.exports.memory.buffer
+    const header = new Uint32Array(mem, headerPTR, 3)
 
     const snapshotPTR = header[0]
     const len = header[1]
+    const imagePTR = header[2]
 
     const snapshotBYTES = new Uint8Array(instance.exports.memory.buffer, snapshotPTR,len)
     console.log(new TextDecoder().decode(snapshotBYTES))
     const snapshots = JSON.parse(new TextDecoder().decode(snapshotBYTES))
 
-   
+ 
+
+   for (let i = 0; i < snapshots.length; i++){
+        
+        const offset = imagePTR  + i * frameSize
+        const raw = new Uint8ClampedArray(mem,offset,frameSize)
+        const data = new ImageData(new Uint8ClampedArray(raw),256,240)
+        snapshots[i].image = await createImageBitmap(data)
+
+   }
+
 
     return snapshots
+}
+
+const prepareSnapshotImages = async (bufferPTR,frames)=>{
+    
+ 
+    const mem = instance.exports.memory.buffer
+
+    const images = []
+
+    for ( let i = 0; i < frames;i++){
+        const offset = bufferPTR + i * frameSize
+
+        const rawBuf = new Uint8ClampedArray(mem,offset,frameSize)
+
+        const data = new ImageData(new Uint8ClampedArray(rawBuf),256,240)
+        images.push(createImageBitmap(data))
+    }
+
+    return Promise.all(images)
+
 }
 
 const pump = ()=>{

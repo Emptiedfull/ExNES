@@ -1,5 +1,6 @@
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
+import { createTilesFromSnapshots } from "./rewind.js"
 
 const worker = new Worker(new URL('./emuWorker.js', import.meta.url))
 let fBytes = null
@@ -128,8 +129,9 @@ worker.onmessage = async ({ data }) => {
             worker.postMessage({ type: "init", inputBuf,speedBuf })
             break
         case 'snaps':
-            console.log(data)
-            console.log(performance.now() - startTime)
+            
+            await createTilesFromSnapshots(data.snaps)
+            
             await ResumeGame()
             break
         case 'frameUp':

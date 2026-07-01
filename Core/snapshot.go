@@ -141,7 +141,7 @@ func (c *Console) TakeSnapshot() {
 }
 
 func (c *Console) createEmptySnapshot() snapshot {
-	return snapshot{
+	s := snapshot{
 		Frame_no:    0,
 		Cycles:      0,
 		mapperState: c.mapper.CreateEmptySnapshot(),
@@ -149,6 +149,10 @@ func (c *Console) createEmptySnapshot() snapshot {
 		PpuState:    PpuSnapshot{},
 		ApuState:    ApuSnapshot{},
 	}
+
+	s.PpuState.BackBuffer = make([]uint8, 256*240*4)
+
+	return s
 
 }
 

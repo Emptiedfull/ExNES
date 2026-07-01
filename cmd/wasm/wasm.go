@@ -185,10 +185,14 @@ func makeSnapshotList(B Core.SnapshotBuffer) uintptr {
 
 	fmt.Println("the length of our list is:", length)
 
-	for i := range length - 1 {
+	for i := range length {
 		res[i] = SnapInfo{
 			Frameno: B.Data[i].Frame_no,
 			Index:   i,
+		}
+
+		if i == 5 {
+			fmt.Printf("first 8:", B.Data[i].PpuState.BackBuffer[:32])
 		}
 
 		copy(snapshotExport[i*size:], B.Data[i].PpuState.BackBuffer)

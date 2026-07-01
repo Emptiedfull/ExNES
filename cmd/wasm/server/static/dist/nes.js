@@ -1,11 +1,76 @@
+// static/scripts/rewind.js
+var track = document.getElementById("items-container");
+var preview_img = document.getElementById("preview-img");
+var rewind_overlay = document.getElementById("rewind-overlay");
+var clicker = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        clickSound();
+      }
+    });
+  },
+  {
+    root: track,
+    rootMargin: "0px -45% 0px -45%",
+    threshold: 0.1
+  }
+);
+var ctx = null;
+var createTilesFromSnapshots = async (snapshots) => {
+  rewind_overlay.style.display = "flex";
+  console.log(snapshots);
+  for (let i = 0; i < snapshots.length; i++) {
+    let snapshot = snapshots[i];
+    let tile2 = document.createElement("div");
+    tile2.classList.add("tape-item");
+    let img = document.createElement("canvas");
+    img.height = snapshot.image.height;
+    img.width = snapshot.image.width;
+    tile2.addEventListener("mousedown", () => {
+      makeActive(tile2);
+    });
+    img.getContext("2d").drawImage(snapshot.image, 0, 0);
+    tile2.append(img);
+    track.append(tile2);
+  }
+};
+var lastactive = null;
+var makeActive = (el) => {
+  if (lastactive != null) {
+    lastactive.classList.remove("tape-active");
+  }
+  console.log("scrolling to:", el);
+  preview_img.src = el.querySelector("img").src;
+  el.scrollIntoView({
+    behavior: "smooth",
+    inline: "nearest",
+    block: "center"
+  });
+  tile.classList.add("tape-active");
+  lastactive = el;
+};
+var clickSound = () => {
+  if (ctx == null) return;
+  const osc = ctx.createOscillator();
+  const gain2 = ctx.createGain();
+  osc.connect(gain2);
+  gain2.connect(ctx.destination);
+  osc.frequency.value = 900;
+  gain2.gain.setValueAtTime(0.4, ctx.currentTime);
+  gain2.gain.exponentialRampToValueAtTime(1e-3, ctx.currentTime + 0.02);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.02);
+};
+
 // static/scripts/driver.js
 var worker = new Worker(new URL("./emuWorker.js", import.meta.url));
 var fBytes = null;
 var inputBuf = new SharedArrayBuffer(4);
 var inputState = new Int32Array(inputBuf);
 var canvas = document.getElementById("screen");
-var ctx = canvas.getContext("2d");
-var imageData = ctx.createImageData(256, 240);
+var ctx2 = canvas.getContext("2d");
+var imageData = ctx2.createImageData(256, 240);
 var speedBuf = new SharedArrayBuffer(4);
 var speedNum = new Int32Array(speedBuf);
 var audioBufS = null;
@@ -90,13 +155,12 @@ worker.onmessage = async ({ data }) => {
       worker.postMessage({ type: "init", inputBuf, speedBuf });
       break;
     case "snaps":
-      console.log(data);
-      console.log(performance.now() - startTime);
+      await createTilesFromSnapshots(data.snaps);
       await ResumeGame();
       break;
     case "frameUp":
       imageData.data.set(fBytes);
-      ctx.putImageData(imageData, 0, 0);
+      ctx2.putImageData(imageData, 0, 0);
       break;
   }
 };
@@ -663,38 +727,6 @@ var drawNav = () => {
     ctx3.fillStyle = T[G[i]];
     ctx3.fillRect(col * PS, r * PS, PS, PS);
   }
-};
-
-// static/scripts/rewind.js
-var track = document.getElementById("items-containers");
-var preview_img = document.getElementById("preview-img");
-var rewind_overlay = document.getElementById("rewind-overlay");
-var clicker = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        clickSound();
-      }
-    });
-  },
-  {
-    root: track,
-    rootMargin: "0px -45% 0px -45%",
-    threshold: 0.1
-  }
-);
-var ctx2 = null;
-var clickSound = () => {
-  if (ctx2 == null) return;
-  const osc = ctx2.createOscillator();
-  const gain2 = ctx2.createGain();
-  osc.connect(gain2);
-  gain2.connect(ctx2.destination);
-  osc.frequency.value = 900;
-  gain2.gain.setValueAtTime(0.4, ctx2.currentTime);
-  gain2.gain.exponentialRampToValueAtTime(1e-3, ctx2.currentTime + 0.02);
-  osc.start();
-  osc.stop(ctx2.currentTime + 0.02);
 };
 
 // static/scripts/nes.js

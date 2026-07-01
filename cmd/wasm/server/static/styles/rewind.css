@@ -90,14 +90,15 @@
     
 }
 
-.tape-item img{
+.tape-item canvas{
     height: 100%;
     width: 100%;
-    object-fit: fill;
     opacity: 0.4;
 }
 
-.tape-item img:hover{
+
+
+.tape-item canvas:hover{
     opacity: 1;
 }
 
@@ -125,7 +126,7 @@
     transform: scale(1.2) !important;
 }
 
-.tape-active img{
+.tape-active canvas{
      opacity: 1 !important; 
 }
 
