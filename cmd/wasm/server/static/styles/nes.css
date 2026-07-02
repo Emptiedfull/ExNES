@@ -15,7 +15,7 @@
     display: flex;
     
     width: 40%;
-    height: 160px;
+    height: 150px;
     position: relative;
     flex-direction: column;
 
@@ -165,7 +165,7 @@
     radial-gradient(#000 20%, transparent 20%), 
     radial-gradient(var(--holes) 25%, transparent 15%);
     
-  background-size: 15px 15px;
+  background-size: 12px 12px;
   background-position: -2px -2px, -2px -2px;
  
 }

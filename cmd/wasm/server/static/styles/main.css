@@ -47,8 +47,9 @@ body {
   display: flex;
   flex-direction: row;
   padding-left: 2rem;
+  padding-right: 2rem;
   
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: end;
 }
 
@@ -56,7 +57,9 @@ body {
   display: flex;
   flex-direction: column;
   
-  height: 90%;
+  height: 85%;
+  max-width: 58%;
+  
   width: fit-content;
   
 }

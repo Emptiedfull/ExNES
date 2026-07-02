@@ -110,9 +110,9 @@
 }
 
 .rewind-preview{
-    width: 50%;
+    width: 40%;
     aspect-ratio: 1.2/1;
-    background-color: rebeccapurple;
+    
 }
 
 #preview-img{
@@ -130,3 +130,111 @@
      opacity: 1 !important; 
 }
 
+.rewind-controls{
+    min-height: 60px;
+   
+    width: 70%;
+    display: flex;
+    flex-direction: row;
+    padding: 1rem;
+    gap: 2rem;
+}
+
+
+.rewind-controls span{
+    height: 100%;
+    aspect-ratio: 1/1;
+    background-color: #FFF0D9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: 3px solid #2c2c2a;
+    
+    border-radius: 0;
+    
+}
+
+.rewind-start{
+    box-shadow: 4px 4px 0 #2c2c2a;
+}
+
+.rewind-end{
+     box-shadow: -4px 4px 0 #2c2c2a ; 
+}
+
+.rewind-end:active{
+    box-shadow: -1px 1px 0 #2c2c2a !important;
+    transform: translate(-3px,3px) !important;
+}
+
+.rewind-end:hover{
+    box-shadow: -6px 6px 0 #2c2c2a;
+    transform: translate(2px,-2px);
+}
+
+
+
+.rewind-start:active {
+    box-shadow: 1px 1px 0 #2c2c2a !important;
+    transform: translate(3px, 3px) !important;
+}
+
+.rewind-start:hover{
+    box-shadow: 6px 6px 0 #2c2c2a ;
+    transform: translate(-2px,-2px);
+}
+
+.rewind-miniscroll {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    
+    background: #544639;
+    border: 3px solid #2c2c2a;
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,0.25);
+    
+    cursor: pointer;
+
+    align-self: stretch;
+
+    
+    background-image: repeating-linear-gradient(
+        90deg,
+        #6b5c4a 0,
+        #6b5c4a 2px,
+        transparent 2px,
+        transparent calc(6% - 2px)
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+
+.rewind-miniscroll::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 6px;
+    height: 38px;
+    background-color: #9c3428;
+   
+}
+
+.rewind-miniscroll::-moz-range-thumb {
+      appearance: none;
+    width: 6px;
+    height: 38px;
+    background-color: #9c3428;
+}
+
+
+.rewind-miniscroll::-moz-range-track {
+    height: 100%;
+    background: transparent;
+    border: none;
+}
+
+
+.rewind-miniscroll::-moz-focus-outer {
+    border: 0;
+}

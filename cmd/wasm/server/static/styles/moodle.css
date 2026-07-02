@@ -85,7 +85,6 @@
 
 
 
-.moodle-item.active {}
 
 .moodle-corners.error::after {
     background-color: var(--goodred);

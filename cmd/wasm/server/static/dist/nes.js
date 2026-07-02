@@ -2,6 +2,7 @@
 var track = document.getElementById("items-container");
 var preview_img = document.getElementById("preview-img");
 var rewind_overlay = document.getElementById("rewind-overlay");
+var timeline = document.getElementById("rewind-timeline");
 var clicker = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
@@ -22,33 +23,56 @@ var createTilesFromSnapshots = async (snapshots) => {
   console.log(snapshots);
   for (let i = 0; i < snapshots.length; i++) {
     let snapshot = snapshots[i];
-    let tile2 = document.createElement("div");
-    tile2.classList.add("tape-item");
+    let tile = document.createElement("div");
+    tile.classList.add("tape-item");
     let img = document.createElement("canvas");
     img.height = snapshot.image.height;
     img.width = snapshot.image.width;
-    tile2.addEventListener("mousedown", () => {
-      makeActive(tile2);
+    tile.addEventListener("mousedown", () => {
+      makeActive(tile, snapshot.image);
     });
     img.getContext("2d").drawImage(snapshot.image, 0, 0);
-    tile2.append(img);
-    track.append(tile2);
+    tile.append(img);
+    track.append(tile);
+  }
+};
+var makeMockTiles = async () => {
+  setupTimeline(150);
+  for (let i = 0; i < 100; i++) {
+    let tile = document.createElement("div");
+    tile.classList.add("tape-item");
+    tile.id = "tile-" + i;
+    let img = document.createElement("canvas");
+    tile.appendChild(img);
+    tile.addEventListener("mousedown", () => {
+      makeActive(tile, null, 100);
+    });
+    track.append(tile);
   }
 };
 var lastactive = null;
-var makeActive = (el) => {
+var makeActive = (el, image, length) => {
   if (lastactive != null) {
     lastactive.classList.remove("tape-active");
   }
-  console.log("scrolling to:", el);
-  preview_img.src = el.querySelector("img").src;
+  if (image != null) {
+    preview_img.height = image.height;
+    preview_img.width = image.width;
+    preview_img.getContext("2d").drawImage(image, 0, 0);
+  }
   el.scrollIntoView({
     behavior: "smooth",
     inline: "nearest",
     block: "center"
   });
-  tile.classList.add("tape-active");
+  el.classList.add("tape-active");
+  let index = el.id.slice(5);
+  timeline.value = index;
   lastactive = el;
+};
+var setupTimeline = (val) => {
+  timeline.min = 0;
+  timeline.max = val;
 };
 var clickSound = () => {
   if (ctx == null) return;
@@ -746,6 +770,7 @@ var romLoaded = "";
 var power = false;
 var roms = [left, middle2, right];
 document.addEventListener("DOMContentLoaded", async () => {
+  await makeMockTiles();
   startRandomTipEngine();
   await setUpKnobs();
   await setUpButtons();

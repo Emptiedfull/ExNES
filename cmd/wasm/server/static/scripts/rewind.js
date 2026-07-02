@@ -4,19 +4,21 @@ const track = document.getElementById("items-container")
 const preview_img = document.getElementById("preview-img")
 const rewind_overlay = document.getElementById("rewind-overlay")
 
-const clicker = new IntersectionObserver((entries)=>{
-    entries.forEach(entry=>{
-        if (entry.isIntersecting){
-            
+const timeline = document.getElementById("rewind-timeline")
+
+const clicker = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+
             clickSound()
         }
     })
 },
-{
-    root: track,
-    rootMargin: '0px -45% 0px -45%', 
-    threshold:0.1,
-})
+    {
+        root: track,
+        rootMargin: '0px -45% 0px -45%',
+        threshold: 0.1,
+    })
 
 let ctx = null
 
@@ -28,101 +30,91 @@ let ctx = null
 //     }   
 // })
 
-export const createTilesFromSnapshots = async (snapshots)=>{
+export const createTilesFromSnapshots = async (snapshots) => {
     rewind_overlay.style.display = "flex"
     console.log(snapshots)
-    for (let i = 0; i < snapshots.length;i++){
+    for (let i = 0; i < snapshots.length; i++) {
         let snapshot = snapshots[i]
         let tile = document.createElement("div")
 
-         tile.classList.add("tape-item")
+        tile.classList.add("tape-item")
 
         let img = document.createElement("canvas")
 
         img.height = snapshot.image.height
         img.width = snapshot.image.width
 
-        tile.addEventListener("mousedown",()=>{
-            makeActive(tile)
+        tile.addEventListener("mousedown", () => {
+            makeActive(tile, snapshot.image)
         })
 
-
-
-        img.getContext('2d').drawImage(snapshot.image,0,0)
+        img.getContext('2d').drawImage(snapshot.image, 0, 0)
 
 
         tile.append(img)
         track.append(tile)
     }
-    
+
 }
 
-export const createTiles = async ()=>{
-    const cont = document.getElementById("items-container")
-
-    let el = null
-    let lasttile = null
-
-    for (let i = 0;i < 100;i++){
+export const makeMockTiles = async () => {
+    setupTimeline(150)
+    for (let i = 0; i < 100; i++) {
         let tile = document.createElement("div")
-        let img = new Image()
-        img.src = "./rom_images/tets.png"
-        tile.appendChild(img)
-        tile.id = "tile-" + i
         tile.classList.add("tape-item")
-        clicker.observe(tile)
+        tile.id = "tile-" + i
 
-        tile.addEventListener("mousedown",()=>{
-                makeActive(tile)
+        let img = document.createElement("canvas")
+        tile.appendChild(img)
 
-                tile.classList.add("tape-active")
-            
+        tile.addEventListener("mousedown", () => {
+            makeActive(tile,null,100)
         })
 
-        cont.appendChild(tile)
+        track.append(tile)
 
-        
-
-        lasttile = tile
-        tile.classList.remo
     }
-
-    
-    // preview_img.src =  "./rom_images/tets.png"
-
-
-    lasttile.scrollIntoView({
-        behavior:"smooth",
-        inline:"nearest",
-        block:"center"
-    })
-
 }
+
 
 let lastactive = null
 
-const makeActive = (el)=>{
+const makeActive = (el, image,length) => {
 
-    if (lastactive != null){
+    if (lastactive != null) {
         lastactive.classList.remove("tape-active")
     }
 
-    console.log("scrolling to:",el)
-    preview_img.src = el.querySelector("img").src
+
+    if (image != null) {
+        preview_img.height = image.height
+        preview_img.width = image.width
+        preview_img.getContext("2d").drawImage(image, 0, 0)
+    }
+
     el.scrollIntoView({
-        behavior:"smooth",
-        inline:"nearest",
-        block:"center"
+        behavior: "smooth",
+        inline: "nearest",
+        block: "center"
     })
 
-    tile.classList.add("tape-active")
+    el.classList.add("tape-active")
+
+    let index = el.id.slice(5)
+    
+    timeline.value = index
 
     lastactive = el
 }
 
+const setupTimeline = (val)=>{
+    timeline.min = 0 
+    timeline.max = val
+}
 
-const clickSound = ()=>{
-    
+
+const clickSound = () => {
+
     if (ctx == null) return
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
@@ -131,16 +123,17 @@ const clickSound = ()=>{
     gain.connect(ctx.destination)
 
     osc.frequency.value = 900
-    gain.gain.setValueAtTime(0.4,ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime + 0.02)
+    gain.gain.setValueAtTime(0.4, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.02)
 
     osc.start()
     osc.stop(ctx.currentTime + 0.02)
- 
+
 }
 
 
-export const StartRewindEngine = async ()=>{
+
+export const StartRewindEngine = async () => {
     rewind_overlay.style.display = "flex"
 
     await createTiles()

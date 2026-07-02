@@ -249,15 +249,14 @@
         </div>
     </div>
 
-    <div class="rewind-overlay" id="rewind-overlay" style="display: none;">
+    <div class="rewind-overlay" id="rewind-overlay">
         <div class="rewind-container">
             <div class="tape-container">
                 <div class="decorative-tape">
 
                 </div>
                 <div class="items-container" id="items-container">
-                   
-
+                  
                 </div>
                 <div class="decorative-tape">
 
@@ -267,8 +266,81 @@
             </div>
         </div>
 
+        <div class="rewind-controls">
+            <span class="rewind-fullback rewind-start">
+                <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+                    <g fill="currentColor">
+                        <rect x="30" y="30" width="10" height="60" />
+                        <rect x="80" y="30" width="10" height="10" />
+                        <rect x="70" y="40" width="10" height="10" />
+                        <rect x="60" y="50" width="10" height="10" />
+                        <rect x="50" y="60" width="10" height="10" />
+                        <rect x="60" y="70" width="10" height="10" />
+                        <rect x="70" y="80" width="10" height="10" />
+                        <rect x="80" y="90" width="10" height="10" />
+                        <rect x="60" y="55" width="30" height="10" />
+                        <rect x="60" y="65" width="30" height="10" />
+                    </g>
+                </svg>
+
+            </span>
+            <span class="rewind-back rewind-start">
+                <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+                    <g fill="currentColor">
+                        <rect x="70" y="30" width="10" height="10" />
+                        <rect x="60" y="40" width="10" height="10" />
+                        <rect x="50" y="50" width="10" height="10" />
+                        <rect x="40" y="60" width="10" height="10" />
+                        <rect x="50" y="70" width="10" height="10" />
+                        <rect x="60" y="80" width="10" height="10" />
+                        <rect x="70" y="90" width="10" height="10" />
+                        <rect x="60" y="55" width="20" height="10" />
+                        <rect x="60" y="65" width="20" height="10" />
+                    </g>
+                </svg>
+
+            </span>
+            <div class="rewind-bar">
+                <input type="range" class="rewind-miniscroll" id="rewind-timeline" min="0" max="100" value="35">
+            </div>
+           
+            <span class="rewind-front rewind-end">
+                <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+                    <g fill="currentColor">
+                        <rect x="40" y="30" width="10" height="10" />
+                        <rect x="50" y="40" width="10" height="10" />
+                        <rect x="60" y="50" width="10" height="10" />
+                        <rect x="70" y="60" width="10" height="10" />
+                        <rect x="60" y="70" width="10" height="10" />
+                        <rect x="50" y="80" width="10" height="10" />
+                        <rect x="40" y="90" width="10" height="10" />
+                        <rect x="40" y="55" width="20" height="10" />
+                        <rect x="40" y="65" width="20" height="10" />
+                    </g>
+                </svg>
+
+            </span>
+            <span class="rewind-fullfront rewind-end">
+                <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+                    <g fill="currentColor">
+                        <rect x="80" y="30" width="10" height="60" />
+                        <rect x="30" y="30" width="10" height="10" />
+                        <rect x="40" y="40" width="10" height="10" />
+                        <rect x="50" y="50" width="10" height="10" />
+                        <rect x="60" y="60" width="10" height="10" />
+                        <rect x="50" y="70" width="10" height="10" />
+                        <rect x="40" y="80" width="10" height="10" />
+                        <rect x="30" y="90" width="10" height="10" />
+                        <rect x="30" y="55" width="30" height="10" />
+                        <rect x="30" y="65" width="30" height="10" />
+                    </g>
+                </svg>
+
+            </span>
+        </div>
+
         <div class="rewind-preview">
-            <img id="preview-img">
+            <canvas id="preview-img">
 
         </div>
 
