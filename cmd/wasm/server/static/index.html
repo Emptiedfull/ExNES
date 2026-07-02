@@ -249,14 +249,14 @@
         </div>
     </div>
 
-    <div class="rewind-overlay" id="rewind-overlay">
+    <div class="rewind-overlay" id="rewind-overlay" >
         <div class="rewind-container">
             <div class="tape-container">
                 <div class="decorative-tape">
 
                 </div>
                 <div class="items-container" id="items-container">
-                  
+
                 </div>
                 <div class="decorative-tape">
 
@@ -267,7 +267,7 @@
         </div>
 
         <div class="rewind-controls">
-            <span class="rewind-fullback rewind-start">
+            <span class="rewind-fullback rewind-start" id="rewind-start">
                 <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
                     <g fill="currentColor">
                         <rect x="30" y="30" width="10" height="60" />
@@ -284,7 +284,7 @@
                 </svg>
 
             </span>
-            <span class="rewind-back rewind-start">
+            <span class="rewind-back rewind-start" id="rewind-back">
                 <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
                     <g fill="currentColor">
                         <rect x="70" y="30" width="10" height="10" />
@@ -306,8 +306,8 @@
                 </div>
                 <input type="range" class="rewind-miniscroll" id="rewind-timeline" min="0" max="100" value="35">
             </div>
-           
-            <span class="rewind-front rewind-end">
+
+            <span class="rewind-front rewind-end" id="rewind-next">
                 <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
                     <g fill="currentColor">
                         <rect x="40" y="30" width="10" height="10" />
@@ -323,7 +323,7 @@
                 </svg>
 
             </span>
-            <span class="rewind-fullfront rewind-end">
+            <span class="rewind-fullfront rewind-end" id="rewind-end">
                 <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
                     <g fill="currentColor">
                         <rect x="80" y="30" width="10" height="60" />
@@ -342,22 +342,56 @@
             </span>
         </div>
 
-        <div class="rewind-preview">
-            <canvas id="preview-img">
+       
 
+        <div class="review-cartridge">
+            <div class="review-cartridge-shadow"></div>
+            <div class="review-cartridge-body">
+
+                <div class="review-cartridge-header">
+                    <span class="review-screw"></span>
+                    <span class="review-cartridge-label">FRAME</span>
+                    <span class="review-screw"></span>
+                </div>
+
+                <div class="review-screen-frame">
+                   
+                    <div class="review-screen-inset">
+                        <canvas id="preview-img" ></canvas>
+                    </div>
+                </div>
+
+                <div class="review-cartridge-header">
+                    <span class="review-screw"></span>
+                    <span class="review-cartridge-id">NO. 005</span>
+                    <span class="review-screw"></span>
+                </div>
+
+                <div class="review-load-wrap">
+                    <div class="review-load-shadow"></div>
+                    <button class="review-load">LOAD</button>
+                </div>
+
+                <div class="review-pin-row">
+                    <span class="review-pin"></span>
+                    <span class="review-pin"></span>
+                    <span class="review-pin"></span>
+                    <span class="review-pin"></span>
+                    <span class="review-pin"></span>
+                </div>
+
+            </div>
         </div>
 
-    </div>
+        <div class="controller-cable controller-corners" id="cable-1"> </div>
+        <div class="cable-wire" id="wire-1"></div>
 
-    <div class="controller-cable controller-corners" id="cable-1"> </div>
-    <div class="cable-wire" id="wire-1"></div>
+        <div class="controller-cable controller-corners" id="cable-2"> </div>
+        <div class="cable-wire" id="wire-2"></div>
 
-    <div class="controller-cable controller-corners" id="cable-2"> </div>
-    <div class="cable-wire" id="wire-2"></div>
+        <div class="moodle-bar">
 
-    <div class="moodle-bar">
-
-    </div>
+        </div>
 </body>
 <script src="/dist/nes.js" type="module"></script>
 

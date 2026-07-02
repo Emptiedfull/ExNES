@@ -4,12 +4,18 @@ var preview_img = document.getElementById("preview-img");
 var rewind_overlay = document.getElementById("rewind-overlay");
 var timeline = document.getElementById("rewind-timeline");
 var highligh_view = document.getElementById("rewind-highlight");
+var back = document.getElementById("rewind-back");
+var next = document.getElementById("rewind-next");
+var start = document.getElementById("rewind-start");
+var end = document.getElementById("rewind-end");
+var activeID = 0;
 var clicker = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        console.log("we obseve evertyhing", entry.target);
-        makeActive(entry.target, null, 100);
+        clickSound();
+        makeActive(entry.target);
+        updateHighlight();
       }
     });
   },
@@ -19,85 +25,186 @@ var clicker = new IntersectionObserver(
     threshold: 0.1
   }
 );
+var ctx = new AudioContext();
 var createTilesFromSnapshots = async (snapshots) => {
+  console.log("creating snapshot tiles");
+  let lastTile = null;
   rewind_overlay.style.display = "flex";
-  console.log(snapshots);
+  setupRewindButtons();
+  setupTimeline(snapshots.length);
   for (let i = 0; i < snapshots.length; i++) {
     let snapshot = snapshots[i];
     let tile = document.createElement("div");
+    tile.id = "tile-" + i;
+    clicker.observe(tile);
     tile.classList.add("tape-item");
     let img = document.createElement("canvas");
     img.height = snapshot.image.height;
     img.width = snapshot.image.width;
     tile.addEventListener("mousedown", () => {
-      makeActive(tile, snapshot.image);
+      makeActive(tile);
     });
     img.getContext("2d").drawImage(snapshot.image, 0, 0);
+    lastTile = tile;
     tile.append(img);
     track.append(tile);
   }
+  console.log("making this");
+  lastTile.scrollIntoView({
+    behavior: "smooth",
+    inline: "nearest",
+    block: "center"
+  });
 };
 var makeMockTiles = async () => {
+  let lastTile = null;
+  setupRewindButtons(100);
   setupTimeline(100);
   for (let i = 0; i < 100; i++) {
     let tile = document.createElement("div");
     tile.classList.add("tape-item");
     tile.id = "tile-" + i;
-    let img = document.createElement("canvas");
+    let img = createRandomPixelArt();
     tile.appendChild(img);
     tile.addEventListener("mousedown", () => {
-      makeActive(tile, null, 100);
+      makeActive(tile);
     });
     clicker.observe(tile);
+    lastTile = tile;
     track.append(tile);
   }
+  lastTile.scrollIntoView({
+    behavior: "smooth",
+    inline: "nearest",
+    block: "center"
+  });
+};
+var setupRewindButtons = (length) => {
+  next.addEventListener("click", () => {
+    let target = parseInt(activeID, 10) + 1;
+    if (target > length - 1) {
+      target = length - 1;
+    }
+    let targetEl = document.getElementById("tile-" + target);
+    makeActive(document.getElementById("tile-" + target));
+    scrollReelToValue(target, convertValToPerc().center);
+  });
+  back.addEventListener("click", () => {
+    let target = parseInt(activeID, 10) - 1;
+    if (target < 0) {
+      target = 0;
+    }
+    let targetEl = document.getElementById("tile-" + target);
+    makeActive(targetEl);
+    scrollReelToValue(target, convertValToPerc().center);
+  });
+  end.addEventListener("click", async () => {
+    let target = length - 1;
+    let targetEl = document.getElementById("tile-" + target);
+    scrollReelToValue(target, false);
+    await wait(200);
+    makeActive(targetEl);
+  });
+  start.addEventListener("click", async () => {
+    let target = 0;
+    let targetEl = document.getElementById("tile-" + target);
+    scrollReelToValue(target, false);
+    await wait(200);
+    makeActive(targetEl);
+  });
 };
 var lastactive = null;
-var makeActive = (el, image, length) => {
+var makeActive = (el) => {
   if (lastactive != null) {
     lastactive.classList.remove("tape-active");
   }
-  if (image != null) {
-    preview_img.height = image.height;
-    preview_img.width = image.width;
-    preview_img.getContext("2d").drawImage(image, 0, 0);
-  }
+  let source = el.querySelector("canvas");
+  preview_img.height = 240;
+  preview_img.width = 256;
+  preview_img.getContext("2d").drawImage(source, 0, 0);
   el.classList.add("tape-active");
   let index = el.id.slice(5);
   timeline.value = index;
+  activeID = index;
   lastactive = el;
 };
 var setupTimeline = (val) => {
   timeline.min = 0;
-  timeline.max = val;
+  timeline.max = val - 1;
 };
 timeline.addEventListener("input", (e) => {
-  let max = e.target.max;
-  let min = e.target.min;
-  let value = e.target.value;
-  let perc = (value - min) / (max - min) * 100;
-  let center = true;
-  if (perc < 6) {
-    perc = 6;
-  }
-  if (perc > 94) {
-    perc = 94;
-    center = false;
-  }
-  highligh_view.style.left = perc - 6 + "%";
-  scrollReelToValue(value, center);
+  scrollReelToValue(timeline.value, convertValToPerc().center);
 });
+var updateHighlight = () => {
+  let res = convertValToPerc();
+  highligh_view.style.left = res.perc - 6 + "%";
+  return res.center;
+};
 var scrollReelToValue = (value, center) => {
   let elemtentID = "tile-" + Math.round(value);
   let tile = document.getElementById(elemtentID);
   console.log(center, center ? "center" : "nearest");
-  tile.classList.add("tape-active");
   tile.scrollIntoView({
     behavior: "instant",
     inline: center ? "center" : "nearest",
     block: "center"
   });
 };
+var convertValToPerc = () => {
+  let max = timeline.max;
+  let min = timeline.min;
+  let val = timeline.value;
+  let perc = (val - min) / (max - min) * 100;
+  let center = true;
+  if (perc < 6) {
+    perc = 6;
+    center = false;
+  }
+  if (perc > 94) {
+    perc = 94;
+    center = false;
+  }
+  return { perc, center };
+};
+var clickSound = () => {
+  if (ctx == null) return;
+  const osc = ctx.createOscillator();
+  const gain2 = ctx.createGain();
+  osc.connect(gain2);
+  gain2.connect(ctx.destination);
+  osc.frequency.value = 900;
+  gain2.gain.setValueAtTime(0.4, ctx.currentTime);
+  gain2.gain.exponentialRampToValueAtTime(1e-3, ctx.currentTime + 0.02);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.02);
+};
+function createRandomPixelArt(blockSize = 4) {
+  const canvas2 = document.createElement("canvas");
+  canvas2.width = 256;
+  canvas2.height = 240;
+  const ctx3 = canvas2.getContext("2d");
+  const palette = [
+    "#000000",
+    "#FCFCFC",
+    "#F8F8F8",
+    "#BCBCBC",
+    "#7C7C7C",
+    "#A40000",
+    "#0000FC",
+    "#00A800",
+    "#F8B800",
+    "#00FCFC",
+    "#F800F8",
+    "#585858"
+  ];
+  for (let y = 0; y < canvas2.height; y += blockSize) {
+    for (let x = 0; x < canvas2.width; x += blockSize) {
+      ctx3.fillStyle = palette[Math.floor(Math.random() * palette.length)];
+      ctx3.fillRect(x, y, blockSize, blockSize);
+    }
+  }
+  return canvas2;
+}
 
 // static/scripts/driver.js
 var worker = new Worker(new URL("./emuWorker.js", import.meta.url));
@@ -105,8 +212,8 @@ var fBytes = null;
 var inputBuf = new SharedArrayBuffer(4);
 var inputState = new Int32Array(inputBuf);
 var canvas = document.getElementById("screen");
-var ctx = canvas.getContext("2d");
-var imageData = ctx.createImageData(256, 240);
+var ctx2 = canvas.getContext("2d");
+var imageData = ctx2.createImageData(256, 240);
 var speedBuf = new SharedArrayBuffer(4);
 var speedNum = new Int32Array(speedBuf);
 var audioBufS = null;
@@ -192,11 +299,10 @@ worker.onmessage = async ({ data }) => {
       break;
     case "snaps":
       await createTilesFromSnapshots(data.snaps);
-      await ResumeGame();
       break;
     case "frameUp":
       imageData.data.set(fBytes);
-      ctx.putImageData(imageData, 0, 0);
+      ctx2.putImageData(imageData, 0, 0);
       break;
   }
 };
@@ -584,7 +690,7 @@ var C = {
 function drawKnob(id, angleDeg) {
   knobSettings[id].angle = angleDeg;
   const canvas2 = document.getElementById(id);
-  const ctx2 = canvas2.getContext("2d");
+  const ctx3 = canvas2.getContext("2d");
   const width = canvas2.width;
   const height = canvas2.height;
   const cx = Math.floor(width / 2);
@@ -592,8 +698,8 @@ function drawKnob(id, angleDeg) {
   const r = Math.floor(width / 2) - 1;
   const fill = (x, y, col) => {
     if (x < 0 || y < 0 || x >= width || y >= height) return;
-    ctx2.fillStyle = col;
-    ctx2.fillRect(x, y, 1, 1);
+    ctx3.fillStyle = col;
+    ctx3.fillRect(x, y, 1, 1);
   };
   for (let py = -r; py <= r; py++) {
     for (let px = -r; px <= r; px++) {
@@ -742,26 +848,26 @@ var cleapUpOverlay = () => {
 };
 var drawNav = () => {
   var c = document.getElementById("canvas-back");
-  var ctx2 = c.getContext("2d");
+  var ctx3 = c.getContext("2d");
   var PS = 16, COLS = 14, ROWS = 14;
   var T = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
   var G = [0, 0, 0, 0, 0, 0, 0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "dk", "dk", "dk", "dk", "hi", 0];
   for (var i = 0; i < G.length; i++) {
     if (!G[i]) continue;
     var r = Math.floor(i / COLS), col = i % COLS;
-    ctx2.fillStyle = T[G[i]];
-    ctx2.fillRect(col * PS, r * PS, PS, PS);
+    ctx3.fillStyle = T[G[i]];
+    ctx3.fillRect(col * PS, r * PS, PS, PS);
   }
   var c = document.getElementById("canvas-next");
-  var ctx2 = c.getContext("2d");
+  var ctx3 = c.getContext("2d");
   var PS = 16, COLS = 14, ROWS = 14;
   var T = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
   var G = [0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "dk", "dk", "dk", "dk", "dk", 0, 0, 0, 0, 0, 0, 0];
   for (var i = 0; i < G.length; i++) {
     if (!G[i]) continue;
     var r = Math.floor(i / COLS), col = i % COLS;
-    ctx2.fillStyle = T[G[i]];
-    ctx2.fillRect(col * PS, r * PS, PS, PS);
+    ctx3.fillStyle = T[G[i]];
+    ctx3.fillRect(col * PS, r * PS, PS, PS);
   }
 };
 

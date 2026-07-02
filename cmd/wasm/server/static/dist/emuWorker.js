@@ -94,6 +94,7 @@
       Atomics.store(control, 2, 0);
       Atomics.notify(control, 2);
     }
+    console.log("execution has been paused");
   };
   var loadRom = async (game) => {
     const response = await fetch("/games/" + game + ".nes");

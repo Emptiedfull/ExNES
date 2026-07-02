@@ -7,12 +7,23 @@ const rewind_overlay = document.getElementById("rewind-overlay")
 const timeline = document.getElementById("rewind-timeline")
 const highligh_view = document.getElementById("rewind-highlight")
 
+const back = document.getElementById("rewind-back")
+const next = document.getElementById("rewind-next")
+const start = document.getElementById("rewind-start")
+const end = document.getElementById("rewind-end")
+
+let activeID = 0
+
 const clicker = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
-            console.log("we obseve evertyhing",entry.target)
-            makeActive(entry.target,null,100)
-            // clickSound()
+
+            clickSound()
+
+
+            makeActive(entry.target)
+            updateHighlight()
+
         }
     })
 },
@@ -22,16 +33,22 @@ const clicker = new IntersectionObserver((entries) => {
         threshold: 0.1,
     })
 
-let ctx = null
+let ctx = new AudioContext()
+
 
 
 
 export const createTilesFromSnapshots = async (snapshots) => {
+    console.log("creating snapshot tiles")
+    let lastTile = null
     rewind_overlay.style.display = "flex"
-    console.log(snapshots)
+    setupRewindButtons()
+    setupTimeline(snapshots.length)
     for (let i = 0; i < snapshots.length; i++) {
         let snapshot = snapshots[i]
         let tile = document.createElement("div")
+        tile.id = "tile-" + i
+        clicker.observe(tile)
 
         tile.classList.add("tape-item")
 
@@ -41,117 +58,186 @@ export const createTilesFromSnapshots = async (snapshots) => {
         img.width = snapshot.image.width
 
         tile.addEventListener("mousedown", () => {
-            makeActive(tile, snapshot.image)
+            makeActive(tile)
         })
 
         img.getContext('2d').drawImage(snapshot.image, 0, 0)
 
-
+        lastTile = tile
         tile.append(img)
         track.append(tile)
     }
+    console.log("making this")
+    lastTile.scrollIntoView({
+        behavior: "smooth",
+        inline: "nearest",
+        block: "center"
+    })
 
 }
 
 export const makeMockTiles = async () => {
+    let lastTile = null
+    setupRewindButtons(100)
     setupTimeline(100)
     for (let i = 0; i < 100; i++) {
         let tile = document.createElement("div")
         tile.classList.add("tape-item")
         tile.id = "tile-" + i
 
-        let img = document.createElement("canvas")
+        let img = createRandomPixelArt()
         tile.appendChild(img)
 
         tile.addEventListener("mousedown", () => {
-            makeActive(tile,null,100)
+            makeActive(tile)
         })
 
         clicker.observe(tile)
+        lastTile = tile
 
         track.append(tile)
 
     }
+    lastTile.scrollIntoView({
+        behavior: "smooth",
+        inline: "nearest",
+        block: "center"
+    })
+
 }
 
+const setupRewindButtons = (length) => {
+    next.addEventListener("click", () => {
+        let target = parseInt(activeID, 10) + 1
+        if (target > length - 1) {
+            target = length - 1
+        }
+        let targetEl = document.getElementById("tile-" + target)
+        makeActive(document.getElementById("tile-" + target))
+        scrollReelToValue(target, convertValToPerc().center)
+
+    })
+
+    back.addEventListener("click", () => {
+        let target = parseInt(activeID, 10) - 1
+        if (target < 0) {
+            target = 0
+        }
+
+        let targetEl = document.getElementById("tile-" + target)
+        makeActive(targetEl)
+        scrollReelToValue(target, convertValToPerc().center)
+    })
+
+    end.addEventListener("click",async()=>{
+        let target = length - 1
+         let targetEl = document.getElementById("tile-" + target)
+          scrollReelToValue(target, false)
+          await wait(200)
+        makeActive(targetEl)
+       
+    })
+
+    start.addEventListener("click",async()=>{
+        let target = 0
+         let targetEl = document.getElementById("tile-" + target)
+          scrollReelToValue(target, false)
+          await wait(200)
+        makeActive(targetEl)
+       
+    })
+}
 
 let lastactive = null
 
-const makeActive = (el, image,length) => {
+const makeActive = (el) => {
+
 
     if (lastactive != null) {
         lastactive.classList.remove("tape-active")
     }
 
+    let source = el.querySelector("canvas")
 
-    if (image != null) {
-        preview_img.height = image.height
-        preview_img.width = image.width
-        preview_img.getContext("2d").drawImage(image, 0, 0)
-    }
+    preview_img.height = 240
+    preview_img.width = 256
 
-    // el.scrollIntoView({
-    //     behavior: "smooth",
-    //     inline: "center",
-    //     block: "center"
-    // })
+    preview_img.getContext("2d").drawImage(source, 0, 0)
 
     el.classList.add("tape-active")
 
     let index = el.id.slice(5)
-    
+
     timeline.value = index
+    activeID = index
 
     lastactive = el
 }
 
-const setupTimeline = (val)=>{
-    timeline.min = 0 
-    timeline.max = val
+const setupTimeline = (val) => {
+    timeline.min = 0
+    timeline.max = val - 1
 }
 
-timeline.addEventListener("input",(e)=>{
-   
-    let max = e.target.max
-    let min = e.target.min 
+timeline.addEventListener("input", (e) => {
 
-    let value = e.target.value
+    
 
-    let perc = ((value - min) / (max - min)) * 100
-
-    let center = true
-
-    if (perc < 6){
-        perc = 6
-    }
-
-    if (perc > 94){
-        perc = 94
-        center = false
-    }
-
-    highligh_view.style.left = perc-6 + "%"
-
-    scrollReelToValue(value,center)
+    scrollReelToValue(timeline.value, convertValToPerc().center)
 })
 
+const updateHighlight = () => {
+
+    let res = convertValToPerc()
+
+    highligh_view.style.left = res.perc - 6 + "%"
+    return res.center
+}
 
 
-const scrollReelToValue= (value,center)=>{
-    
+
+const scrollReelToValue = (value, center) => {
+
 
     let elemtentID = "tile-" + Math.round(value)
 
     let tile = document.getElementById(elemtentID)
-    console.log(center,center ? "center":"nearest")
-    tile.classList.add("tape-active")
+    console.log(center, center ? "center" : "nearest")
 
     tile.scrollIntoView({
         behavior: "instant",
-        inline:center ? "center" : "nearest",
-        block:"center"
+        inline: center ? "center" : "nearest",
+        block: "center"
     })
 }
+
+const convertValToPerc = () => {
+    let max = timeline.max
+    let min = timeline.min
+    let val = timeline.value
+
+    let perc = ((val - min) / (max - min)) * 100
+
+    let center = true
+
+    if (perc < 6) {
+        perc = 6
+        center = false
+    }
+
+    if (perc > 94) {
+        perc = 94
+        center = false
+    }
+
+
+    return { perc, center }
+}
+
+const getCenter = (perc) => {
+
+}
+
 
 const clickSound = () => {
 
@@ -176,5 +262,27 @@ const clickSound = () => {
 export const StartRewindEngine = async () => {
     rewind_overlay.style.display = "flex"
 
+
     await createTiles()
+}
+
+function createRandomPixelArt(blockSize = 4) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 240;
+    const ctx = canvas.getContext('2d');
+
+
+    const palette = ['#000000', '#FCFCFC', '#F8F8F8', '#BCBCBC',
+        '#7C7C7C', '#A40000', '#0000FC', '#00A800',
+        '#F8B800', '#00FCFC', '#F800F8', '#585858'];
+
+    for (let y = 0; y < canvas.height; y += blockSize) {
+        for (let x = 0; x < canvas.width; x += blockSize) {
+            ctx.fillStyle = palette[Math.floor(Math.random() * palette.length)];
+            ctx.fillRect(x, y, blockSize, blockSize);
+        }
+    }
+
+    return canvas;
 }

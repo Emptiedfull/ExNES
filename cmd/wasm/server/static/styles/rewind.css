@@ -1,4 +1,4 @@
-.rewind-overlay{
+.rewind-overlay {
     background-color: rgba(0, 0, 0, 0.6);
     width: 100%;
     height: 100%;
@@ -12,14 +12,14 @@
     gap: 3rem;
 }
 
-.rewind-container{
-    
+.rewind-container {
+
     width: 100%;
     background-color: pink;
 }
 
 .tape-container {
-    
+
     width: 100%;
     background-color: #161412;
     display: flex;
@@ -28,32 +28,33 @@
     justify-content: center;
 
     background-position: 0 0, 8px 8px;
-    
- 
+
+
 }
 
 .decorative-tape {
-  height: 3.5rem;
-  width: 100%;
-  
+    height: 3.5rem;
+    width: 100%;
 
-  background-image:
-    
-    radial-gradient(circle, rgba(255,255,255,0.18) 6px, transparent 7px),
-    
-    radial-gradient(circle, #2d0d0a 0 5.5px,rgb(86, 42, 42) 6.5px, transparent 8px);
 
-  background-size: 32px 32px;
-  background-position: center, center;
+    background-image:
+
+        radial-gradient(circle, rgba(255, 255, 255, 0.18) 6px, transparent 7px),
+
+        radial-gradient(circle, #2d0d0a 0 5.5px, rgb(86, 42, 42) 6.5px, transparent 8px);
+
+    background-size: 32px 32px;
+    background-position: center, center;
 }
-.items-container{
+
+.items-container {
     width: 100%;
     height: 90%;
 
-    
-    padding-bottom:1rem;
+
+    padding-bottom: 1rem;
     background-color: #161412;
-    
+
     display: flex;
     flex-direction: row;
     white-space: nowrap;
@@ -62,9 +63,10 @@
 }
 
 .items-container::-webkit-scrollbar {
-  height: 4px;           
-  width: 6px;            
+    height: 4px;
+    width: 6px;
 }
+
 /* 
 .items-container::-webkit-scrollbar-track {
   background: #2a2420;
@@ -73,24 +75,24 @@
 
 
 .items-container::-webkit-scrollbar-thumb {
-  background: #544639;
-  border-radius: 6px;
+    background: #544639;
+    border-radius: 6px;
 }
 
 .items-container::-webkit-scrollbar-thumb:hover {
-  background: #e8b04b;
+    background: #e8b04b;
 }
 
-.tape-item{
+.tape-item {
     width: 8%;
     /* min-width: 100px; */
     aspect-ratio: 4/3;
     flex: 0 0 auto;
-   
-    
+
+
 }
 
-.tape-item canvas{
+.tape-item canvas {
     height: 100%;
     width: 100%;
     opacity: 0.4;
@@ -98,42 +100,30 @@
 
 
 
-.tape-item canvas:hover{
+.tape-item canvas:hover {
     opacity: 1;
 }
 
-.tape-item:hover{
+.tape-item:hover {
     background-color: red;
     transform: scale(1.05);
     opacity: 0.8;
     z-index: 20000;
 }
 
-.rewind-preview{
-    width: 40%;
-    aspect-ratio: 1.2/1;
-    
-}
-
-#preview-img{
-    height: 100%;
-    width: 100%;
-    object-fit: fill;
-}
-
-.tape-active{
+.tape-active {
     background-color: blueviolet;
-    opacity: 1 !important; 
-    /* transform: scale(1.2) !important; */
+    opacity: 1 !important;
+    transform: scale(1.05) !important;
 }
 
-.tape-active canvas{
-     opacity: 1 !important; 
+.tape-active canvas {
+    opacity: 1 !important;
 }
 
-.rewind-controls{
+.rewind-controls {
     min-height: 60px;
-   
+
     width: 70%;
     display: flex;
     flex-direction: row;
@@ -142,7 +132,7 @@
 }
 
 
-.rewind-controls span{
+.rewind-controls span {
     height: 100%;
     aspect-ratio: 1/1;
     background-color: #FFF0D9;
@@ -151,27 +141,27 @@
     align-items: center;
 
     border: 3px solid #2c2c2a;
-    
+
     border-radius: 0;
-    
+
 }
 
-.rewind-start{
+.rewind-start {
     box-shadow: 4px 4px 0 #2c2c2a;
 }
 
-.rewind-end{
-     box-shadow: -4px 4px 0 #2c2c2a ; 
+.rewind-end {
+    box-shadow: -4px 4px 0 #2c2c2a;
 }
 
-.rewind-end:active{
+.rewind-end:active {
     box-shadow: -1px 1px 0 #2c2c2a !important;
-    transform: translate(-3px,3px) !important;
+    transform: translate(-3px, 3px) !important;
 }
 
-.rewind-end:hover{
+.rewind-end:hover {
     box-shadow: -6px 6px 0 #2c2c2a;
-    transform: translate(2px,-2px);
+    transform: translate(2px, -2px);
 }
 
 
@@ -181,32 +171,30 @@
     transform: translate(3px, 3px) !important;
 }
 
-.rewind-start:hover{
-    box-shadow: 6px 6px 0 #2c2c2a ;
-    transform: translate(-2px,-2px);
+.rewind-start:hover {
+    box-shadow: 6px 6px 0 #2c2c2a;
+    transform: translate(-2px, -2px);
 }
 
 .rewind-miniscroll {
     width: 100%;
     -webkit-appearance: none;
     appearance: none;
-    
+
     background: #544639;
     border: 3px solid #2c2c2a;
-    box-shadow: inset 2px 2px 0 rgba(0,0,0,0.25);
-    
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.25);
+
     cursor: pointer;
 
     align-self: stretch;
 
-    
-    background-image: repeating-linear-gradient(
-        90deg,
-        #6b5c4a 0,
-        #6b5c4a 2px,
-        transparent 2px,
-        transparent calc(6% - 2px)
-    );
+
+    background-image: repeating-linear-gradient(90deg,
+            #6b5c4a 0,
+            #6b5c4a 2px,
+            transparent 2px,
+            transparent calc(6% - 2px));
     background-repeat: no-repeat;
     background-size: 100% 100%;
 }
@@ -218,34 +206,34 @@
     width: 6px;
     height: 38px;
     background-color: #a52d20;
-     z-index: 200;
-   
+    z-index: 200;
+
 }
 
 .rewind-miniscroll::-moz-range-thumb {
-      appearance: none;
+    appearance: none;
     width: 6px;
     height: 38px;
     background-color: #9c3428;
     z-index: 200;
 }
 
-.rewind-bar{
+.rewind-bar {
     flex: 1;
     height: 100%;
     position: relative;
 }
 
-.rewind-highlight{
+.rewind-highlight {
     position: absolute;
     align-self: center;
     height: 80%;
     width: 12%;
     left: 20%;
     background-color: rgba(255, 255, 255, 0.1);
-    
+
     border-right: white;
-    border-left: white ;
+    border-left: white;
     border-width: 2px;
     border-style: solid;
     border-top: none;
@@ -263,4 +251,130 @@
 
 .rewind-miniscroll::-moz-focus-outer {
     border: 0;
+}
+
+.review-cartridge {
+    position: relative;
+    max-width: 350px;
+    width: 50%;
+}
+
+.review-cartridge-shadow {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 100%;
+    height: 100%;
+    background: #1a1712;
+
+}
+
+.review-cartridge-body {
+    position: relative;
+    background: #b8874f;
+    padding: 2rem;
+    padding-bottom: 0;
+    box-sizing: border-box;
+}
+
+.review-cartridge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.review-screw {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #6b5c4a;
+    border: 2px solid #2c2c2a;
+}
+
+.review-cartridge-label,
+.review-cartridge-id {
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 11px;
+    color: #2c2c2a;
+
+}
+
+
+
+.review-screen-inset {
+    position: relative;
+    z-index: 1;
+    aspect-ratio: 256 / 240;
+    border: 4px solid #2c2c2a;
+    background: #000;
+}
+
+#preview-img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.review-load-wrap {
+    position: relative;
+    margin-top: 1rem;
+}
+
+.review-load-shadow {
+    position: absolute;
+    top: 4px;
+
+    width: 100%;
+    height: 100%;
+    background: #2c2c2a;
+}
+
+.review-load {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding: 10px 0;
+    background: #FFF0D9;
+    border: 3px solid #2c2c2a;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 15px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: transform 0.06s ease;
+}
+
+.review-load:active {
+    transform: translate(0px, 4px);
+}
+
+
+.review-pin-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 2rem;
+    padding: 0 6px;
+}
+
+.review-pin {
+    flex: 1;
+    height: 4rem;
+    background: #d4b483;
+    border-left: 2px solid #2c2c2a;
+    border-right: 2px solid #2c2c2a;
+
+    background-image: repeating-linear-gradient(90deg,
+            #2c2c2a 0px,
+            #2c2c2a 1px,
+            #e8c99a 1px,
+            #e8c99a 2px,
+            transparent 2px,
+            transparent 4px);
+
+    transform: translate(0, 1rem);
+
 }

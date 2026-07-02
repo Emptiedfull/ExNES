@@ -160,6 +160,8 @@ const pump = ()=>{
         Atomics.store(control,2,0)
         Atomics.notify(control,2) //god pls work this is my 5th rewrite
     }
+
+    console.log("execution has been paused")
 }
 
 

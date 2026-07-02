@@ -72,6 +72,8 @@ export const PauseGame = async ()=>{
 
     Atomics.store(control,2,2)
     Atomics.notify(control,2)
+
+
 }
 
 export const ResumeGame = async ()=>{
@@ -129,10 +131,9 @@ worker.onmessage = async ({ data }) => {
             worker.postMessage({ type: "init", inputBuf,speedBuf })
             break
         case 'snaps':
-            
             await createTilesFromSnapshots(data.snaps)
             
-            await ResumeGame()
+            // await ResumeGame()
             break
         case 'frameUp':
             imageData.data.set(fBytes)
