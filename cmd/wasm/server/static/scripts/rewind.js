@@ -5,12 +5,14 @@ const preview_img = document.getElementById("preview-img")
 const rewind_overlay = document.getElementById("rewind-overlay")
 
 const timeline = document.getElementById("rewind-timeline")
+const highligh_view = document.getElementById("rewind-highlight")
 
 const clicker = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
-
-            clickSound()
+            console.log("we obseve evertyhing",entry.target)
+            makeActive(entry.target,null,100)
+            // clickSound()
         }
     })
 },
@@ -22,13 +24,7 @@ const clicker = new IntersectionObserver((entries) => {
 
 let ctx = null
 
-// document.addEventListener("keydown",async()=>{
-//     if (ctx == null){
-//         ctx = new AudioContext()
 
-//         await StartRewindEngine()
-//     }   
-// })
 
 export const createTilesFromSnapshots = async (snapshots) => {
     rewind_overlay.style.display = "flex"
@@ -58,7 +54,7 @@ export const createTilesFromSnapshots = async (snapshots) => {
 }
 
 export const makeMockTiles = async () => {
-    setupTimeline(150)
+    setupTimeline(100)
     for (let i = 0; i < 100; i++) {
         let tile = document.createElement("div")
         tile.classList.add("tape-item")
@@ -70,6 +66,8 @@ export const makeMockTiles = async () => {
         tile.addEventListener("mousedown", () => {
             makeActive(tile,null,100)
         })
+
+        clicker.observe(tile)
 
         track.append(tile)
 
@@ -92,11 +90,11 @@ const makeActive = (el, image,length) => {
         preview_img.getContext("2d").drawImage(image, 0, 0)
     }
 
-    el.scrollIntoView({
-        behavior: "smooth",
-        inline: "nearest",
-        block: "center"
-    })
+    // el.scrollIntoView({
+    //     behavior: "smooth",
+    //     inline: "center",
+    //     block: "center"
+    // })
 
     el.classList.add("tape-active")
 
@@ -112,6 +110,48 @@ const setupTimeline = (val)=>{
     timeline.max = val
 }
 
+timeline.addEventListener("input",(e)=>{
+   
+    let max = e.target.max
+    let min = e.target.min 
+
+    let value = e.target.value
+
+    let perc = ((value - min) / (max - min)) * 100
+
+    let center = true
+
+    if (perc < 6){
+        perc = 6
+    }
+
+    if (perc > 94){
+        perc = 94
+        center = false
+    }
+
+    highligh_view.style.left = perc-6 + "%"
+
+    scrollReelToValue(value,center)
+})
+
+
+
+const scrollReelToValue= (value,center)=>{
+    
+
+    let elemtentID = "tile-" + Math.round(value)
+
+    let tile = document.getElementById(elemtentID)
+    console.log(center,center ? "center":"nearest")
+    tile.classList.add("tape-active")
+
+    tile.scrollIntoView({
+        behavior: "instant",
+        inline:center ? "center" : "nearest",
+        block:"center"
+    })
+}
 
 const clickSound = () => {
 

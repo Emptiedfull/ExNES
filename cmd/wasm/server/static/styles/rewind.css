@@ -122,8 +122,9 @@
 }
 
 .tape-active{
+    background-color: blueviolet;
     opacity: 1 !important; 
-    transform: scale(1.2) !important;
+    /* transform: scale(1.2) !important; */
 }
 
 .tape-active canvas{
@@ -186,7 +187,7 @@
 }
 
 .rewind-miniscroll {
-    flex: 1;
+    width: 100%;
     -webkit-appearance: none;
     appearance: none;
     
@@ -216,7 +217,8 @@
     appearance: none;
     width: 6px;
     height: 38px;
-    background-color: #9c3428;
+    background-color: #a52d20;
+     z-index: 200;
    
 }
 
@@ -225,8 +227,32 @@
     width: 6px;
     height: 38px;
     background-color: #9c3428;
+    z-index: 200;
 }
 
+.rewind-bar{
+    flex: 1;
+    height: 100%;
+    position: relative;
+}
+
+.rewind-highlight{
+    position: absolute;
+    align-self: center;
+    height: 80%;
+    width: 12%;
+    left: 20%;
+    background-color: rgba(255, 255, 255, 0.1);
+    
+    border-right: white;
+    border-left: white ;
+    border-width: 2px;
+    border-style: solid;
+    border-top: none;
+    border-bottom: none;
+    z-index: 100;
+    pointer-events: none;
+}
 
 .rewind-miniscroll::-moz-range-track {
     height: 100%;

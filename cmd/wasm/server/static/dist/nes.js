@@ -3,11 +3,13 @@ var track = document.getElementById("items-container");
 var preview_img = document.getElementById("preview-img");
 var rewind_overlay = document.getElementById("rewind-overlay");
 var timeline = document.getElementById("rewind-timeline");
+var highligh_view = document.getElementById("rewind-highlight");
 var clicker = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        clickSound();
+        console.log("we obseve evertyhing", entry.target);
+        makeActive(entry.target, null, 100);
       }
     });
   },
@@ -17,7 +19,6 @@ var clicker = new IntersectionObserver(
     threshold: 0.1
   }
 );
-var ctx = null;
 var createTilesFromSnapshots = async (snapshots) => {
   rewind_overlay.style.display = "flex";
   console.log(snapshots);
@@ -37,7 +38,7 @@ var createTilesFromSnapshots = async (snapshots) => {
   }
 };
 var makeMockTiles = async () => {
-  setupTimeline(150);
+  setupTimeline(100);
   for (let i = 0; i < 100; i++) {
     let tile = document.createElement("div");
     tile.classList.add("tape-item");
@@ -47,6 +48,7 @@ var makeMockTiles = async () => {
     tile.addEventListener("mousedown", () => {
       makeActive(tile, null, 100);
     });
+    clicker.observe(tile);
     track.append(tile);
   }
 };
@@ -60,11 +62,6 @@ var makeActive = (el, image, length) => {
     preview_img.width = image.width;
     preview_img.getContext("2d").drawImage(image, 0, 0);
   }
-  el.scrollIntoView({
-    behavior: "smooth",
-    inline: "nearest",
-    block: "center"
-  });
   el.classList.add("tape-active");
   let index = el.id.slice(5);
   timeline.value = index;
@@ -74,17 +71,32 @@ var setupTimeline = (val) => {
   timeline.min = 0;
   timeline.max = val;
 };
-var clickSound = () => {
-  if (ctx == null) return;
-  const osc = ctx.createOscillator();
-  const gain2 = ctx.createGain();
-  osc.connect(gain2);
-  gain2.connect(ctx.destination);
-  osc.frequency.value = 900;
-  gain2.gain.setValueAtTime(0.4, ctx.currentTime);
-  gain2.gain.exponentialRampToValueAtTime(1e-3, ctx.currentTime + 0.02);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.02);
+timeline.addEventListener("input", (e) => {
+  let max = e.target.max;
+  let min = e.target.min;
+  let value = e.target.value;
+  let perc = (value - min) / (max - min) * 100;
+  let center = true;
+  if (perc < 6) {
+    perc = 6;
+  }
+  if (perc > 94) {
+    perc = 94;
+    center = false;
+  }
+  highligh_view.style.left = perc - 6 + "%";
+  scrollReelToValue(value, center);
+});
+var scrollReelToValue = (value, center) => {
+  let elemtentID = "tile-" + Math.round(value);
+  let tile = document.getElementById(elemtentID);
+  console.log(center, center ? "center" : "nearest");
+  tile.classList.add("tape-active");
+  tile.scrollIntoView({
+    behavior: "instant",
+    inline: center ? "center" : "nearest",
+    block: "center"
+  });
 };
 
 // static/scripts/driver.js
@@ -93,8 +105,8 @@ var fBytes = null;
 var inputBuf = new SharedArrayBuffer(4);
 var inputState = new Int32Array(inputBuf);
 var canvas = document.getElementById("screen");
-var ctx2 = canvas.getContext("2d");
-var imageData = ctx2.createImageData(256, 240);
+var ctx = canvas.getContext("2d");
+var imageData = ctx.createImageData(256, 240);
 var speedBuf = new SharedArrayBuffer(4);
 var speedNum = new Int32Array(speedBuf);
 var audioBufS = null;
@@ -184,7 +196,7 @@ worker.onmessage = async ({ data }) => {
       break;
     case "frameUp":
       imageData.data.set(fBytes);
-      ctx2.putImageData(imageData, 0, 0);
+      ctx.putImageData(imageData, 0, 0);
       break;
   }
 };
@@ -572,7 +584,7 @@ var C = {
 function drawKnob(id, angleDeg) {
   knobSettings[id].angle = angleDeg;
   const canvas2 = document.getElementById(id);
-  const ctx3 = canvas2.getContext("2d");
+  const ctx2 = canvas2.getContext("2d");
   const width = canvas2.width;
   const height = canvas2.height;
   const cx = Math.floor(width / 2);
@@ -580,8 +592,8 @@ function drawKnob(id, angleDeg) {
   const r = Math.floor(width / 2) - 1;
   const fill = (x, y, col) => {
     if (x < 0 || y < 0 || x >= width || y >= height) return;
-    ctx3.fillStyle = col;
-    ctx3.fillRect(x, y, 1, 1);
+    ctx2.fillStyle = col;
+    ctx2.fillRect(x, y, 1, 1);
   };
   for (let py = -r; py <= r; py++) {
     for (let px = -r; px <= r; px++) {
@@ -730,26 +742,26 @@ var cleapUpOverlay = () => {
 };
 var drawNav = () => {
   var c = document.getElementById("canvas-back");
-  var ctx3 = c.getContext("2d");
+  var ctx2 = c.getContext("2d");
   var PS = 16, COLS = 14, ROWS = 14;
   var T = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
   var G = [0, 0, 0, 0, 0, 0, 0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "dk", "dk", "dk", "dk", "hi", 0];
   for (var i = 0; i < G.length; i++) {
     if (!G[i]) continue;
     var r = Math.floor(i / COLS), col = i % COLS;
-    ctx3.fillStyle = T[G[i]];
-    ctx3.fillRect(col * PS, r * PS, PS, PS);
+    ctx2.fillStyle = T[G[i]];
+    ctx2.fillRect(col * PS, r * PS, PS, PS);
   }
   var c = document.getElementById("canvas-next");
-  var ctx3 = c.getContext("2d");
+  var ctx2 = c.getContext("2d");
   var PS = 16, COLS = 14, ROWS = 14;
   var T = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
   var G = [0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "dk", "dk", "dk", "dk", "dk", 0, 0, 0, 0, 0, 0, 0];
   for (var i = 0; i < G.length; i++) {
     if (!G[i]) continue;
     var r = Math.floor(i / COLS), col = i % COLS;
-    ctx3.fillStyle = T[G[i]];
-    ctx3.fillRect(col * PS, r * PS, PS, PS);
+    ctx2.fillStyle = T[G[i]];
+    ctx2.fillRect(col * PS, r * PS, PS, PS);
   }
 };
 
