@@ -31,8 +31,6 @@ const roms = [left, middle, right]
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // await makeMockTiles()
-
     startRandomTipEngine()
     await setUpKnobs()
     await setUpButtons()

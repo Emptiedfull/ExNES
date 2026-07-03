@@ -213,7 +213,7 @@ func (c *Console) PopulateSnapshot(s *snapshot) {
 	c.Cpu.TakeCpuSnapshot(&s.CpuState)
 	c.Ppu.TakePpuSnapshot(&s.PpuState)
 	c.Apu.TakeSnapshot(&s.ApuState)
-	c.mapper.TakeSnapshot(&s.mapperState)
+	c.mapper.TakeSnapshot(s.mapperState)
 	s.Frame_no = c.Ppu.Frame
 	s.Cycles = c.Cpu.TotalCycles
 }

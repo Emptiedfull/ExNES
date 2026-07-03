@@ -1,7 +1,6 @@
 package Core
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -13,7 +12,7 @@ type Mapper interface {
 	WriteCHR(addr uint16, val uint8)
 
 	getMirroring() uint8
-	TakeSnapshot(*MapperScreenShot)
+	TakeSnapshot(MapperScreenShot)
 	CreateEmptySnapshot() MapperScreenShot
 }
 
@@ -37,14 +36,15 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			CHRROM:     chrData,
 			Mirrroring: mirroring,
 		}
-		// case 1:
-		// 	m = &Mapper1{
-		// 		PRGROM:        prgData,
-		// 		CHRROM:        chrData,
-		// 		control:       0x0F,
-		// 		shiftRegister: 0x10,
-		// 		isRam:         c.Ppu.mem.CHR_isRam,
-		// 	}
+	case 1:
+		m = &Mapper1{
+			PRGROM:        prgData,
+			CHRROM:        chrData,
+			PRGRAM:        make([]uint8, 0x2000),
+			control:       0x0F,
+			shiftRegister: 0x10,
+			isRam:         c.Ppu.mem.CHR_isRam,
+		}
 		// case 2:
 		// 	m = &Mapper2{
 		// 		PRGROM:     prgData,
@@ -93,7 +93,19 @@ func (m *Mapper0) CreateEmptySnapshot() MapperScreenShot {
 		CHRROM: make([]uint8, len(m.CHRROM)),
 		PRGROM: make([]uint8, len(m.PRGROM)),
 	}
-	return res
+	return &res
+}
+
+func (m *Mapper0) TakeSnapshot(s MapperScreenShot) {
+
+	res, ok := s.(*Mapper0SS)
+	if !ok {
+		log.Fatalf("babababa")
+	}
+
+	copy(res.CHRROM, m.CHRROM)
+	copy(res.PRGROM, m.PRGROM)
+
 }
 
 func (m *Mapper0) ReadPRG(addr uint16) uint8 {
@@ -110,18 +122,6 @@ func (m *Mapper0) ReadCHR(addr uint16) uint8 {
 }
 
 func (m *Mapper0) WriteCHR(addr uint16, val uint8) {
-
-}
-
-func (m *Mapper0) TakeSnapshot(s *MapperScreenShot) {
-	res := Mapper0SS{
-		PRGROM:    make([]uint8, len(m.PRGROM)),
-		CHRROM:    make([]uint8, len(m.CHRROM)),
-		Mirroring: m.Mirrroring,
-	}
-
-	copy(res.CHRROM, m.CHRROM)
-	copy(res.PRGROM, m.PRGROM)
 
 }
 
@@ -158,7 +158,7 @@ type Mapper2 struct {
 }
 
 type Mapper2SS struct {
-	PRGRAM []uint8
+	PRGROM []uint8
 	CHRROM []uint8
 
 	BankSelect uint8
@@ -166,22 +166,27 @@ type Mapper2SS struct {
 }
 
 func (m *Mapper2) CreateEmptySnapshot() MapperScreenShot {
-	res := Mapper2SS{}
-
-	return res
-}
-
-func (m Mapper2) TakeSnapshot(s *MapperScreenShot) {
 	res := Mapper2SS{
-		PRGRAM: make([]uint8, len(m.PRGROM)),
+		PRGROM: make([]uint8, len(m.PRGROM)),
 		CHRROM: make([]uint8, len(m.CHRROM)),
-
-		BankSelect: m.BankSelect,
-		Mirroring:  m.Mirroring,
 	}
 
+	return &res
+}
+
+func (m Mapper2) TakeSnapshot(s MapperScreenShot) {
+
+	res, ok := s.(*Mapper2SS)
+
+	if !ok {
+		log.Fatalf("invalid mapper for screenshot")
+	}
+
+	res.BankSelect = m.BankSelect
+	res.Mirroring = m.Mirroring
+
 	copy(res.CHRROM, m.CHRROM)
-	copy(res.PRGRAM, m.PRGROM)
+	copy(res.PRGROM, m.PRGROM)
 
 }
 
@@ -194,7 +199,7 @@ func (s Mapper2SS) LoadSS(m Mapper) {
 	}
 
 	copy(safe.CHRROM, s.CHRROM)
-	copy(safe.PRGROM, s.PRGRAM)
+	copy(safe.PRGROM, s.PRGROM)
 
 	safe.Mirroring = s.Mirroring
 	safe.BankSelect = s.BankSelect
@@ -233,7 +238,7 @@ func (m *Mapper2) getMirroring() uint8 {
 type Mapper1 struct {
 	PRGROM []uint8
 	CHRROM []uint8
-	PRGRAM [0x2000]uint8
+	PRGRAM []uint8
 
 	shiftRegister uint8
 
@@ -248,25 +253,46 @@ type Mapper1 struct {
 type Mapper1SS struct {
 	PRGROM []uint8
 	CHRROM []uint8
-	PRGRAM [0x2000]uint8
+	PRGRAM []uint8
 
 	shiftRegister uint8
 
 	control  uint8
 	PrgBank  uint8
 	ChrBank0 uint8
-	ChrRank1 uint8
+	ChrBank1 uint8
 
 	isRam bool
 }
 
 func (m *Mapper1) CreateEmptySnapshot() MapperScreenShot {
-	res := Mapper1SS{}
+	res := Mapper1SS{
+		PRGROM: make([]uint8, len(m.PRGROM)),
+		CHRROM: make([]uint8, len(m.CHRROM)),
+		PRGRAM: make([]uint8, 0x2000),
+
+		isRam: m.isRam,
+	}
 
 	return res
 }
 
-func (m *Mapper1) TakeSnapshot(s *MapperScreenShot) {
+func (m *Mapper1) TakeSnapshot(s MapperScreenShot) {
+	snap, ok := s.(*Mapper1SS)
+	if !ok {
+		log.Fatal("wowowoow")
+	}
+
+	copy(snap.CHRROM, m.CHRROM)
+	copy(snap.PRGROM, m.PRGROM)
+	copy(snap.PRGRAM, m.PRGRAM)
+
+	snap.shiftRegister = m.shiftRegister
+
+	snap.control = m.control
+	snap.PrgBank = m.PrgBank
+	snap.ChrBank0 = m.ChrBank0
+	snap.ChrBank1 = m.ChrBank1
 
 }
 
@@ -276,17 +302,17 @@ func (s Mapper1SS) LoadSS(m Mapper) {
 		log.Fatal("im dead bro")
 	}
 
-	safe.CHRROM = s.CHRROM
-	safe.PRGRAM = s.PRGRAM
-	safe.PRGRAM = s.PRGRAM
+	copy(safe.CHRROM, s.CHRROM)
+	copy(safe.PRGROM, s.PRGROM)
+	copy(safe.PRGRAM, s.PRGRAM)
 
 	safe.shiftRegister = s.shiftRegister
+
 	safe.control = s.control
 	safe.PrgBank = s.PrgBank
 	safe.ChrBank0 = s.ChrBank0
-	safe.ChrBank1 = s.ChrRank1
+	safe.ChrBank1 = s.ChrBank1
 
-	safe.isRam = s.isRam
 }
 
 func (m *Mapper1) WritePRG(addr uint16, val uint8) {
@@ -398,10 +424,7 @@ func (m *Mapper1) ReadCHR(addr uint16) uint8 {
 func (m *Mapper1) WriteCHR(addr uint16, val uint8) {
 	if m.isRam {
 		m.CHRROM[addr] = val
-		// if val != 0 {
-		// 	fmt.Printf("First CHR RAM write: addr=%04X val=%02X\n", addr, val)
 
-		// }
 		return
 	}
 
@@ -432,183 +455,4 @@ func (m *Mapper1) getMirroring() uint8 {
 	mode := m.control & 0x03
 
 	return mode
-}
-
-//Mapper 4
-
-type Mapper4 struct {
-	PRGROM []uint8
-	CHRROM []uint8
-	PRGRAM [0x2000]uint8
-
-	BankSelect uint8
-	BankData   [8]uint8
-	Mirroring  uint8
-
-	PRGMode uint8
-	CHRMode uint8
-
-	IRQLatch   uint8
-	IRQCounter uint8
-	IRQReload  bool
-	IRQEnabled bool
-	IRQPending bool
-}
-
-func (m *Mapper4) WritePRG(addr uint16, val uint8) {
-
-	if addr < 0x8000 {
-		m.PRGRAM[addr-0x6000] = val
-	}
-
-	if addr >= 0x8000 && addr <= 0x9FFF {
-		if addr&1 == 0 { //even
-			m.BankSelect = val
-			m.PRGMode = getbit(val, 6)
-			m.CHRMode = getbit(val, 7)
-		} else { // odd
-			slot := m.BankSelect & 0x07
-			m.BankData[slot] = val
-		}
-	}
-
-	if addr >= 0xA000 && addr <= 0xBFFE {
-		if addr&1 == 0 {
-			m.Mirroring = val & 1
-		} else {
-			//intetionally left
-
-			fmt.Println("hitting prg ram protectg")
-		}
-	}
-
-	if addr >= 0xC000 && addr <= 0xDFFE {
-		if addr&1 == 0 { //even
-			m.IRQLatch = val
-		} else {
-			m.IRQCounter = 0
-			m.IRQReload = true
-		}
-	}
-
-	if addr >= 0xE000 && addr <= 0xFFFE {
-		if addr&1 == 0 {
-			m.IRQEnabled = false
-			m.IRQPending = false
-		} else {
-			m.IRQEnabled = true
-		}
-	}
-}
-
-func (m *Mapper4) ReadPRG(addr uint16) uint8 {
-	if addr < 0x8000 {
-		return m.PRGRAM[addr-0x6000]
-	}
-	var bank uint8
-	var offset uint32
-
-	switch {
-	case addr < 0xA000:
-		if m.PRGMode == 0 {
-			bank = m.BankData[6] //r6
-		} else {
-			bank = uint8((len(m.PRGROM) / 0x2000) - 2) //second last
-		}
-		offset = uint32(addr - 0x8000)
-	case addr < 0xC000:
-		bank = m.BankData[7] //R7
-		offset = uint32(addr - 0xA000)
-	case addr < 0xE000:
-		if m.PRGMode == 0 {
-			bank = uint8((len(m.PRGROM) / 0x2000) - 2) // secon last
-		} else {
-			bank = m.BankData[6] //r6
-		}
-		offset = uint32(addr - 0xC000)
-	default: // $E000 - $FFFF
-		bank = uint8((len(m.PRGROM) / 0x2000) - 1) //last
-		offset = uint32(addr - 0xE000)
-	}
-
-	newaddr := uint32(bank)*0x2000 + offset
-
-	if int(newaddr) > len(m.PRGROM) {
-		fmt.Println(bank, offset, addr)
-	}
-
-	return m.PRGROM[uint32(bank)*0x2000+offset]
-
-}
-
-func (m *Mapper4) ReadCHR(addr uint16) uint8 {
-	var bank uint8
-	offset := addr % 0x400
-
-	if addr <= 0x07FF {
-		if m.CHRMode == 0 {
-			bank = m.BankData[0] //R0
-		} else {
-			if addr <= 0x03FF {
-				bank = m.BankData[2] //R2
-			} else {
-				bank = m.BankData[3] //R3
-			}
-		}
-	}
-
-	if addr >= 0x0800 && addr <= 0x0FFF {
-		if m.CHRMode == 0 {
-			bank = m.BankData[1] // R1
-		} else {
-			if addr <= 0x0BFF {
-				bank = m.BankData[4] //R4
-			} else {
-				bank = m.BankData[5] //R5
-			}
-		}
-	}
-
-	if addr >= 0x1000 && addr <= 0x17FF {
-		if m.CHRMode == 0 {
-			if addr <= 0x13FF {
-				bank = m.BankData[2] //R2
-			} else {
-				bank = m.BankData[3] //R3
-			}
-		} else {
-			bank = m.BankData[0] //R0
-		}
-	}
-
-	if addr >= 0x1800 && addr <= 0x1FFF {
-		if m.CHRMode == 0 {
-			if addr <= 0x1BFF {
-				bank = m.BankData[4] //R4
-			} else {
-				bank = m.BankData[5] // R5
-			}
-		} else {
-			bank = m.BankData[1]
-		}
-	}
-
-	return m.CHRROM[uint32(bank)*0x400+uint32(offset)]
-
-}
-
-func (m *Mapper4) WriteCHR(addr uint16, val uint8) {
-
-}
-
-func (m *Mapper4) extractCHR() []uint8 {
-	return m.CHRROM
-}
-
-func (m *Mapper4) loadCHR(data []uint8) {
-	m.CHRROM = data
-}
-
-func (m *Mapper4) getMirroring() uint8 {
-	return uint8(m.Mirroring)
 }
