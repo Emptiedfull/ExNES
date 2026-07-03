@@ -45,19 +45,13 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			shiftRegister: 0x10,
 			isRam:         c.Ppu.mem.CHR_isRam,
 		}
-		// case 2:
-		// 	m = &Mapper2{
-		// 		PRGROM:     prgData,
-		// 		CHRROM:     chrData,
-		// 		Mirroring:  mirroring,
-		// 		BankSelect: 0,
-		// 	}
-		// case 4:
-		// 	m = &Mapper4{
-		// 		PRGROM:    prgData,
-		// 		CHRROM:    chrData,
-		// 		Mirroring: mirroring,
-		// 	}
+	case 2:
+		m = &Mapper2{
+			PRGROM:     prgData,
+			CHRROM:     chrData,
+			Mirroring:  mirroring,
+			BankSelect: 0,
+		}
 
 	}
 

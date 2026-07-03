@@ -165,6 +165,7 @@ func (c *Console) StartConsoleCycle() {
 			framecount++
 
 			c.RunFrame()
+			c.RunDisplayUpdates()
 
 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
 		}

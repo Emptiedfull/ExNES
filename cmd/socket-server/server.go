@@ -221,7 +221,8 @@ func quickStart(w http.ResponseWriter, r *http.Request) {
 
 func startDebugger(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	debugConsole.Console = Core.Quickstart("/Users/test/Projects/ExNES/games/NROM/mario.nes")
+	fmt.Print("hello")
+	debugConsole.Console = Core.Quickstart("/Users/test/Projects/ExNES/games/Mapper2/contra.nes")
 	// c.LoadROM()
 
 	//c.LoadROM("C:/Users/user/ExNES/emulatorCore/games/Mapper1/ff.nes")

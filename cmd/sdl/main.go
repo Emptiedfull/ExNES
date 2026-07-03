@@ -1,25 +1,30 @@
 package main
 
 /*
+#cgo pkg-config: sdl2
 #include <SDL2/SDL.h>
-extern void audioCallback(void *userdata, Uint8 *stream, int len);
+#include "_cgo_export.h"
+extern void audioCallback(void *userdata, unsigned char *stream, int len);
+
+static void* getAudioCallback() {
+    return (void*)audioCallback;
+}
 */
 
 import "C"
 import (
 	"exnes/Core"
-	"fmt"
 	"log"
+	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-var console Core.Debugger
+var console *Core.Console
 
 func main() {
 
-	emulator := Core.Quickstart("/Users/test/Projects/ExNES/games/Mapper2/contra.nes")
-	fmt.Println(emulator)
+	console = Core.Quickstart("/Users/test/Projects/ExNES/games/Mapper2/contra.nes")
 
 	if err := sdl.Init(sdl.INIT_AUDIO | sdl.INIT_VIDEO); err != nil {
 		panic(err)
@@ -49,7 +54,43 @@ func main() {
 
 	defer screenTexture.Destroy()
 
-	c := make(chan bool)
-	c <- true
+	audioSpec := sdl.AudioSpec{
+		Freq:     44100,
+		Format:   sdl.AUDIO_S16LSB,
+		Channels: 1,
+		Samples:  1024,
+		Callback: sdl.AudioCallback(C.getAudioCallback()),
+	}
 
+	running := true
+	for running {
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch event.(type) {
+			case *sdl.QuitEvent:
+				running = false
+
+			case *sdl.WindowEvent:
+
+			default:
+
+			}
+		}
+
+		select {
+		case s := <-console.ScreenChannel:
+			renderFrame(screenTexture, renderer, s.Buffer)
+		default:
+
+		}
+
+		sdl.Delay(1)
+	}
+
+}
+
+func renderFrame(texture *sdl.Texture, renderer *sdl.Renderer, buffer []byte) {
+	texture.Update(nil, unsafe.Pointer(&buffer[0]), 256*4)
+	renderer.Clear()
+	renderer.Copy(texture, nil, nil)
+	renderer.Present()
 }
