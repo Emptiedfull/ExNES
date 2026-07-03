@@ -10,6 +10,9 @@ var start = document.getElementById("rewind-start");
 var end = document.getElementById("rewind-end");
 var load = document.getElementById("review-load");
 var cart = document.getElementById("review-cart");
+var saveCap = document.getElementById("rewind-cap");
+var saveArea = document.getElementById("rewind-area");
+var slot2 = document.getElementById("rewind-slot");
 var activeID = 0;
 var clicker = new IntersectionObserver(
   (entries) => {
@@ -30,6 +33,7 @@ var clicker = new IntersectionObserver(
 var ctx = new AudioContext();
 var createTilesFromSnapshots = async (snapshots) => {
   console.log("creating snapshot tiles");
+  openCap();
   let lastTile = null;
   rewind_overlay.style.display = "flex";
   setupRewindButtons(snapshots.length);
@@ -49,29 +53,6 @@ var createTilesFromSnapshots = async (snapshots) => {
     img.getContext("2d").drawImage(snapshot.image, 0, 0);
     lastTile = tile;
     tile.append(img);
-    track.append(tile);
-  }
-  lastTile.scrollIntoView({
-    behavior: "smooth",
-    inline: "nearest",
-    block: "center"
-  });
-};
-var makeMockTiles = async () => {
-  let lastTile = null;
-  setupRewindButtons(100);
-  setupTimeline(100);
-  for (let i = 0; i < 100; i++) {
-    let tile = document.createElement("div");
-    tile.classList.add("tape-item");
-    tile.id = "tile-" + i;
-    let img = createRandomPixelArt();
-    tile.appendChild(img);
-    tile.addEventListener("mousedown", () => {
-      makeActive(tile);
-    });
-    clicker.observe(tile);
-    lastTile = tile;
     track.append(tile);
   }
   lastTile.scrollIntoView({
@@ -115,22 +96,54 @@ var setupRewindButtons = (length) => {
   });
   load.addEventListener("click", async () => {
     console.log("loading snapshot:", activeID);
-    startSaveLoad();
-    rewind_overlay.style.display = "none";
+    await startSaveLoad();
+    await loadSnap(parseInt(activeID, 10));
   });
 };
-var startSaveLoad = () => {
+var startSaveLoad = async () => {
   let clone = cart.cloneNode(true);
   clone.classList.add("rewind-cart-clone");
-  let orignalRect = cart.getBoundingClientRect();
+  let originalRect = cart.getBoundingClientRect();
+  let slotRect = slot2.getBoundingClientRect();
+  let areaRect = saveArea.getBoundingClientRect();
+  let areaHeight = areaRect.top - areaRect.bottom;
   let sourceCanvas = cart.querySelector("canvas");
-  let width = orignalRect.right - orignalRect.left;
-  clone.style.left = orignalRect.left + "px";
-  clone.style.top = orignalRect.top + "px";
+  let width = originalRect.right - originalRect.left;
+  let targetWidth = slotRect.right - slotRect.left;
+  let scaleFactor2 = targetWidth / width;
+  clone.style.position = "fixed";
+  clone.style.left = originalRect.left + "px";
+  clone.style.top = originalRect.top + "px";
   clone.style.width = width + "px";
+  clone.style.transformOrigin = "top left";
+  clone.style.transition = "transform 0.8s cubic-bezier(0.34, 1.56, 0.67 , 1)";
+  clone.style.zIndex = 0;
   clone.querySelector("canvas").getContext("2d").drawImage(sourceCanvas, 0, 0);
-  console.log(orignalRect.right, orignalRect.bottom);
   document.body.appendChild(clone);
+  await wait(10);
+  rewind_overlay.style.display = "none";
+  let dx = slotRect.left - originalRect.left;
+  let dy = slotRect.top - originalRect.top;
+  clone.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleFactor2})`;
+  await wait(1e3);
+  let movedown = slotRect.bottom - slotRect.top;
+  clone.style.transition = "transform 0.8s ease";
+  clone.style.transform = `translate(${dx}px, ${dy - areaHeight}px) scale(${scaleFactor2})`;
+  closeCap();
+};
+var openCap = () => {
+  console.log(slot2);
+  let Rect = saveArea.getBoundingClientRect();
+  let dy = Rect.top - Rect.bottom;
+  console.log(dy);
+  let capRect = saveCap.getBoundingClientRect();
+  let capheight = capRect.bottom - capRect.top;
+  saveArea.style.transform = `translateY(${dy}px)`;
+  saveCap.style.transform = `translateY(${dy - capheight}px)`;
+};
+var closeCap = () => {
+  saveArea.style.transform = `translateY(0)`;
+  saveCap.style.transform = `translateY(0)`;
 };
 var lastactive = null;
 var makeActive = (el) => {
@@ -196,33 +209,6 @@ var clickSound = () => {
   osc.start();
   osc.stop(ctx.currentTime + 0.02);
 };
-function createRandomPixelArt(blockSize = 4) {
-  const canvas2 = document.createElement("canvas");
-  canvas2.width = 256;
-  canvas2.height = 240;
-  const ctx3 = canvas2.getContext("2d");
-  const palette = [
-    "#000000",
-    "#FCFCFC",
-    "#F8F8F8",
-    "#BCBCBC",
-    "#7C7C7C",
-    "#A40000",
-    "#0000FC",
-    "#00A800",
-    "#F8B800",
-    "#00FCFC",
-    "#F800F8",
-    "#585858"
-  ];
-  for (let y = 0; y < canvas2.height; y += blockSize) {
-    for (let x = 0; x < canvas2.width; x += blockSize) {
-      ctx3.fillStyle = palette[Math.floor(Math.random() * palette.length)];
-      ctx3.fillRect(x, y, blockSize, blockSize);
-    }
-  }
-  return canvas2;
-}
 
 // static/scripts/driver.js
 var worker = new Worker(new URL("./emuWorker.js", import.meta.url));
@@ -785,7 +771,7 @@ async function wiggleKnob(id, intensity = 15) {
   await turnKnob(id, current + intensity * 0.5, 70, 5);
   await turnKnob(id, current, 80, 6);
 }
-var closeCap = async () => {
+var closeCap2 = async () => {
   cap.style.transition = "all ease 1s";
   cap.classList.remove("open");
   await wait2(200);
@@ -803,7 +789,7 @@ function pushbtn(canvasId) {
     c.style.transform = "scale(1)";
   }, 280);
 }
-var openCap = async () => {
+var openCap2 = async () => {
   cap.style.transition = "all ease 1s";
   cap.classList.add("open");
   await await 200;
@@ -844,7 +830,7 @@ var slotCart = async () => {
   clone.style.transform = "scale(0.9)";
   flickerLed(romled);
   await wait2(500);
-  await closeCap();
+  await closeCap2();
   cleapUpOverlay();
 };
 var flickerLed = async (led) => {
@@ -893,7 +879,7 @@ var currentIndex = 3;
 var middle2 = document.getElementById("middle");
 var left = document.getElementById("left");
 var right = document.getElementById("right");
-var slot2 = document.getElementById("slot");
+var slot3 = document.getElementById("slot");
 var overlay2 = document.getElementById("overlay");
 var strip2 = document.getElementById("strip");
 var cap2 = document.getElementById("cartridge");
@@ -905,7 +891,6 @@ var romLoaded = "";
 var power = false;
 var roms = [left, middle2, right];
 document.addEventListener("DOMContentLoaded", async () => {
-  await makeMockTiles();
   startRandomTipEngine();
   await setUpKnobs();
   await setUpButtons();
@@ -1014,7 +999,7 @@ var setUpButtons = async () => {
       return;
     }
     powerLed.classList.remove("off");
-    await openCap(cap2);
+    await openCap2(cap2);
     await wait(200);
     overlay2.style.display = "flex";
     overlay2.style.transition = "all ease 1";
@@ -1045,7 +1030,7 @@ var setUpButtons = async () => {
   });
   cap2.addEventListener("click", async () => {
     await PauseGame();
-    await openCap(cap2);
+    await openCap2(cap2);
     await wait(200);
     overlay2.style.display = "flex";
     overlay2.style.transition = "all ease 1";

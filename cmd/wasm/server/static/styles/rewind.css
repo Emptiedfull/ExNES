@@ -384,7 +384,6 @@
     top: 0;
     left: 0;
     z-index: 200;
-
-    transition: transform ease 1s;
+    transition: transform 0.3s ease;
     z-index: 200;
 }

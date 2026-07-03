@@ -8,6 +8,7 @@ const rewind_overlay = document.getElementById("rewind-overlay")
 const timeline = document.getElementById("rewind-timeline")
 const highligh_view = document.getElementById("rewind-highlight")
 
+
 const back = document.getElementById("rewind-back")
 const next = document.getElementById("rewind-next")
 const start = document.getElementById("rewind-start")
@@ -15,6 +16,10 @@ const end = document.getElementById("rewind-end")
 
 const load = document.getElementById("review-load")
 const cart = document.getElementById("review-cart")
+
+const saveCap = document.getElementById("rewind-cap")
+const saveArea = document.getElementById("rewind-area")
+const slot = document.getElementById("rewind-slot")
 
 let activeID = 0
 
@@ -44,6 +49,7 @@ let ctx = new AudioContext()
 
 export const createTilesFromSnapshots = async (snapshots) => {
     console.log("creating snapshot tiles")
+    openCap()
     let lastTile = null
     rewind_overlay.style.display = "flex"
     setupRewindButtons(snapshots.length)
@@ -81,6 +87,13 @@ export const createTilesFromSnapshots = async (snapshots) => {
 }
 
 export const makeMockTiles = async () => {
+    console.log("mocking ur ass")
+    
+
+   
+
+    // saveCap.style.setProperty("offset","-100%")
+
     let lastTile = null
     setupRewindButtons(100)
     setupTimeline(100)
@@ -153,40 +166,85 @@ const setupRewindButtons = (length) => {
 
     load.addEventListener("click",async()=>{
         console.log("loading snapshot:",activeID)
-        // await loadSnap(parseInt(activeID,10))
+       
 
         
 
-        startSaveLoad()
+        await startSaveLoad()
+         await loadSnap(parseInt(activeID,10))
 
-        rewind_overlay.style.display = "none"
+      
     
     })
 } 
 
-const startSaveLoad = ()=>{
-    let clone  = cart.cloneNode(true)
 
-    clone.classList.add("rewind-cart-clone")
+const startSaveLoad = async () => {
+  let clone = cart.cloneNode(true)
+  clone.classList.add("rewind-cart-clone")
 
-    let orignalRect = cart.getBoundingClientRect()
-    let sourceCanvas = cart.querySelector("canvas")
+  let originalRect = cart.getBoundingClientRect()
+  let slotRect = slot.getBoundingClientRect()
+  let areaRect = saveArea.getBoundingClientRect()
+  let areaHeight = areaRect.top - areaRect.bottom
+  let sourceCanvas = cart.querySelector("canvas")
 
-    let width = orignalRect.right - orignalRect.left
+  let width = originalRect.right - originalRect.left
+  let targetWidth = slotRect.right - slotRect.left
+  
+  let scaleFactor = targetWidth / width;
 
-    clone.style.left = orignalRect.left + "px"
-    clone.style.top = orignalRect.top + "px"
-    clone.style.width = width + "px"
+  
+  clone.style.position = "fixed"
+  clone.style.left = originalRect.left + "px"
+  clone.style.top = originalRect.top + "px"
+  clone.style.width = width + "px"
+  clone.style.transformOrigin = "top left"
+  clone.style.transition = "transform 0.8s cubic-bezier(0.34, 1.56, 0.67 , 1)"
+  clone.style.zIndex = 0
 
+  clone.querySelector("canvas").getContext("2d").drawImage(sourceCanvas, 0, 0);
+
+  document.body.appendChild(clone);
+
+  await wait(10);
+      rewind_overlay.style.display = "none"
+  
+  let dx = (slotRect.left ) - originalRect.left;
+  let dy = (slotRect.top ) - originalRect.top;
+
+  clone.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleFactor})`;
+
+  await wait(1000)
+
+  let movedown = slotRect.bottom - slotRect.top
+    clone.style.transition = "transform 0.8s ease"
+  
+   clone.style.transform = `translate(${dx}px, ${dy - areaHeight}px) scale(${scaleFactor})`;
+    closeCap()
+
+  
+};
+
+const openCap = ()=>{
+    console.log(slot)
+    let Rect = saveArea.getBoundingClientRect()
+    let dy = Rect.top - Rect.bottom 
+    console.log(dy)
+
+    let capRect = saveCap.getBoundingClientRect()
+    let capheight = capRect.bottom - capRect.top
     
 
-    clone.querySelector("canvas").getContext("2d").drawImage(sourceCanvas,0,0)
+    saveArea.style.transform = `translateY(${dy}px)`
+    saveCap.style.transform = `translateY(${dy - capheight}px)`
+}
 
+const closeCap =()=>{
+    saveArea.style.transform = `translateY(0)`
+    saveCap.style.transform =  `translateY(0)`
+}
 
-    console.log(orignalRect.right,orignalRect.bottom)
-
-    document.body.appendChild(clone)
-}   
 
 let lastactive = null
 
