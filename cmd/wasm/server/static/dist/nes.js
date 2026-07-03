@@ -8,6 +8,8 @@ var back = document.getElementById("rewind-back");
 var next = document.getElementById("rewind-next");
 var start = document.getElementById("rewind-start");
 var end = document.getElementById("rewind-end");
+var load = document.getElementById("review-load");
+var cart = document.getElementById("review-cart");
 var activeID = 0;
 var clicker = new IntersectionObserver(
   (entries) => {
@@ -30,7 +32,7 @@ var createTilesFromSnapshots = async (snapshots) => {
   console.log("creating snapshot tiles");
   let lastTile = null;
   rewind_overlay.style.display = "flex";
-  setupRewindButtons();
+  setupRewindButtons(snapshots.length);
   setupTimeline(snapshots.length);
   for (let i = 0; i < snapshots.length; i++) {
     let snapshot = snapshots[i];
@@ -49,7 +51,6 @@ var createTilesFromSnapshots = async (snapshots) => {
     tile.append(img);
     track.append(tile);
   }
-  console.log("making this");
   lastTile.scrollIntoView({
     behavior: "smooth",
     inline: "nearest",
@@ -112,6 +113,24 @@ var setupRewindButtons = (length) => {
     await wait(200);
     makeActive(targetEl);
   });
+  load.addEventListener("click", async () => {
+    console.log("loading snapshot:", activeID);
+    startSaveLoad();
+    rewind_overlay.style.display = "none";
+  });
+};
+var startSaveLoad = () => {
+  let clone = cart.cloneNode(true);
+  clone.classList.add("rewind-cart-clone");
+  let orignalRect = cart.getBoundingClientRect();
+  let sourceCanvas = cart.querySelector("canvas");
+  let width = orignalRect.right - orignalRect.left;
+  clone.style.left = orignalRect.left + "px";
+  clone.style.top = orignalRect.top + "px";
+  clone.style.width = width + "px";
+  clone.querySelector("canvas").getContext("2d").drawImage(sourceCanvas, 0, 0);
+  console.log(orignalRect.right, orignalRect.bottom);
+  document.body.appendChild(clone);
 };
 var lastactive = null;
 var makeActive = (el) => {
@@ -143,7 +162,6 @@ var updateHighlight = () => {
 var scrollReelToValue = (value, center) => {
   let elemtentID = "tile-" + Math.round(value);
   let tile = document.getElementById(elemtentID);
-  console.log(center, center ? "center" : "nearest");
   tile.scrollIntoView({
     behavior: "instant",
     inline: center ? "center" : "nearest",
@@ -271,7 +289,6 @@ var getSnapList = async () => {
   worker.postMessage({ type: "getsnap" });
 };
 var loadSnap = async (index) => {
-  await PauseGame();
   worker.postMessage({ type: "loadSnapshot", index });
   await wait(100);
   await ResumeGame();

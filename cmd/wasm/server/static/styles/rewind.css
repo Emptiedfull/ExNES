@@ -378,3 +378,13 @@
     transform: translate(0, 1rem);
 
 }
+
+.rewind-cart-clone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 200;
+
+    transition: transform ease 1s;
+    z-index: 200;
+}

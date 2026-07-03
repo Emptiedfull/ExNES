@@ -1,4 +1,5 @@
 import { wait } from "./joypad"
+import { loadSnap } from "./driver"
 
 const track = document.getElementById("items-container")
 const preview_img = document.getElementById("preview-img")
@@ -11,6 +12,9 @@ const back = document.getElementById("rewind-back")
 const next = document.getElementById("rewind-next")
 const start = document.getElementById("rewind-start")
 const end = document.getElementById("rewind-end")
+
+const load = document.getElementById("review-load")
+const cart = document.getElementById("review-cart")
 
 let activeID = 0
 
@@ -42,7 +46,7 @@ export const createTilesFromSnapshots = async (snapshots) => {
     console.log("creating snapshot tiles")
     let lastTile = null
     rewind_overlay.style.display = "flex"
-    setupRewindButtons()
+    setupRewindButtons(snapshots.length)
     setupTimeline(snapshots.length)
     for (let i = 0; i < snapshots.length; i++) {
         let snapshot = snapshots[i]
@@ -67,7 +71,7 @@ export const createTilesFromSnapshots = async (snapshots) => {
         tile.append(img)
         track.append(tile)
     }
-    console.log("making this")
+    
     lastTile.scrollIntoView({
         behavior: "smooth",
         inline: "nearest",
@@ -146,7 +150,43 @@ const setupRewindButtons = (length) => {
         makeActive(targetEl)
        
     })
-}
+
+    load.addEventListener("click",async()=>{
+        console.log("loading snapshot:",activeID)
+        // await loadSnap(parseInt(activeID,10))
+
+        
+
+        startSaveLoad()
+
+        rewind_overlay.style.display = "none"
+    
+    })
+} 
+
+const startSaveLoad = ()=>{
+    let clone  = cart.cloneNode(true)
+
+    clone.classList.add("rewind-cart-clone")
+
+    let orignalRect = cart.getBoundingClientRect()
+    let sourceCanvas = cart.querySelector("canvas")
+
+    let width = orignalRect.right - orignalRect.left
+
+    clone.style.left = orignalRect.left + "px"
+    clone.style.top = orignalRect.top + "px"
+    clone.style.width = width + "px"
+
+    
+
+    clone.querySelector("canvas").getContext("2d").drawImage(sourceCanvas,0,0)
+
+
+    console.log(orignalRect.right,orignalRect.bottom)
+
+    document.body.appendChild(clone)
+}   
 
 let lastactive = null
 
@@ -202,7 +242,6 @@ const scrollReelToValue = (value, center) => {
     let elemtentID = "tile-" + Math.round(value)
 
     let tile = document.getElementById(elemtentID)
-    console.log(center, center ? "center" : "nearest")
 
     tile.scrollIntoView({
         behavior: "instant",

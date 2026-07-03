@@ -97,7 +97,6 @@ export const getSnapList = async ()=>{
 }
 
 export const loadSnap = async(index)=>{
-     await PauseGame()
     worker.postMessage({type:"loadSnapshot",index})
 
     await wait(100)
@@ -132,8 +131,6 @@ worker.onmessage = async ({ data }) => {
             break
         case 'snaps':
             await createTilesFromSnapshots(data.snaps)
-            
-            // await ResumeGame()
             break
         case 'frameUp':
             imageData.data.set(fBytes)

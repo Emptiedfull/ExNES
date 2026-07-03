@@ -53,7 +53,7 @@
                 </div>
                 <div class="top-cap"></div>
                 <div class="mid-line">
-                    <div class="slot" id="slot"></div>
+                <div class="slot" id="slot"></div>
                 </div>
                 <div class="bottom-cap">
                     <div class="bottom-1">
@@ -90,6 +90,15 @@
                     </div>
                 </div>
                 <div class="strip" id="strip">
+                    <!-- I DONT FUCKING KNOW WHY THIS HAS TO BE A SEPERATE ELEMETN I HATE CSS RULES -->
+                    <div class="strip-background"> 
+
+                    </div>
+                    <div class="save-cap">
+                        <!-- <div class="save-middle">
+
+                        </div> -->
+                    </div>
                     <div class="controllers">
                         <div class="port">
                             <span class="controllerLabel">1</span>
@@ -249,7 +258,7 @@
         </div>
     </div>
 
-    <div class="rewind-overlay" id="rewind-overlay" >
+    <div class="rewind-overlay" id="rewind-overlay" style="display: none;">
         <div class="rewind-container">
             <div class="tape-container">
                 <div class="decorative-tape">
@@ -344,7 +353,7 @@
 
        
 
-        <div class="review-cartridge">
+        <div class="review-cartridge" id="review-cart">
             <div class="review-cartridge-shadow"></div>
             <div class="review-cartridge-body">
 
@@ -369,7 +378,7 @@
 
                 <div class="review-load-wrap">
                     <div class="review-load-shadow"></div>
-                    <button class="review-load">LOAD</button>
+                    <button class="review-load" id="review-load">LOAD</button>
                 </div>
 
                 <div class="review-pin-row">
