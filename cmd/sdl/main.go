@@ -11,15 +11,27 @@ import "C"
 import (
 	"exnes/Core"
 	"log"
-	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 func main() {
+	var console *Core.Console
 
-	console := Core.Quickstart("/Users/test/Projects/ExNES/games/Mapper2/contra.nes")
+	displayChannel := make(chan Core.ScreenInfo, 100)
 
+	startWindow(console, displayChannel)
+
+}
+
+const (
+	game_width  = 256
+	game_heigth = 240
+	menu_height = 20
+)
+
+func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
+	setUpMenu()
 	if err := sdl.Init(sdl.INIT_AUDIO | sdl.INIT_VIDEO); err != nil {
 		panic(err)
 	}
@@ -40,16 +52,22 @@ func main() {
 
 	defer renderer.Destroy()
 
-	screenTexture, err := renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STREAMING, 256, 240)
+	renderer.SetViewport(nil)
+	renderer.SetDrawColor(200, 200, 200, 255)
+	// renderer.DrawRect(&sdl.Rect{X: 0, Y: 0, W: 256, H: 40})
+	renderer.FillRect(&sdl.Rect{X: 0, Y: 0, W: 256, H: 20})
+
+	// screenTexture, err := renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STREAMING, 256, 240)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer screenTexture.Destroy()
+	renderer.Present()
+	// defer screenTexture.Destroy()
 
 	audioSpec := sdl.AudioSpec{
-		Freq:     44100 * 2,
+		Freq:     44100,
 		Format:   sdl.AUDIO_F32SYS,
 		Channels: 1,
 		Samples:  512,
@@ -63,7 +81,6 @@ func main() {
 	defer sdl.CloseAudioDevice(audioDevice)
 
 	sdl.PauseAudioDevice(audioDevice, false)
-	go beginSampleLoop(audioDevice, console)
 
 	running := true
 	for running {
@@ -75,84 +92,25 @@ func main() {
 			case *sdl.WindowEvent:
 
 			case *sdl.KeyboardEvent:
-				handleInputs(console, e)
+				if console != nil {
+					handleInputs(console, e)
+				} else {
+					console = startGame("/Users/test/Projects/ExNES/games/NROM/mario.nes", audioDevice, updateChan)
+				}
+
 			default:
 
 			}
 		}
 
-		select {
-		case s := <-console.ScreenChannel:
-			renderFrame(screenTexture, renderer, s.Buffer)
-		default:
+		// select {
+		// case  := <-updateChan:
 
-		}
+		// 	// renderFrame(screenTexture, renderer, s.Buffer)
+		// default:
+
+		// }
 
 		sdl.Delay(1)
 	}
-
-}
-
-const bufferMillis = 46
-
-func backpressureThreshold(freq int32) uint32 {
-	bytesPerSecond := uint32(freq) * 4
-	return bytesPerSecond * bufferMillis / 1000
-}
-
-func renderFrame(texture *sdl.Texture, renderer *sdl.Renderer, buffer []byte) {
-	texture.Update(nil, unsafe.Pointer(&buffer[0]), 256*4)
-	renderer.Clear()
-	renderer.Copy(texture, nil, nil)
-	renderer.Present()
-}
-
-func beginSampleLoop(dev sdl.AudioDeviceID, console *Core.Console) {
-	const samples = 512
-
-	sampleBuf := make([]float32, samples)
-	threshold := backpressureThreshold(44100 * 2)
-
-	for {
-
-		for i := range samples {
-			for !console.Apu.HasSample() {
-				console.TickNoAudio()
-
-			}
-			sample := console.Apu.PopSample()
-			sampleBuf[i] = sample
-			sampleBuf[i] = sample
-
-		}
-		for sdl.GetQueuedAudioSize(dev) > threshold {
-			sdl.Delay(1)
-		}
-
-		console.RunDisplayUpdates()
-		sdl.QueueAudio(dev, float32ToBytes(sampleBuf))
-	}
-
-}
-
-func float32ToBytes(samples []float32) []byte {
-	return unsafe.Slice((*byte)(unsafe.Pointer(&samples[0])), len(samples)*4)
-}
-
-var controlMap = map[sdl.Keycode]int{
-	sdl.K_z:      Core.ButtonA,
-	sdl.K_x:      Core.ButtonB,
-	sdl.K_UP:     Core.ButtonUp,
-	sdl.K_DOWN:   Core.ButtonDown,
-	sdl.K_LEFT:   Core.ButtonLeft,
-	sdl.K_RIGHT:  Core.ButtonRight,
-	sdl.K_LSHIFT: Core.ButtonSelect,
-	sdl.K_RETURN: Core.ButtonStart,
-}
-
-func handleInputs(console *Core.Console, e *sdl.KeyboardEvent) {
-
-	pressed := e.State == sdl.PRESSED
-
-	console.Player1.UpdateBtnBool(controlMap[e.Keysym.Sym], pressed)
 }

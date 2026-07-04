@@ -127,7 +127,7 @@ func InitializeConsole() *Console {
 
 	c.Cpu.console = c
 	c.Ppu.console = c
-	c.Apu = newApu(44100, c)
+	c.Apu = NewApu(44100, c)
 
 	c.OpenBusVal = 0
 	c.Cpu.fetchNew = true

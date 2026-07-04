@@ -77,7 +77,7 @@ func (b *exposedBuffer) pushBuffer(sample []float32) {
 	}
 }
 
-func newApu(sampleRate float64, console *Console) *APU {
+func NewApu(sampleRate float64, console *Console) *APU {
 	return &APU{
 		Pulse1:          newPulseChannel(true),
 		Pulse2:          newPulseChannel(false),
