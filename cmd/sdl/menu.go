@@ -1,9 +1,12 @@
+// #cgo CFLAGS: -Wno-deprecated-declarations
+
 package main
 
 import (
 	"fmt"
 	"log"
 
+	"github.com/sqweek/dialog"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -20,12 +23,17 @@ type menuBar struct {
 	dropdownIndex    int
 	hoverIndex       int
 	optionHoverIndex int
+
+	W     int32
+	H     int32
+	scale int32
 }
 
 type menuItem struct {
 	label   string
 	Rect    sdl.Rect
 	options []ItemOptions
+	onClick func()
 }
 
 type ItemOptions struct {
@@ -34,26 +42,38 @@ type ItemOptions struct {
 	onClick func()
 }
 
-func createNewMenu() *menuBar {
+func createNewMenu(font *ttf.Font, menuH, menuW, dpiscale int32) *menuBar {
 	mb := &menuBar{
 		textCache:        map[string]*sdl.Texture{},
 		dropdownIndex:    -1,
 		hoverIndex:       -1,
 		optionHoverIndex: -1,
+		Font:             font,
+		W:                menuW,
+		H:                menuH,
+		scale:            dpiscale,
 	}
 
 	mb.Items = []menuItem{
 		{
-			label: "FILE",
+			label: "File",
+			onClick: func() {
+				filename, err := dialog.File().Filter("NES ROM", "nes").Load()
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fmt.Println("game:", filename)
+			},
 			options: []ItemOptions{
 				{
 					label:   "Open",
-					onClick: openRom,
+					onClick: func() { fmt.Println("YO BITCHES") },
 				},
 			},
 		},
 		{
-			label: "EMULATION",
+			label: "Emulation",
 			options: []ItemOptions{
 				{
 					label: "Pause",
@@ -64,55 +84,99 @@ func createNewMenu() *menuBar {
 			},
 		},
 	}
-	fmt.Println(mb)
+
+	mb.positionLayout()
 
 	return mb
 }
 
-func (mb *menuBar) positionLayout() {
-	x := int32(0)
-	for _, item := range mb.Items {
-		w := int32(game_width / len(mb.Items))
-		item.Rect = sdl.Rect{X: x, Y: 0, H: menu_height, W: w}
+func (mb *menuBar) handleMouse(x, y int32) {
+	mb.hoverIndex = -1
 
-		for j, option := range item.options {
-			optW := int32(len(option.label)*3 + 30)
-			if optW < 90 {
-				optW = 90
-			}
+	for i, item := range mb.Items {
+		if pointInRect(item.Rect, x, y) {
+			mb.hoverIndex = i
 
-			option.Rect = sdl.Rect{
-				X: x,
-				Y: menu_height + int32(j)*menu_height,
-			}
+			return
 		}
 
-		x += w
+	}
+}
+
+func pointInRect(rect sdl.Rect, x, y int32) bool {
+	return x >= rect.X && x <= rect.X+rect.W && y >= rect.Y && y <= rect.Y+rect.H
+}
+
+func (mb *menuBar) handleClick() {
+	if mb.hoverIndex != -1 {
+		mb.Items[mb.hoverIndex].onClick()
+	}
+}
+
+func (mb *menuBar) positionLayout() {
+	x := int32(0)
+	for i := range mb.Items {
+		item := &mb.Items[i]
+		w, _, _ := mb.Font.SizeUTF8(item.label)
+		padding := int32(24)
+		itemW := int32(w)/mb.scale + padding
+		fmt.Println(itemW)
+		item.Rect = sdl.Rect{
+			X: x,
+			Y: 0,
+			W: itemW,
+			H: mb.H,
+		}
+		x += itemW
 	}
 }
 
 func (mb *menuBar) renderBar(r *sdl.Renderer) {
-	r.SetDrawColor(35, 35, 35, 255)
-	r.FillRect(&sdl.Rect{X: 0, Y: 0, W: game_width, H: game_heigth + menu_height})
+	r.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 255)
+	r.FillRect(&sdl.Rect{X: 0, Y: 0, W: mb.W, H: mb.H})
 
-	for _, item := range mb.Items {
+	for i, item := range mb.Items {
+		r.SetDrawColor(230, 210, 66, 255)
 
+		if i == mb.hoverIndex {
+			r.SetDrawColor(colHover.R, colBarBG.G, colBarBG.B, 255)
+			r.FillRect(&item.Rect)
+			r.SetDrawColor(0, 0, 0, 255)
+			r.DrawRect(&item.Rect)
+		}
+
+		mb.drawText(item.label, item.Rect, r)
+		// r.SetDrawColor(colSeparator.R, colSeparator.G, colSeparator.B, colSeparator.A)
+		// r.DrawLine(item.Rect.X+item.Rect.W, 2, item.Rect.X+item.Rect.W, mb.H-2)
 	}
+
+	r.SetDrawColor(colSeparator.R, colSeparator.G, colSeparator.B, colSeparator.A)
+	r.DrawLine(0, mb.H+1, mb.W, mb.H+1)
 }
 
-func (item *menuItem) drawText(r *sdl.Renderer, font *ttf.Font) {
-	surface, err := font.RenderUTF8Blended(item.label, sdl.Color{230, 230, 230, 255})
+func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer) {
+	surface, err := m.Font.RenderUTF8Blended(text, colText)
 	if err != nil {
-		log.Fatal("FUCK FUCK", err)
+		log.Fatal("bad", err)
+	}
+	defer surface.Free()
+
+	texture, err := r.CreateTextureFromSurface(surface)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer texture.Destroy()
+
+	logicalW := int32(surface.W / m.scale)
+	logicalH := int32(surface.H / m.scale)
+
+	dst := sdl.Rect{
+		X: rect.X + 12,
+		Y: (rect.H - logicalH) / 2,
+		W: logicalW,
+		H: logicalH,
 	}
 
-	text, err := r.CreateTextureFromSurface(surface)
-	surface.Free()
-	if err != nil {
-		log.Fatal("FUCK NO", err)
-	}
-
-	_, _, w, h, _ := text.Query()
-	r.Copy(text, nil, &sdl.Rect{X: item.Rect.X + 10, Y: item.Rect.Y + 5, W: w, H: h})
+	r.Copy(texture, nil, &dst)
 
 }

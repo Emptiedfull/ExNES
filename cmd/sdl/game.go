@@ -16,7 +16,7 @@ func startGame(filepath string, dev sdl.AudioDeviceID, screenChannel chan Core.S
 
 	go beginSampleLoop(dev, console)
 
-	go frameMonitor(console)
+	// go frameMonitor(console)
 
 	return console
 
