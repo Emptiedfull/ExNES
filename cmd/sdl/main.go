@@ -12,6 +12,7 @@ import (
 	"exnes/Core"
 	"fmt"
 	"log"
+	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -29,15 +30,19 @@ func main() {
 const (
 	game_width  = 256
 	game_heigth = 240
-	menu_height = 10
+	menu_height = 12
 	scale       = 2
 )
 
 var (
-	colBarBG     = sdl.Color{R: 240, G: 240, B: 241, A: 255}
-	colHover     = sdl.Color{R: 210, G: 225, B: 250, A: 255}
-	colSeparator = sdl.Color{R: 200, G: 200, B: 202, A: 255}
-	colText      = sdl.Color{R: 20, G: 20, B: 20, A: 255}
+	colBarBG       = sdl.Color{R: 24, G: 24, B: 28, A: 255}
+	colHover       = sdl.Color{R: 88, G: 74, B: 168, A: 255}
+	colSeparator   = sdl.Color{R: 12, G: 12, B: 15, A: 255}
+	colText        = sdl.Color{R: 230, G: 228, B: 235, A: 255}
+	colTextDim     = sdl.Color{R: 130, G: 128, B: 140, A: 255}
+	colAccent      = sdl.Color{R: 130, G: 110, B: 220, A: 255}
+	colPanelBG     = sdl.Color{R: 40, G: 40, B: 44, A: 235}
+	colPanelBorder = sdl.Color{R: 68, G: 60, B: 86, A: 255}
 )
 
 func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
@@ -49,7 +54,7 @@ func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
 		panic(err)
 	}
 	defer sdl.Quit()
-	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
+
 	window, err := sdl.CreateWindow("ExNES", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, windowW, windowH, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI)
 
 	if err != nil {
@@ -58,12 +63,15 @@ func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
 
 	defer window.Destroy()
 
-	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
+	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED|sdl.RENDERER_PRESENTVSYNC)
+	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	renderer.SetLogicalSize(windowW, windowH)
+	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
+
 	defer renderer.Destroy()
 
 	W_H, _ := window.GetSize()
@@ -87,10 +95,30 @@ func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
 	renderer.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 255)
 	renderer.FillRect(&sdl.Rect{X: 0, Y: 0, W: windowW, H: windowH})
 
-	mb := createNewMenu(font, (menu_height * 2), windowW, dpi_scale)
+	mb := createNewMenu(font, console, (menu_height * 2), windowW, dpi_scale)
 	mb.renderBar(renderer)
 
 	renderer.Present()
+
+	gameTexture, err := renderer.CreateTexture(
+		sdl.PIXELFORMAT_ABGR8888,
+		sdl.TEXTUREACCESS_STREAMING,
+		game_width,
+		game_heigth,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer gameTexture.Destroy()
+
+	gameRect := &sdl.Rect{
+		X: 0,
+		Y: menu_height * scale,
+		H: game_heigth * scale,
+		W: game_width * scale,
+	}
+
+	renderer.Copy(gameTexture, nil, gameRect)
 
 	audioSpec := sdl.AudioSpec{
 		Freq:     44100,
@@ -126,7 +154,7 @@ func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
 			case *sdl.MouseMotionEvent:
 				mb.handleMouse(e.X, e.Y)
 			case *sdl.MouseButtonEvent:
-				if e.Button == sdl.BUTTON_LEFT {
+				if e.Button == sdl.BUTTON_LEFT && e.Type == sdl.MOUSEBUTTONDOWN {
 					mb.handleClick()
 				}
 				fmt.Println("button:", e.Button)
@@ -134,11 +162,28 @@ func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
 
 			}
 		}
-
 		renderer.Clear()
+
+		select {
+		case s := <-updateChan:
+			renderFrame(gameTexture, renderer, s.Buffer, gameRect)
+			if console.Ppu.Frame%10 == 0 {
+				console.TakeSnapshot()
+			}
+		default:
+			renderer.Copy(gameTexture, nil, gameRect)
+		}
+
 		mb.renderBar(renderer)
 		renderer.Present()
 
 		sdl.Delay(1)
 	}
+}
+
+func renderFrame(texture *sdl.Texture, renderer *sdl.Renderer, buffer []byte, gameRect *sdl.Rect) {
+	texture.Update(nil, unsafe.Pointer(&buffer[0]), 256*4)
+
+	renderer.Copy(texture, nil, gameRect)
+
 }

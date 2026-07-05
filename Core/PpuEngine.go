@@ -312,19 +312,22 @@ func (p *ppu) renderPixel() {
 		}
 	}
 
-	c := NesPaletteLUT[p.readPallete(uint16(color)%64)]
-	p.pushRGB(c, x, y)
+	// c := NesPaletteLUT[p.readPallete(uint16(color)%64)]
+	in := p.readPallete(uint16(color) % 64)
+
+	p.pushRGB(p.console.palette[p.mem.register.emphasisIndex][in], x, y)
+	// p.pushRGB([3]byte{c.R, c.G, c.B}, x, y)
 
 }
 
-func (p *ppu) pushRGB(c RGB, x, y int) {
+func (p *ppu) pushRGB(rgb [3]uint8, x, y int) {
 
 	idx := ((y << 8) + x) << 2
 
-	p.BackBuffer[idx] = c.R
-	p.BackBuffer[idx+1] = c.G
-	p.BackBuffer[idx+2] = c.B
-	p.BackBuffer[idx+3] = 254
+	p.BackBuffer[idx] = rgb[0]
+	p.BackBuffer[idx+1] = rgb[1]
+	p.BackBuffer[idx+2] = rgb[2]
+	p.BackBuffer[idx+3] = 255
 }
 
 func (p *ppu) readPallete(addr uint16) uint8 {

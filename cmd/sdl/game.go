@@ -44,13 +44,6 @@ func backpressureThreshold(freq int32) uint32 {
 	return bytesPerSecond * bufferMillis / 1000
 }
 
-func renderFrame(texture *sdl.Texture, renderer *sdl.Renderer, buffer []byte) {
-	texture.Update(nil, unsafe.Pointer(&buffer[0]), 256*4)
-	renderer.Clear()
-	renderer.Copy(texture, nil, nil)
-	renderer.Present()
-}
-
 func beginSampleLoop(dev sdl.AudioDeviceID, console *Core.Console) {
 	const samples = 512
 

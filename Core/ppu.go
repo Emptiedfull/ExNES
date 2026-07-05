@@ -1,5 +1,10 @@
 package Core
 
+import (
+	"fmt"
+	"os"
+)
+
 //for any readers, please stop here I barely understand what ive done
 
 type ppu struct {
@@ -20,6 +25,35 @@ type ppu struct {
 	ScreenChanged bool
 
 	DebugBuffer []uint8
+}
+
+type FullPalette [8][64][3]byte
+
+func loadFPal(path string) FullPalette {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println("FUCKKK", err)
+		return FullPalette{}
+	}
+
+	expectedLen := 8 * 64 * 3
+	if len(data) < expectedLen {
+		fmt.Println("AHHHH")
+		return FullPalette{}
+	}
+
+	var pal FullPalette
+	offset := 0
+	for e := range 8 {
+		for i := range 64 {
+			pal[e][i][0] = data[offset+0]
+			pal[e][i][1] = data[offset+1]
+			pal[e][i][2] = data[offset+2]
+			offset += 3
+		}
+	}
+
+	return pal
 }
 
 var NesPaletteLUT = [64]RGB{
@@ -58,8 +92,6 @@ type ppu_mem struct {
 	register registersFlags
 	internal PPUInternal
 	temp     TempPPU
-
-	// chrRom_WARNING []uint8 //THIS IS ONLY TO BE USED FOR SNAPSHOT PURPOSES NO USE IN MAIN CPU I BEG YOU
 
 	Vblank_flag bool
 }
@@ -102,6 +134,8 @@ type registersFlags struct {
 
 	// $2007
 	bufferedData uint8
+
+	emphasisIndex int
 }
 
 func (p *ppu) MirrorNameTable(addr uint16) uint16 {
@@ -243,6 +277,21 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 		p.mem.register.ShowLeftSprite = getbitBool(val, 2)
 		p.mem.register.ShowLeftBG = getbitBool(val, 1)
 		p.mem.register.GreyScale = getbitBool(val, 0)
+
+		empId := 0
+		if p.mem.register.EmpRed {
+			empId |= 0
+		}
+
+		if p.mem.register.EmpGreen {
+			empId |= 2
+		}
+
+		if p.mem.register.EmpBlue {
+			empId |= 4
+		}
+
+		p.mem.register.emphasisIndex = empId
 	case 3: //PPU OAMADDR
 		p.mem.register.OAMADDR = val
 	case 4: //PPU OAMDATA

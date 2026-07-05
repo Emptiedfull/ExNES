@@ -33,6 +33,13 @@ type Console struct {
 	Debugger  Debugger
 
 	mapper Mapper
+
+	palette FullPalette
+}
+
+func Init() {
+	fmt.Print("Core V2")
+
 }
 
 func (c *Console) Pause() {
@@ -112,12 +119,14 @@ func (c *Console) InitRom(data io.Reader) error {
 }
 
 func InitializeConsole() *Console {
+
 	c := &Console{
 
 		Ppu: &ppu{},
 		Cpu: &cpu{},
 
 		OpenBusVal: 0,
+		palette:    loadFPal("/Users/test/Projects/ExNES/Core/ntsc.pal"),
 	}
 
 	c.Ppu.BackBuffer = make([]uint8, 245760)
