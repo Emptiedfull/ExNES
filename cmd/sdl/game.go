@@ -3,6 +3,7 @@ package main
 import (
 	"exnes/Core"
 	"fmt"
+	"os"
 	"time"
 	"unsafe"
 
@@ -27,16 +28,19 @@ func startGame(filepath string, dev sdl.AudioDeviceID, screenChannel chan Core.S
 
 }
 
-func (console *game) LoadRom(filepath string) error {
-	err := console.core.LoadRom(filepath)
+func (console *game) LoadRom(filepath string) (string, error) {
+	file, err := os.Open(filepath)
+
 	if err != nil {
-		return fmt.Errorf("uhm: %v", err)
+		return "", fmt.Errorf("uhm: %v", err)
 	}
+
+	console.core.InitRom(file)
 
 	go beginSampleLoop(console.audioDevice, console.core)
 	sdl.PauseAudioDevice(console.audioDevice, false)
 
-	return nil
+	return file.Name(), nil
 }
 
 func initConsole(screenChannel chan Core.ScreenInfo) *Core.Console {

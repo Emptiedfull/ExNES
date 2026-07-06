@@ -12,12 +12,14 @@ func openRom(console *game, state *localState) {
 		fmt.Println("error opening rom", err)
 	}
 
-	err = console.LoadRom(filename)
+	name, err := console.LoadRom(filename)
 	if err != nil {
 		fmt.Println("error loading rom", err)
 	}
 
-	state.RecentFiles = append(state.RecentFiles, filename)
+	state.RecentFiles = append(state.RecentFiles, recentRom{
+		Name:     name,
+		Location: filename,
+	})
 
-	fmt.Println(state.RecentFiles)
 }

@@ -7,13 +7,18 @@ import (
 )
 
 type localState struct {
-	RecentFiles []string `json:"recent"`
+	RecentFiles []recentRom `json:"recent"`
 }
 
 func newState() *localState {
 	return &localState{
-		RecentFiles: make([]string, 0),
+		RecentFiles: make([]recentRom, 0),
 	}
+}
+
+type recentRom struct {
+	Name     string `json:"name"`
+	Location string `json:"location"`
 }
 
 func loadState() *localState {

@@ -21,16 +21,22 @@ type menuBar struct {
 	Items []menuItem
 	Font  *ttf.Font
 
-	textCache  map[string]textCache
-	hoverCache map[int32]*sdl.Texture
+	dropdownIndex       int
+	hoverIndex          int
+	optionHoverIndex    int
+	subOptionHoverIndex int
 
-	dropdownIndex    int
-	hoverIndex       int
-	optionHoverIndex int
+	cache TextureCache
 
 	W     int32
 	H     int32
 	scale int32
+}
+
+type TextureCache struct {
+	textCache  map[string]textCache
+	hoverCache map[int32]*sdl.Texture
+	arrowCache *sdl.Texture
 }
 
 type menuItem struct {
@@ -66,17 +72,24 @@ type textCache struct {
 
 func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menuW, dpiscale int32) *menuBar {
 	mb := &menuBar{
-		textCache:        map[string]textCache{},
-		hoverCache:       map[int32]*sdl.Texture{},
-		dropdownIndex:    -1,
-		hoverIndex:       -1,
-		optionHoverIndex: -1,
-		Font:             font,
-		W:                menuW,
-		H:                menuH,
-		scale:            dpiscale,
-		state:            state,
+
+		dropdownIndex:       -1,
+		hoverIndex:          -1,
+		optionHoverIndex:    -1,
+		subOptionHoverIndex: -1,
+		Font:                font,
+		W:                   menuW,
+		H:                   menuH,
+		scale:               dpiscale,
+		state:               state,
 	}
+
+	cache := TextureCache{
+		textCache:  map[string]textCache{},
+		hoverCache: map[int32]*sdl.Texture{},
+	}
+
+	mb.cache = cache
 
 	mb.Items = []menuItem{
 		{
@@ -137,18 +150,30 @@ func (mb *menuBar) handleMouse(x, y int32) {
 
 	if mb.hoverIndex != -1 {
 		item := mb.Items[mb.hoverIndex]
-		changed := false
+
 		for i, option := range item.options {
 			if pointInRect(option.Rect, x, y) {
 				mb.optionHoverIndex = i
-				changed = true
 
 			}
 		}
 
-		if !changed {
-			mb.optionHoverIndex = -1
+	}
+
+	if mb.optionHoverIndex != -1 {
+		option := mb.Items[mb.hoverIndex].options[mb.optionHoverIndex]
+
+		if len(option.ExpandableItems) == 0 {
+			mb.subOptionHoverIndex = -1
 		}
+
+		for i, suboption := range option.ExpandableItems {
+			if pointInRect(suboption.Rect, x, y) {
+				mb.subOptionHoverIndex = i
+			}
+		}
+	} else {
+		mb.subOptionHoverIndex = -1
 	}
 
 	for i, item := range mb.Items {
@@ -280,7 +305,7 @@ func (mb *menuBar) renderBar(r *sdl.Renderer) {
 					pill = mb.getHoverPill(r, option.Rect.W, option.Rect.H)
 					r.Copy(pill, nil, &option.Rect)
 
-					mb.renderSupDropdown(r, option)
+					mb.renderSupDropdown(r, &mb.Items[i].options[j])
 				}
 			}
 			mb.renderDropdown(r, &mb.Items[i])
@@ -293,7 +318,7 @@ func (mb *menuBar) renderBar(r *sdl.Renderer) {
 
 }
 
-func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option ItemOption) {
+func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 	if len(option.ExpandableItems) == 0 {
 		return
 	}
@@ -309,7 +334,15 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option ItemOption) {
 	}
 
 	gfx.RoundedBoxColor(r, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBG)
-	gfx.RoundedRectangleColor(r, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBorder)
+
+	for i, subOption := range option.ExpandableItems {
+
+		if i == mb.subOptionHoverIndex {
+			pill := mb.getHoverPill(r, subOption.Rect.W, subOption.Rect.H)
+			r.Copy(pill, nil, &option.ExpandableItems[i].Rect)
+		}
+		mb.drawText(subOption.label, subOption.Rect, r, 12)
+	}
 
 }
 
@@ -327,8 +360,6 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 
 	gfx.RoundedBoxColor(r, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBG)
 
-	gfx.RoundedRectangleColor(r, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBorder)
-
 	for _, option := range item.options {
 		if option.isLine {
 			midY := option.Rect.Y + option.Rect.H/2
@@ -339,12 +370,24 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 
 		mb.drawText(option.label, option.Rect, r, 14)
 
+		if option.Expandable {
+
+			arrowRect := sdl.Rect{
+				X: option.Rect.X + option.Rect.W - 24,
+				H: option.Rect.H,
+				Y: option.Rect.Y,
+				W: 16,
+			}
+
+			r.Copy(mb.getArrow(r), nil, &arrowRect)
+		}
+
 	}
 
 }
 
 func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32) {
-	entry, ok := m.textCache[text]
+	entry, ok := m.cache.textCache[text]
 	if !ok {
 		entry = textCache{}
 		surface, err := m.Font.RenderUTF8Blended(text, colText)
@@ -362,7 +405,7 @@ func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet in
 		}
 
 		entry.texture = texture
-		m.textCache[text] = entry
+		m.cache.textCache[text] = entry
 
 	}
 
@@ -380,7 +423,7 @@ func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet in
 const upfactor = 4
 
 func (mb *menuBar) getHoverPill(r *sdl.Renderer, w, h int32) *sdl.Texture {
-	entry, ok := mb.hoverCache[w]
+	entry, ok := mb.cache.hoverCache[w]
 	if ok {
 		return entry
 	}
@@ -391,7 +434,7 @@ func (mb *menuBar) getHoverPill(r *sdl.Renderer, w, h int32) *sdl.Texture {
 		return nil
 	}
 
-	mb.hoverCache[w] = texture
+	mb.cache.hoverCache[w] = texture
 	return texture
 }
 
