@@ -9,6 +9,11 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+type game struct {
+	core        *Core.Console
+	audioDevice sdl.AudioDeviceID
+}
+
 func startGame(filepath string, dev sdl.AudioDeviceID, screenChannel chan Core.ScreenInfo) *Core.Console {
 	console := Core.Quickstart(filepath)
 	console.Apu = Core.NewApu(44100, console)
@@ -20,6 +25,27 @@ func startGame(filepath string, dev sdl.AudioDeviceID, screenChannel chan Core.S
 
 	return console
 
+}
+
+func (console *game) LoadRom(filepath string) error {
+	err := console.core.LoadRom(filepath)
+	if err != nil {
+		return fmt.Errorf("uhm: %v", err)
+	}
+
+	go beginSampleLoop(console.audioDevice, console.core)
+	sdl.PauseAudioDevice(console.audioDevice, false)
+
+	return nil
+}
+
+func initConsole(screenChannel chan Core.ScreenInfo) *Core.Console {
+	console := Core.InitializeConsole()
+
+	console.Apu = Core.NewApu(44100, console)
+	console.ScreenChannel = screenChannel
+
+	return console
 }
 
 func frameMonitor(console *Core.Console) {

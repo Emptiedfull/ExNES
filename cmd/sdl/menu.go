@@ -3,11 +3,9 @@
 package main
 
 import (
-	"exnes/Core"
 	"fmt"
 	"log"
 
-	"github.com/sqweek/dialog"
 	"github.com/veandco/go-sdl2/gfx"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -18,10 +16,12 @@ func setUpMenu() {
 }
 
 type menuBar struct {
+	state *localState
+
 	Items []menuItem
 	Font  *ttf.Font
 
-	textCache  map[string]*sdl.Texture
+	textCache  map[string]textCache
 	hoverCache map[int32]*sdl.Texture
 
 	dropdownIndex    int
@@ -37,7 +37,6 @@ type menuItem struct {
 	label   string
 	Rect    sdl.Rect
 	options []ItemOption
-	onClick func()
 }
 
 type ItemOption struct {
@@ -47,12 +46,28 @@ type ItemOption struct {
 
 	disabled bool
 
+	Expandable      bool
+	ExpandableItems []expandableOption
+
 	isLine bool
 }
 
-func createNewMenu(font *ttf.Font, console *Core.Console, menuH, menuW, dpiscale int32) *menuBar {
+type expandableOption struct {
+	label   string
+	Rect    sdl.Rect
+	onClick func()
+}
+
+type textCache struct {
+	texture *sdl.Texture
+	W       int32
+	H       int32
+}
+
+func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menuW, dpiscale int32) *menuBar {
 	mb := &menuBar{
-		textCache:        map[string]*sdl.Texture{},
+		textCache:        map[string]textCache{},
+		hoverCache:       map[int32]*sdl.Texture{},
 		dropdownIndex:    -1,
 		hoverIndex:       -1,
 		optionHoverIndex: -1,
@@ -60,23 +75,29 @@ func createNewMenu(font *ttf.Font, console *Core.Console, menuH, menuW, dpiscale
 		W:                menuW,
 		H:                menuH,
 		scale:            dpiscale,
+		state:            state,
 	}
 
 	mb.Items = []menuItem{
 		{
 			label: "File",
-			onClick: func() {
-				filename, err := dialog.File().Filter("NES ROM", "nes").Load()
-				if err != nil {
-					log.Fatal(err)
-				}
 
-				fmt.Println("game:", filename)
-			},
 			options: []ItemOption{
 				{
-					label:   "Open",
-					onClick: func() { fmt.Println("YO BITCHES") },
+					label:   "Load Rom",
+					onClick: func() { openRom(console, state) },
+				},
+				{
+					label:      "Recent files",
+					Expandable: true,
+					ExpandableItems: []expandableOption{
+						{
+							label: "hello",
+						},
+						{
+							label: "bye",
+						},
+					},
 				},
 				{
 					label:   "exit",
@@ -96,6 +117,14 @@ func createNewMenu(font *ttf.Font, console *Core.Console, menuH, menuW, dpiscale
 		},
 		{
 			label: "input",
+			options: []ItemOption{
+				{
+					label: "Set controls",
+				},
+				{
+					label: "pair controls",
+				},
+			},
 		},
 	}
 
@@ -105,34 +134,65 @@ func createNewMenu(font *ttf.Font, console *Core.Console, menuH, menuW, dpiscale
 }
 
 func (mb *menuBar) handleMouse(x, y int32) {
-	mb.hoverIndex = -1
+
+	if mb.hoverIndex != -1 {
+		item := mb.Items[mb.hoverIndex]
+		changed := false
+		for i, option := range item.options {
+			if pointInRect(option.Rect, x, y) {
+				mb.optionHoverIndex = i
+				changed = true
+
+			}
+		}
+
+		if !changed {
+			mb.optionHoverIndex = -1
+		}
+	}
 
 	for i, item := range mb.Items {
 		if pointInRect(item.Rect, x, y) {
 			mb.hoverIndex = i
 
-			return
 		}
 
 	}
+
 }
 
 func pointInRect(rect sdl.Rect, x, y int32) bool {
 	return x >= rect.X && x <= rect.X+rect.W && y >= rect.Y && y <= rect.Y+rect.H
 }
 
-func (mb *menuBar) handleClick() {
+func (mb *menuBar) handleClick(x, y int32) {
 	if mb.hoverIndex != -1 {
-		mb.Items[mb.hoverIndex].onClick()
+		item := mb.Items[mb.hoverIndex]
+		for _, option := range item.options {
+			if pointInRect(option.Rect, x, y) {
+				option.onClick()
+				return
+			}
+		}
+
+		for _, item := range mb.Items {
+			if pointInRect(item.Rect, x, y) {
+				return
+			}
+		}
+		mb.hoverIndex = -1
 	}
+
 }
 
 const (
-	optionH       = 20
+	optionH       = 24
 	lineH         = 5
 	panelPadding  = 8
 	optionPadding = 26
-	minW          = 100
+	minW          = 140
+	expandableW   = 120
+	itemSpacer    = 6
 )
 
 func (mb *menuBar) positionLayout() {
@@ -154,6 +214,7 @@ func (mb *menuBar) positionLayout() {
 			if padded > dropdownW {
 				dropdownW = padded
 			}
+
 		}
 
 		y := mb.H + 6
@@ -170,6 +231,24 @@ func (mb *menuBar) positionLayout() {
 				H: h,
 				W: dropdownW,
 			}
+
+			if option.Expandable && len(option.ExpandableItems) > 0 {
+				subX := option.Rect.X + option.Rect.W + 4
+				subY := option.Rect.Y
+				for k := range option.ExpandableItems {
+					subOption := &option.ExpandableItems[k]
+
+					subOption.Rect = sdl.Rect{
+						X: subX,
+						Y: subY,
+						H: optionH,
+						W: expandableW,
+					}
+
+					subY += optionH
+				}
+			}
+
 			y += h
 
 		}
@@ -180,32 +259,62 @@ func (mb *menuBar) positionLayout() {
 			W: itemW,
 			H: mb.H,
 		}
-		x += itemW
+		x += itemW + itemSpacer
 	}
 }
 
 func (mb *menuBar) renderBar(r *sdl.Renderer) {
 	r.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 255)
-	r.FillRect(&sdl.Rect{X: 0, Y: 0, W: mb.W, H: mb.H})
+	r.FillRect(&sdl.Rect{X: 0, Y: 0, W: mb.W, H: mb.H + 4})
 
 	for i, item := range mb.Items {
 		r.SetDrawColor(230, 210, 66, 255)
 
 		if i == mb.hoverIndex {
 
-			gfx.RoundedBoxColor(r, item.Rect.X+2, item.Rect.Y+2, item.Rect.X+item.Rect.W-4, item.Rect.Y+item.Rect.H-2, 10, colHover)
+			pill := mb.getHoverPill(r, item.Rect.W, item.Rect.H)
+			r.Copy(pill, nil, &sdl.Rect{X: item.Rect.X, Y: item.Rect.Y, W: item.Rect.W, H: item.Rect.H})
+
+			for j, option := range mb.Items[i].options {
+				if j == mb.optionHoverIndex {
+					pill = mb.getHoverPill(r, option.Rect.W, option.Rect.H)
+					r.Copy(pill, nil, &option.Rect)
+
+					mb.renderSupDropdown(r, option)
+				}
+			}
 			mb.renderDropdown(r, &mb.Items[i])
+
 		}
 
-		mb.drawText(item.label, item.Rect, r)
+		mb.drawText(item.label, item.Rect, r, 12)
 
 	}
 
-	r.SetDrawColor(colSeparator.R, colSeparator.G, colSeparator.B, colSeparator.A)
-	r.DrawLine(0, mb.H+1, mb.W, mb.H+1)
+}
+
+func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option ItemOption) {
+	if len(option.ExpandableItems) == 0 {
+		return
+	}
+
+	first := option.ExpandableItems[0]
+	last := option.ExpandableItems[len(option.ExpandableItems)-1].Rect
+
+	panel := sdl.Rect{
+		X: first.Rect.X,
+		Y: first.Rect.Y,
+		H: (last.Y + last.H) - first.Rect.Y,
+		W: first.Rect.W,
+	}
+
+	gfx.RoundedBoxColor(r, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBG)
+	gfx.RoundedRectangleColor(r, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBorder)
+
 }
 
 func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
+
 	first := item.options[0].Rect
 	last := item.options[len(item.options)-1].Rect
 
@@ -228,34 +337,85 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 			continue
 		}
 
-		mb.drawText(option.label, option.Rect, r)
+		mb.drawText(option.label, option.Rect, r, 14)
 
 	}
 
 }
-func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer) {
-	surface, err := m.Font.RenderUTF8Blended(text, colText)
-	if err != nil {
-		log.Fatal("bad", err)
-	}
-	defer surface.Free()
 
-	texture, err := r.CreateTextureFromSurface(surface)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer texture.Destroy()
+func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32) {
+	entry, ok := m.textCache[text]
+	if !ok {
+		entry = textCache{}
+		surface, err := m.Font.RenderUTF8Blended(text, colText)
+		if err != nil {
+			log.Fatal("bad", err)
+		}
+		defer surface.Free()
 
-	logicalW := int32(surface.W / m.scale)
-	logicalH := int32(surface.H / m.scale)
+		entry.W = int32(surface.W / m.scale)
+		entry.H = int32(surface.H / m.scale)
+
+		texture, err := r.CreateTextureFromSurface(surface)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		entry.texture = texture
+		m.textCache[text] = entry
+
+	}
 
 	dst := sdl.Rect{
-		X: rect.X + 12,
-		Y: rect.Y + (rect.H-logicalH)/2,
-		W: logicalW,
-		H: logicalH,
+		X: rect.X + offet,
+		Y: rect.Y + (rect.H-entry.H)/2,
+		W: entry.W,
+		H: entry.H,
 	}
 
-	r.Copy(texture, nil, &dst)
+	r.Copy(entry.texture, nil, &dst)
 
+}
+
+const upfactor = 4
+
+func (mb *menuBar) getHoverPill(r *sdl.Renderer, w, h int32) *sdl.Texture {
+	entry, ok := mb.hoverCache[w]
+	if ok {
+		return entry
+	}
+
+	texture, err := createHover(r, colHover, w, h)
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+
+	mb.hoverCache[w] = texture
+	return texture
+}
+
+func createHover(r *sdl.Renderer, col sdl.Color, w, h int32) (*sdl.Texture, error) {
+	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
+	defer sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
+	bigW := w * upfactor
+	bigH := h * upfactor
+
+	tex, err := r.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_TARGET, bigW, bigH)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create texture fuck: %v", err)
+	}
+
+	tex.SetBlendMode(sdl.BLENDMODE_BLEND)
+
+	r.SetRenderTarget(tex)
+	r.SetDrawColor(0, 0, 0, 0)
+	r.Clear()
+
+	bigR := int32(10 * upfactor)
+
+	gfx.RoundedBoxColor(r, 0, 0, bigW-1, bigH-1, bigR, col)
+
+	r.SetRenderTarget(nil)
+	return tex, nil
 }

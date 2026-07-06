@@ -19,11 +19,18 @@ import (
 )
 
 func main() {
-	var console *Core.Console
 
 	displayChannel := make(chan Core.ScreenInfo, 100)
+	console := initConsole(displayChannel)
+	g := &game{
+		core: console,
+	}
 
-	startWindow(console, displayChannel)
+	state := loadState()
+
+	defer state.saveState()
+
+	startWindow(g, displayChannel, state)
 
 }
 
@@ -41,11 +48,11 @@ var (
 	colText        = sdl.Color{R: 230, G: 228, B: 235, A: 255}
 	colTextDim     = sdl.Color{R: 130, G: 128, B: 140, A: 255}
 	colAccent      = sdl.Color{R: 130, G: 110, B: 220, A: 255}
-	colPanelBG     = sdl.Color{R: 40, G: 40, B: 44, A: 235}
+	colPanelBG     = sdl.Color{R: 40, G: 40, B: 44, A: 215}
 	colPanelBorder = sdl.Color{R: 68, G: 60, B: 86, A: 255}
 )
 
-func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
+func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localState) {
 
 	windowW := int32(game_width * scale)
 	windowH := int32((game_heigth + menu_height) * scale)
@@ -95,7 +102,7 @@ func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
 	renderer.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 255)
 	renderer.FillRect(&sdl.Rect{X: 0, Y: 0, W: windowW, H: windowH})
 
-	mb := createNewMenu(font, console, (menu_height * 2), windowW, dpi_scale)
+	mb := createNewMenu(font, console, state, (menu_height * 2), windowW, dpi_scale)
 	mb.renderBar(renderer)
 
 	renderer.Present()
@@ -134,7 +141,8 @@ func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
 
 	defer sdl.CloseAudioDevice(audioDevice)
 
-	sdl.PauseAudioDevice(audioDevice, false)
+	sdl.PauseAudioDevice(audioDevice, true)
+	console.audioDevice = audioDevice
 
 	running := true
 	for running {
@@ -146,16 +154,14 @@ func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
 			case *sdl.WindowEvent:
 
 			case *sdl.KeyboardEvent:
-				if console != nil {
-					handleInputs(console, e)
-				} else {
-					console = startGame("/Users/test/Projects/ExNES/games/NROM/mario.nes", audioDevice, updateChan)
-				}
+
+				handleInputs(console.core, e)
+
 			case *sdl.MouseMotionEvent:
 				mb.handleMouse(e.X, e.Y)
 			case *sdl.MouseButtonEvent:
 				if e.Button == sdl.BUTTON_LEFT && e.Type == sdl.MOUSEBUTTONDOWN {
-					mb.handleClick()
+					mb.handleClick(e.X, e.Y)
 				}
 				fmt.Println("button:", e.Button)
 			default:
@@ -167,8 +173,8 @@ func startWindow(console *Core.Console, updateChan chan Core.ScreenInfo) {
 		select {
 		case s := <-updateChan:
 			renderFrame(gameTexture, renderer, s.Buffer, gameRect)
-			if console.Ppu.Frame%10 == 0 {
-				console.TakeSnapshot()
+			if console.core.Ppu.Frame%10 == 0 {
+				console.core.TakeSnapshot()
 			}
 		default:
 			renderer.Copy(gameTexture, nil, gameRect)

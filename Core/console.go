@@ -54,6 +54,22 @@ func (c *Console) UnPause() {
 	c.Paused = false
 }
 
+func (c *Console) LoadRom(filepath string) error {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return fmt.Errorf("unable to read rom file:", err)
+	}
+
+	err = c.InitRom(file)
+	if err != nil {
+		return fmt.Errorf("Invalid rom data:", err)
+	}
+
+	c.Cpu.Reset()
+
+	return nil
+}
+
 func (c *Console) OpenRomFile(filepath string) (io.Reader, error) {
 	file, err := os.Open(filepath)
 	return file, err
