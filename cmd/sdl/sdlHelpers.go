@@ -62,3 +62,42 @@ func createArrow(r *sdl.Renderer, w, h int32, col sdl.Color) (*sdl.Texture, erro
 	r.SetRenderTarget(nil)
 	return texture, nil
 }
+
+func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOption {
+	res := make([]expandableOption, len(roms))
+
+	for i, rom := range roms {
+		res[i] = expandableOption{
+			label: rom.Name,
+			onClick: func() {
+
+				console.LoadRom(rom.Location)
+				mb.resetMenu()
+			},
+		}
+	}
+
+	return res
+}
+
+func getSaveStateItems(state *localState, console *game) []expandableOption {
+	res := make([]expandableOption, len(state.snapshots))
+
+	for i, save := range state.snapshots {
+		if save == nil {
+			res[i].label = "empty"
+
+		}
+
+		res[i].onClick = func() { console.clickSnapshot(state, i) }
+	}
+
+	return res
+}
+
+func (mb *menuBar) resetMenu() {
+	mb.hoverIndex = -1
+	mb.optionHoverIndex = -1
+	mb.dropdownIndex = -1
+	mb.subOptionHoverIndex = -1
+}

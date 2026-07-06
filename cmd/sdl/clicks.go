@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/sqweek/dialog"
 )
@@ -12,14 +13,17 @@ func openRom(console *game, state *localState) {
 		fmt.Println("error opening rom", err)
 	}
 
-	name, err := console.LoadRom(filename)
+	err = console.LoadRom(filename)
 	if err != nil {
 		fmt.Println("error loading rom", err)
 	}
 
-	state.RecentFiles = append(state.RecentFiles, recentRom{
-		Name:     name,
-		Location: filename,
-	})
+	if state != nil {
+
+		state.addRecentRom(recentRom{
+			Name:     filepath.Base(filename),
+			Location: filename,
+		})
+	}
 
 }

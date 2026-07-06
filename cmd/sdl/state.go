@@ -2,12 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"exnes/Core"
 	"fmt"
 	"os"
 )
 
 type localState struct {
 	RecentFiles []recentRom `json:"recent"`
+	running     bool
+	snapshots   []*Core.Snapshot
 }
 
 func newState() *localState {
@@ -27,14 +30,16 @@ func loadState() *localState {
 	data, err := os.ReadFile("state.json")
 	if err != nil {
 		fmt.Println("error loading state:", err)
-		return newState()
+
 	}
 
 	err = json.Unmarshal(data, s)
 	if err != nil {
 		fmt.Println("error unmarshaling state:", err)
-		return newState()
+
 	}
+
+	s.snapshots = make([]*Core.Snapshot, 10)
 
 	return s
 }
@@ -47,4 +52,14 @@ func (state *localState) saveState() {
 	}
 
 	os.WriteFile("state.json", data, 0644)
+}
+
+func (state *localState) addRecentRom(new recentRom) {
+	for _, rom := range state.RecentFiles {
+		if rom.Location == new.Location {
+			return
+		}
+	}
+
+	state.RecentFiles = append(state.RecentFiles, new)
 }

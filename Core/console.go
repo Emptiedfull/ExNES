@@ -158,7 +158,7 @@ func InitializeConsole() *Console {
 	c.Cpu.fetchNew = true
 	c.ScreenChannel = make(chan ScreenInfo, 100)
 
-	c.Snapshots.Data = make([]snapshot, 100)
+	c.Snapshots.Data = make([]Snapshot, 100)
 
 	c.Cpu.mem = &bus{
 		cpu: c.Cpu,

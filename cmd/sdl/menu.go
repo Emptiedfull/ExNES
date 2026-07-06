@@ -101,20 +101,25 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					onClick: func() { openRom(console, state) },
 				},
 				{
-					label:      "Recent files",
-					Expandable: true,
-					ExpandableItems: []expandableOption{
-						{
-							label: "hello",
-						},
-						{
-							label: "bye",
-						},
-					},
+					label:           "Recent files",
+					Expandable:      true,
+					ExpandableItems: getRecentItems(state.RecentFiles, console, mb),
+				},
+				{
+					isLine: true,
+				},
+				{
+					label:           "Save state",
+					Expandable:      true,
+					ExpandableItems: getSaveStateItems(state, console),
+					disabled:        true,
+				},
+				{
+					isLine: true,
 				},
 				{
 					label:   "exit",
-					onClick: func() { fmt.Println("exiting") },
+					onClick: func() { state.running = false },
 				}},
 		},
 		{
@@ -160,7 +165,7 @@ func (mb *menuBar) handleMouse(x, y int32) {
 
 	}
 
-	if mb.optionHoverIndex != -1 {
+	if mb.optionHoverIndex != -1 && mb.hoverIndex != -1 {
 		option := mb.Items[mb.hoverIndex].options[mb.optionHoverIndex]
 
 		if len(option.ExpandableItems) == 0 {
@@ -193,11 +198,24 @@ func pointInRect(rect sdl.Rect, x, y int32) bool {
 func (mb *menuBar) handleClick(x, y int32) {
 	if mb.hoverIndex != -1 {
 		item := mb.Items[mb.hoverIndex]
-		for _, option := range item.options {
-			if pointInRect(option.Rect, x, y) {
+
+		for i, option := range item.options {
+			if option.Expandable {
+				if i == mb.optionHoverIndex {
+					for _, subOption := range option.ExpandableItems {
+						if pointInRect(subOption.Rect, x, y) {
+							subOption.onClick()
+
+							return
+						}
+					}
+				}
+			} else if pointInRect(option.Rect, x, y) {
+
 				option.onClick()
 				return
 			}
+
 		}
 
 		for _, item := range mb.Items {
@@ -205,14 +223,18 @@ func (mb *menuBar) handleClick(x, y int32) {
 				return
 			}
 		}
-		mb.hoverIndex = -1
+
+		mb.resetMenu()
+
+		fmt.Println(mb.optionHoverIndex)
 	}
 
 }
 
 const (
 	optionH       = 24
-	lineH         = 5
+	subOptionH    = 24
+	lineH         = 12
 	panelPadding  = 8
 	optionPadding = 26
 	minW          = 140
@@ -266,7 +288,7 @@ func (mb *menuBar) positionLayout() {
 					subOption.Rect = sdl.Rect{
 						X: subX,
 						Y: subY,
-						H: optionH,
+						H: subOptionH,
 						W: expandableW,
 					}
 
@@ -301,7 +323,7 @@ func (mb *menuBar) renderBar(r *sdl.Renderer) {
 			r.Copy(pill, nil, &sdl.Rect{X: item.Rect.X, Y: item.Rect.Y, W: item.Rect.W, H: item.Rect.H})
 
 			for j, option := range mb.Items[i].options {
-				if j == mb.optionHoverIndex {
+				if j == mb.optionHoverIndex && !option.isLine && !option.disabled {
 					pill = mb.getHoverPill(r, option.Rect.W, option.Rect.H)
 					r.Copy(pill, nil, &option.Rect)
 
@@ -312,7 +334,7 @@ func (mb *menuBar) renderBar(r *sdl.Renderer) {
 
 		}
 
-		mb.drawText(item.label, item.Rect, r, 12)
+		mb.drawText(item.label, item.Rect, r, 12, colText)
 
 	}
 
@@ -341,7 +363,7 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 			pill := mb.getHoverPill(r, subOption.Rect.W, subOption.Rect.H)
 			r.Copy(pill, nil, &option.ExpandableItems[i].Rect)
 		}
-		mb.drawText(subOption.label, subOption.Rect, r, 12)
+		mb.drawText(subOption.label, subOption.Rect, r, 12, colText)
 	}
 
 }
@@ -355,7 +377,7 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 		X: first.X,
 		Y: first.Y,
 		W: first.W,
-		H: (last.Y + last.H) - first.Y,
+		H: (last.Y + last.H) - first.Y + 5,
 	}
 
 	gfx.RoundedBoxColor(r, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBG)
@@ -363,12 +385,17 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 	for _, option := range item.options {
 		if option.isLine {
 			midY := option.Rect.Y + option.Rect.H/2
-			r.SetDrawColor(colSeparator.R, colSeparator.G, colAccent.B, 255)
-			r.DrawLine(option.Rect.X, midY, option.Rect.X+option.Rect.W, midY)
+			r.SetDrawColor(colHover.R, colHover.G, colHover.B, 255)
+			r.DrawLine(option.Rect.X+12, midY, option.Rect.X+option.Rect.W-12, midY)
 			continue
 		}
 
-		mb.drawText(option.label, option.Rect, r, 14)
+		color := colText
+		if option.disabled {
+			color = colTextDim
+		}
+
+		mb.drawText(option.label, option.Rect, r, 14, color)
 
 		if option.Expandable {
 
@@ -386,11 +413,11 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 
 }
 
-func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32) {
+func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color) {
 	entry, ok := m.cache.textCache[text]
 	if !ok {
 		entry = textCache{}
-		surface, err := m.Font.RenderUTF8Blended(text, colText)
+		surface, err := m.Font.RenderUTF8Blended(text, col)
 		if err != nil {
 			log.Fatal("bad", err)
 		}

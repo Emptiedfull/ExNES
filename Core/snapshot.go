@@ -2,7 +2,7 @@ package Core
 
 // Contains utility for the snapshot function
 
-type snapshot struct {
+type Snapshot struct {
 	Frame_no int
 	Cycles   int
 	CpuState CpuSnapshot
@@ -16,7 +16,7 @@ type SnapshotBuffer struct {
 	Frame int
 	// Data  [100]snapshot
 
-	Data []snapshot
+	Data []Snapshot
 
 	Index int
 }
@@ -140,8 +140,14 @@ func (c *Console) TakeSnapshot() {
 	c.Snapshots.Index = (c.Snapshots.Index + 1) % (len(c.Snapshots.Data) - 1)
 }
 
-func (c *Console) createEmptySnapshot() snapshot {
-	s := snapshot{
+func (c *Console) SaveState() *Snapshot {
+	s := c.createEmptySnapshot()
+	c.PopulateSnapshot(&s)
+	return &s
+}
+
+func (c *Console) createEmptySnapshot() Snapshot {
+	s := Snapshot{
 		Frame_no:    0,
 		Cycles:      0,
 		mapperState: c.mapper.CreateEmptySnapshot(),
@@ -170,7 +176,7 @@ func (p *ppu) TakePpuSnapshot(S *PpuSnapshot) {
 
 }
 
-func (b *SnapshotBuffer) AddSnapshot(shot snapshot) {
+func (b *SnapshotBuffer) AddSnapshot(shot Snapshot) {
 	b.Data[b.Index] = shot
 	b.Index = (b.Index + 1) % len(b.Data)
 
@@ -204,7 +210,7 @@ func (c cpu) TakeCpuSnapshot(S *CpuSnapshot) {
 
 }
 
-func (c *Console) PopulateSnapshot(s *snapshot) {
+func (c *Console) PopulateSnapshot(s *Snapshot) {
 
 	if c.mapper == nil || c.Cpu == nil || c.Ppu == nil || c.Apu == nil {
 		return
@@ -218,13 +224,13 @@ func (c *Console) PopulateSnapshot(s *snapshot) {
 	s.Cycles = c.Cpu.TotalCycles
 }
 
-func (c *Console) AddSnapshot(s snapshot) {
+func (c *Console) AddSnapshot(s Snapshot) {
 	s.Frame_no = c.Snapshots.Frame
 
 	c.Snapshots.AddSnapshot(s)
 }
 
-func (c *Console) LoadSnapshot(snap snapshot) {
+func (c *Console) LoadSnapshot(snap Snapshot) {
 
 	c.Cpu.LoadCpuSnapshot(snap.CpuState)
 	c.Ppu.LoadPpuSnapshot(snap.PpuState)

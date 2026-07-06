@@ -144,12 +144,12 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 	sdl.PauseAudioDevice(audioDevice, true)
 	console.audioDevice = audioDevice
 
-	running := true
-	for running {
+	state.running = true
+	for state.running {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch e := event.(type) {
 			case *sdl.QuitEvent:
-				running = false
+				state.running = false
 
 			case *sdl.WindowEvent:
 
@@ -189,7 +189,6 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 
 func renderFrame(texture *sdl.Texture, renderer *sdl.Renderer, buffer []byte, gameRect *sdl.Rect) {
 	texture.Update(nil, unsafe.Pointer(&buffer[0]), 256*4)
-
 	renderer.Copy(texture, nil, gameRect)
 
 }

@@ -1,8 +1,12 @@
 {
 "recent": [
 {
-"name": "/Users/test/Projects/ExNES/games/NROM/mario.nes",
+"name": "mario.nes",
 "location": "/Users/test/Projects/ExNES/games/NROM/mario.nes"
+},
+{
+"name": "popeye.nes",
+"location": "/Users/test/Projects/ExNES/games/NROM/popeye.nes"
 }
 ]
 }

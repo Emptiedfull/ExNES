@@ -28,19 +28,22 @@ func startGame(filepath string, dev sdl.AudioDeviceID, screenChannel chan Core.S
 
 }
 
-func (console *game) LoadRom(filepath string) (string, error) {
+func (console *game) LoadRom(filepath string) error {
 	file, err := os.Open(filepath)
 
 	if err != nil {
-		return "", fmt.Errorf("uhm: %v", err)
+		return fmt.Errorf("uhm: %v", err)
 	}
 
-	console.core.InitRom(file)
+	err = console.core.InitRom(file)
+	console.core.Cpu.Reset()
+	fmt.Println("error:", err)
+	fmt.Println("starting the game")
 
 	go beginSampleLoop(console.audioDevice, console.core)
 	sdl.PauseAudioDevice(console.audioDevice, false)
 
-	return file.Name(), nil
+	return nil
 }
 
 func initConsole(screenChannel chan Core.ScreenInfo) *Core.Console {
@@ -50,6 +53,11 @@ func initConsole(screenChannel chan Core.ScreenInfo) *Core.Console {
 	console.ScreenChannel = screenChannel
 
 	return console
+}
+
+func (console *game) clickSnapshot(state *localState, index int) {
+	state.snapshots[index] = console.core.SaveState()
+
 }
 
 func frameMonitor(console *Core.Console) {
