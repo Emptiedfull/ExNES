@@ -53,13 +53,14 @@ func createArrow(r *sdl.Renderer, w, h int32, col sdl.Color) (*sdl.Texture, erro
 
 	texture.SetBlendMode(sdl.BLENDMODE_BLEND)
 
+	priv := r.GetRenderTarget()
 	r.SetRenderTarget(texture)
 	r.SetDrawColor(0, 0, 0, 0)
 	r.Clear()
 
 	drawArrowIcon(r, sdl.Rect{X: 0, Y: 0, W: bigW, H: bigH}, col)
 
-	r.SetRenderTarget(nil)
+	r.SetRenderTarget(priv)
 	return texture, nil
 }
 
@@ -127,7 +128,7 @@ func (mb *menuBar) updateSavesMenus() {
 	mb.Items[0].options[4].ExpandableItems = loadItems
 
 	if len(loadItems) > 0 {
-		// mb.menuFlags[saveAvailable] = true
+
 		mb.setFlag(saveAvailable, true)
 	}
 
@@ -139,6 +140,8 @@ func (mb *menuBar) resetMenu() {
 	mb.optionHoverIndex = -1
 	mb.dropdownIndex = -1
 	mb.subOptionHoverIndex = -1
+
+	mb.cache.barDirty = true
 }
 
 func convertColToString(col sdl.Color) string {
@@ -172,4 +175,5 @@ func (mb *menuBar) updateMenuState() {
 func (mb *menuBar) setFlag(flag Menuflag, state bool) {
 	mb.flagsUpdated = true
 	mb.menuFlags[flag] = state
+	mb.cache.barDirty = true
 }

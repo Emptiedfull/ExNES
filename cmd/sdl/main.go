@@ -12,8 +12,6 @@ import (
 	"exnes/Core"
 	"fmt"
 	"log"
-	"os"
-	"runtime/pprof"
 	"time"
 	"unsafe"
 
@@ -24,16 +22,6 @@ import (
 )
 
 func main() {
-	f, err := os.Create("cpu.pprof")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	if err := pprof.StartCPUProfile(f); err != nil {
-		log.Fatal(err)
-	}
-	defer pprof.StopCPUProfile()
 
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	console := initConsole(displayChannel)
@@ -84,6 +72,7 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 	}
 
 	defer window.Destroy()
+	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
 
 	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
@@ -92,7 +81,6 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 	}
 
 	renderer.SetLogicalSize(windowW, windowH)
-	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
 
 	defer renderer.Destroy()
 
