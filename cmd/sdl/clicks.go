@@ -29,6 +29,7 @@ func openRom(console *game, state *localState, mb *menuBar) {
 }
 
 func (console *game) clickSnapshot(state *localState, index int) {
+
 	state.saves[index].snapshot = console.core.SaveState()
 
 }

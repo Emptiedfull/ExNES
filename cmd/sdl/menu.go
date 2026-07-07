@@ -449,7 +449,8 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 }
 
 func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color) {
-	entry, ok := m.cache.textCache[text+convertColToString(col)]
+	itemEntry := text + convertColToString(col)
+	entry, ok := m.cache.textCache[itemEntry]
 	if !ok {
 		entry = textCache{}
 		surface, err := m.Font.RenderUTF8Blended(text, col)
@@ -467,7 +468,7 @@ func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet in
 		}
 
 		entry.texture = texture
-		m.cache.textCache[text] = entry
+		m.cache.textCache[itemEntry] = entry
 
 	}
 

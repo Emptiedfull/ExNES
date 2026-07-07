@@ -12,13 +12,28 @@ import (
 	"exnes/Core"
 	"fmt"
 	"log"
+	"os"
+	"runtime/pprof"
+	"time"
 	"unsafe"
+
+	_ "net/http/pprof"
 
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
 
 func main() {
+	f, err := os.Create("cpu.pprof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Fatal(err)
+	}
+	defer pprof.StopCPUProfile()
 
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	console := initConsole(displayChannel)
@@ -70,7 +85,7 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 
 	defer window.Destroy()
 
-	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED|sdl.RENDERER_PRESENTVSYNC)
+	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
 	if err != nil {
 		log.Fatal(err)
@@ -145,13 +160,29 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 	console.audioDevice = audioDevice
 
 	state.running = true
+	visible := true
+
+	const targetFPS = 60
+	frameDuration := time.Second / targetFPS
+
 	for state.running {
+
+		start := time.Now()
+
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch e := event.(type) {
+
 			case *sdl.QuitEvent:
 				state.running = false
 
 			case *sdl.WindowEvent:
+				switch e.Event {
+				case sdl.WINDOWEVENT_MINIMIZED, sdl.WINDOWEVENT_HIDDEN:
+					visible = false
+
+				case sdl.WINDOWEVENT_MAXIMIZED, sdl.WINDOWEVENT_SHOWN, sdl.WINDOWEVENT_EXPOSED:
+					visible = true
+				}
 
 			case *sdl.KeyboardEvent:
 
@@ -168,22 +199,29 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 
 			}
 		}
-		renderer.Clear()
 
-		select {
-		case s := <-updateChan:
-			renderFrame(gameTexture, renderer, s.Buffer, gameRect)
-			if console.core.Ppu.Frame%10 == 0 {
-				console.core.TakeSnapshot()
+		if visible {
+			renderer.Clear()
+
+			select {
+			case s := <-updateChan:
+				renderFrame(gameTexture, renderer, s.Buffer, gameRect)
+				if console.core.Ppu.Frame%10 == 0 {
+					console.core.TakeSnapshot()
+				}
+			default:
+				renderer.Copy(gameTexture, nil, gameRect)
 			}
-		default:
-			renderer.Copy(gameTexture, nil, gameRect)
+
+			mb.renderBar(renderer)
+			renderer.Present()
 		}
 
-		mb.renderBar(renderer)
-		renderer.Present()
+		elapsed := time.Since(start)
+		if elapsed < frameDuration {
+			sdl.Delay(uint32((frameDuration - elapsed).Milliseconds()))
+		}
 
-		sdl.Delay(1)
 	}
 }
 
