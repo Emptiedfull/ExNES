@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 	"unsafe"
 
@@ -19,7 +20,8 @@ type game struct {
 	pauseChannel  chan bool
 	screenChannel chan Core.ScreenInfo
 
-	fps int
+	fps    int
+	volume float32
 }
 
 func (console *game) LoadRom(filepath string, mb *menuBar) error {
@@ -33,7 +35,7 @@ func (console *game) LoadRom(filepath string, mb *menuBar) error {
 	console.core.Cpu.Reset()
 	fmt.Println("error:", err)
 
-	go beginSampleLoop(console.audioDevice, console.core, console.pauseChannel)
+	go console.beginSampleLoop()
 	go console.frameMonitor(console.core)
 	sdl.PauseAudioDevice(console.audioDevice, false)
 
@@ -95,7 +97,7 @@ func backpressureThreshold(freq int32) uint32 {
 	return bytesPerSecond * bufferMillis / 1000
 }
 
-func beginSampleLoop(dev sdl.AudioDeviceID, console *Core.Console, pauseChannel chan bool) {
+func (game *game) beginSampleLoop() {
 	const samples = 512
 
 	sampleBuf := make([]float32, samples)
@@ -104,9 +106,9 @@ func beginSampleLoop(dev sdl.AudioDeviceID, console *Core.Console, pauseChannel 
 	for {
 
 		select {
-		case paused := <-pauseChannel:
+		case paused := <-game.pauseChannel:
 			if paused {
-				for state := range pauseChannel {
+				for state := range game.pauseChannel {
 					if !state {
 						break
 					}
@@ -116,20 +118,20 @@ func beginSampleLoop(dev sdl.AudioDeviceID, console *Core.Console, pauseChannel 
 		}
 
 		for i := range samples {
-			for !console.Apu.HasSample() {
-				console.TickNoAudio()
+			for !game.core.Apu.HasSample() {
+				game.core.TickNoAudio()
 
 			}
-			sample := console.Apu.PopSample()
+			sample := game.core.Apu.PopSample()
 			sampleBuf[i] = sample
 
 		}
-		for sdl.GetQueuedAudioSize(dev) > threshold {
+		for sdl.GetQueuedAudioSize(game.audioDevice) > threshold {
 			sdl.Delay(1)
 		}
-		console.RunDisplayUpdates()
-		adjustVolume(sampleBuf, 0.1)
-		sdl.QueueAudio(dev, float32ToBytes(sampleBuf))
+		game.core.RunDisplayUpdates()
+		adjustVolume(sampleBuf, game.volume)
+		sdl.QueueAudio(game.audioDevice, float32ToBytes(sampleBuf))
 	}
 
 }
@@ -178,4 +180,23 @@ func (console *game) changeSpeed(multipler float64) {
 	targetFrequency := 44100 / multipler
 	console.core.Apu = Core.NewApu(targetFrequency, console.core)
 
+}
+
+func (console *game) changeVolume(volumeStr string) {
+	volumeStr = volumeStr[0 : len(volumeStr)-1]
+
+	volumeInt, err := strconv.Atoi(volumeStr)
+	if err != nil {
+		log.Fatal("man stop giving me non int values", err)
+	}
+
+	volume := float32(volumeInt) / 100.0
+
+	fmt.Println(volume, volumeInt)
+
+	if volume > 1 {
+		volume = 1
+	}
+
+	console.volume = volume
 }

@@ -20,6 +20,7 @@
 "settings": {
 "show_fps": true,
 "current_speed": "100%",
-"muted": false
+"muted": true,
+"current_volume": "100%"
 }
 }

@@ -36,6 +36,8 @@ func main() {
 
 	state := loadState()
 
+	g.changeVolume(state.Settings.Current_volume)
+
 	defer state.saveState()
 
 	startWindow(g, displayChannel, state)

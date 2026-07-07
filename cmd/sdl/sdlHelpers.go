@@ -72,7 +72,8 @@ func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOp
 
 	for i, rom := range roms {
 		res[i] = expandableOption{
-			label: rom.Name,
+			enabled: true,
+			label:   rom.Name,
 			onClick: func() {
 				// if mb.menuFlags[gameRunning]{
 				// 	console =
@@ -91,6 +92,7 @@ func (mb *menuBar) getSaveStateItems() []expandableOption {
 	res := make([]expandableOption, len(mb.state.saves))
 
 	for i, save := range mb.state.saves {
+		res[i].enabled = true
 		if !save.filled {
 			res[i].label = "empty"
 			res[i].Icon = "./icons/save-plus.svg"
@@ -116,9 +118,11 @@ func (mb *menuBar) getLoadItems() []expandableOption {
 	res := make([]expandableOption, 0)
 
 	for i, save := range mb.state.saves {
+
 		if save.filled {
 			option := expandableOption{}
 			option.label = save.timestamp
+			option.enabled = true
 			option.Icon = "./icons/save-check.svg"
 			option.onClick = func() {
 				mb.console.loadSnapshot(mb.state, i)
@@ -131,10 +135,15 @@ func (mb *menuBar) getLoadItems() []expandableOption {
 	return res
 }
 
+func (mb *menuBar) setupMenus() {
+	mb.updateSettingsMenu()
+	mb.updateSoundMenu()
+}
+
 func (mb *menuBar) updateSettingsMenu() {
 	state := mb.state.Settings
 
-	saveOption := &mb.Items[2].options[0].ExpandableItems[0]
+	fpsOption := &mb.Items[2].options[0].ExpandableItems[0]
 
 	speedOptions := mb.Items[2].options[0].ExpandableItems[2:6]
 
@@ -142,7 +151,7 @@ func (mb *menuBar) updateSettingsMenu() {
 
 		if speedOptions[i].label == state.Current_speed {
 			speedOptions[i].Icon = "./icons/check.svg"
-			// mb.Items[2].options[0].ExpandableItems[2+i].Icon = "./icons/check.svg"
+
 			label := speedOptions[i].label
 			speedPerc, _ := strconv.Atoi(label[0 : len(label)-1])
 
@@ -160,25 +169,54 @@ func (mb *menuBar) updateSettingsMenu() {
 	}
 
 	if state.Show_fps {
-		saveOption.Icon = "./icons/check.svg"
+		fpsOption.Icon = "./icons/check.svg"
 	} else {
-		saveOption.Icon = ""
+		fpsOption.Icon = ""
 	}
 
+	mb.positionLayout()
+}
+
+func (mb *menuBar) updateSoundMenu() {
+	state := mb.state.Settings
 	muteOption := &mb.Items[2].options[1].ExpandableItems[0]
+	volumeOptions := mb.Items[2].options[1].ExpandableItems[2:6]
 
 	if state.Muted {
 		muteOption.Icon = "./icons/check.svg"
 		muteOption.onClick = func() {
 			mb.state.Settings.Muted = false
-			mb.updateSettingsMenu()
+			mb.updateSoundMenu()
 		}
 	} else {
 		muteOption.Icon = ""
 		muteOption.onClick = func() {
 			mb.state.Settings.Muted = true
-			mb.updateSettingsMenu()
+			mb.updateSoundMenu()
 		}
+	}
+
+	for i := range volumeOptions {
+		label := volumeOptions[i].label
+
+		if state.Muted {
+			volumeOptions[i].enabled = true
+		} else {
+			volumeOptions[i].enabled = false
+		}
+
+		if label == state.Current_volume {
+			volumeOptions[i].Icon = "./icons/check.svg"
+		} else {
+			volumeOptions[i].Icon = ""
+		}
+
+		volumeOptions[i].onClick = func() {
+			mb.state.Settings.Current_volume = label
+			mb.console.changeVolume(label)
+			mb.updateSoundMenu()
+		}
+
 	}
 
 	mb.positionLayout()

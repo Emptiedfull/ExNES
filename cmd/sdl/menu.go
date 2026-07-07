@@ -90,7 +90,8 @@ type expandableOption struct {
 	Rect    sdl.Rect
 	onClick func()
 
-	Icon string
+	Icon    string
+	enabled bool
 
 	isLine bool
 }
@@ -242,7 +243,8 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					Expandable:   true,
 					ExpandableItems: []expandableOption{
 						{
-							label: "Show Fps",
+							label:   "Show Fps",
+							enabled: true,
 							onClick: func() {
 								mb.state.Settings.Show_fps = !mb.state.Settings.Show_fps
 								mb.updateSettingsMenu()
@@ -253,13 +255,17 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 							isLine: true,
 						},
 						{
-							label: "50%",
+							enabled: true,
+							label:   "50%",
 						}, {
-							label: "75%",
+							enabled: true,
+							label:   "75%",
 						}, {
-							label: "100%",
+							enabled: true,
+							label:   "100%",
 						}, {
-							label: "200%",
+							enabled: true,
+							label:   "200%",
 						},
 					},
 				},
@@ -272,7 +278,8 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					Expandable: true,
 					ExpandableItems: []expandableOption{
 						{
-							label: "Muted",
+							label:   "Muted",
+							enabled: true,
 						},
 						{
 							isLine: true,
@@ -294,8 +301,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 		},
 	}
 	mb.setupFlags()
-	mb.updateSettingsMenu()
-	mb.positionLayout()
+	mb.setupMenus()
 
 	return mb
 }
@@ -519,7 +525,11 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 	gfx.RoundedBoxColor(r, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBG)
 
 	for i, subOption := range option.ExpandableItems {
+		color := colText
 
+		if !subOption.enabled {
+			color = colTextDim
+		}
 		if subOption.isLine {
 			midY := subOption.Rect.Y + subOption.Rect.H/2
 			r.SetDrawColor(colHover.R, colHover.G, colHover.B, 255)
@@ -549,7 +559,7 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 			}
 		}
 
-		mb.drawText(subOption.label, textRect, r, iconGutter, colText)
+		mb.drawText(subOption.label, textRect, r, iconGutter, color)
 	}
 
 }
