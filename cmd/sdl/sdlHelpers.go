@@ -28,18 +28,18 @@ func drawArrowIcon(r *sdl.Renderer, rect sdl.Rect, col sdl.Color) {
 	gfx.FilledTrigonColor(r, x1, y1, x2, y2, x3, y3, col)
 }
 
-func (mb *menuBar) getArrow(r *sdl.Renderer) *sdl.Texture {
-	if mb.cache.arrowCache != nil {
-		return mb.cache.arrowCache
+func (mb *menuBar) getArrow(r *sdl.Renderer, col sdl.Color) *sdl.Texture {
+	if mb.cache.arrowCache[col] != nil {
+		return mb.cache.arrowCache[col]
 	}
 
-	arrow, err := createArrow(r, 16, 16, colText)
+	arrow, err := createArrow(r, 16, 16, col)
 	if err != nil {
 		fmt.Println("soemthing fuckass:", err)
 		return nil
 	}
 
-	mb.cache.arrowCache = arrow
+	mb.cache.arrowCache[col] = arrow
 	return arrow
 }
 
@@ -135,24 +135,26 @@ func (mb *menuBar) updateSettingsMenu() {
 	state := mb.state.Settings
 
 	saveOption := &mb.Items[2].options[0].ExpandableItems[0]
-	speedOptions := mb.Items[2].options[0].ExpandableItems[2:5]
+
+	speedOptions := mb.Items[2].options[0].ExpandableItems[2:6]
 
 	for i := range speedOptions {
 
 		if speedOptions[i].label == state.Current_speed {
 			speedOptions[i].Icon = "./icons/check.svg"
 			// mb.Items[2].options[0].ExpandableItems[2+i].Icon = "./icons/check.svg"
-		} else {
-			speedOptions[i].Icon = ""
-		}
-
-		speedOptions[i].onClick = func() {
 			label := speedOptions[i].label
 			speedPerc, _ := strconv.Atoi(label[0 : len(label)-1])
 
 			mb.console.changeSpeed(float64(speedPerc) / 100.0)
 
-			mb.state.Settings.Current_speed = label
+		} else {
+			speedOptions[i].Icon = ""
+		}
+
+		speedOptions[i].onClick = func() {
+
+			mb.state.Settings.Current_speed = speedOptions[i].label
 			mb.updateSettingsMenu()
 		}
 	}
@@ -161,6 +163,22 @@ func (mb *menuBar) updateSettingsMenu() {
 		saveOption.Icon = "./icons/check.svg"
 	} else {
 		saveOption.Icon = ""
+	}
+
+	muteOption := &mb.Items[2].options[1].ExpandableItems[0]
+
+	if state.Muted {
+		muteOption.Icon = "./icons/check.svg"
+		muteOption.onClick = func() {
+			mb.state.Settings.Muted = false
+			mb.updateSettingsMenu()
+		}
+	} else {
+		muteOption.Icon = ""
+		muteOption.onClick = func() {
+			mb.state.Settings.Muted = true
+			mb.updateSettingsMenu()
+		}
 	}
 
 	mb.positionLayout()
@@ -223,6 +241,7 @@ func (mb *menuBar) updateMenuState() {
 }
 
 func (mb *menuBar) setFlag(flag Menuflag, state bool) {
+
 	mb.flagsUpdated = true
 	mb.menuFlags[flag] = state
 
@@ -263,7 +282,7 @@ func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet in
 
 }
 
-const upfactor = 8
+const upfactor = 2
 
 func (mb *menuBar) getHoverPill(r *sdl.Renderer, w, h int32) *sdl.Texture {
 	entry, ok := mb.cache.hoverCache[w]
@@ -306,31 +325,33 @@ func createHover(r *sdl.Renderer, col sdl.Color, w, h int32) (*sdl.Texture, erro
 	return tex, nil
 }
 
-func (mb *menuBar) getIcon(r *sdl.Renderer, path string) *sdl.Texture {
-	texture, ok := mb.cache.iconCache[path]
+func (mb *menuBar) getIcon(r *sdl.Renderer, path string, col sdl.Color) *sdl.Texture {
+	texture, ok := mb.cache.iconCache[path+convertColToString(col)]
 	if ok {
+
 		return texture
 	}
 
 	texture, err := img.LoadTexture(r, path)
+	texture.SetColorMod(col.R, col.G, col.B)
 	if err != nil {
 		log.Fatal(err)
 		return nil
 	}
 
-	mb.cache.iconCache[path] = texture
+	mb.cache.iconCache[path+convertColToString(col)] = texture
 	return texture
 
 }
 
 func (mb *menuBar) renderFps(r *sdl.Renderer) {
 	if mb.state.Settings.Show_fps {
-		label := fmt.Sprintf("%d Fps", mb.console.fps)
+		label := fmt.Sprintf("%d Fps (%v)", mb.console.fps, mb.state.Settings.Current_speed)
 
 		rect := sdl.Rect{
-			X: mb.W - 50,
+			X: mb.W - 100,
 			Y: mb.H + menu_height,
-			W: 80,
+			W: 100,
 			H: 30,
 		}
 

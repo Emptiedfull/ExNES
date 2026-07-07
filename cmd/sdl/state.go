@@ -17,6 +17,7 @@ type localState struct {
 type state_setting struct {
 	Show_fps      bool   `json:"show_fps"`
 	Current_speed string `json:"current_speed"`
+	Muted         bool   `json:"muted"`
 }
 
 type romSave struct {

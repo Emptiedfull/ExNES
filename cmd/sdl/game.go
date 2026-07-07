@@ -128,7 +128,19 @@ func beginSampleLoop(dev sdl.AudioDeviceID, console *Core.Console, pauseChannel 
 			sdl.Delay(1)
 		}
 		console.RunDisplayUpdates()
+		adjustVolume(sampleBuf, 0.1)
 		sdl.QueueAudio(dev, float32ToBytes(sampleBuf))
+	}
+
+}
+
+func adjustVolume(samples []float32, volume float32) {
+	if volume == 1 {
+		return
+	}
+
+	for i := range samples {
+		samples[i] = samples[i] * volume
 	}
 
 }

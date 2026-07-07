@@ -38,13 +38,6 @@ func main() {
 
 	defer state.saveState()
 
-	go func() {
-
-		time.Sleep(5 * time.Second)
-		fmt.Println("activating test")
-		g.changeSpeed(2)
-	}()
-
 	startWindow(g, displayChannel, state)
 
 }
@@ -63,7 +56,7 @@ var (
 	colText        = sdl.Color{R: 230, G: 228, B: 235, A: 255}
 	colTextDim     = sdl.Color{R: 130, G: 128, B: 140, A: 255}
 	colAccent      = sdl.Color{R: 130, G: 110, B: 220, A: 255}
-	colPanelBG     = sdl.Color{R: 40, G: 40, B: 44, A: 215}
+	colPanelBG     = sdl.Color{R: 40, G: 40, B: 44, A: 240}
 	colPanelBorder = sdl.Color{R: 68, G: 60, B: 86, A: 255}
 )
 

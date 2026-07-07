@@ -58,7 +58,7 @@ type menuBar struct {
 type TextureCache struct {
 	textCache  map[string]textCache
 	hoverCache map[int32]*sdl.Texture
-	arrowCache *sdl.Texture
+	arrowCache map[sdl.Color]*sdl.Texture
 	iconCache  map[string]*sdl.Texture
 }
 
@@ -123,6 +123,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 		textCache:  map[string]textCache{},
 		hoverCache: map[int32]*sdl.Texture{},
 		iconCache:  map[string]*sdl.Texture{},
+		arrowCache: map[sdl.Color]*sdl.Texture{},
 	}
 
 	mb.cache = cache
@@ -212,7 +213,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					label:        "Pause",
 					Icon:         "./icons/pause.svg",
 					onClick: func() {
-						console.PauseGame()
+						go console.PauseGame()
 						mb.setFlag(gamePlaying, false)
 						mb.setFlag(gamePaused, true)
 					},
@@ -223,7 +224,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					label:        "Play",
 					Icon:         "./icons/play.svg",
 					onClick: func() {
-						console.UnPauseGame()
+						go console.UnPauseGame()
 						mb.setFlag(gamePlaying, true)
 						mb.setFlag(gamePaused, false)
 					},
@@ -234,9 +235,9 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			label: "Settings",
 			options: []ItemOption{
 				{
-					label:        "speed",
+					label:        "Speed",
 					Icon:         "./icons/gauge.svg",
-					enabled:      true,
+					enabled:      false,
 					affectedFlag: gameRunning,
 					Expandable:   true,
 					ExpandableItems: []expandableOption{
@@ -247,23 +248,47 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 								mb.updateSettingsMenu()
 							},
 						},
+
 						{
 							isLine: true,
 						},
 						{
 							label: "50%",
 						}, {
+							label: "75%",
+						}, {
 							label: "100%",
 						}, {
 							label: "200%",
 						},
-						{
-							isLine: true,
-						},
 					},
 				},
 				{
-					label: "pair controls",
+					label: "Sound",
+
+					affectedFlag: gameRunning,
+					Icon:         "./icons/headset.svg",
+
+					Expandable: true,
+					ExpandableItems: []expandableOption{
+						{
+							label: "Muted",
+						},
+						{
+							isLine: true,
+						},
+						{
+							label: "25%",
+						}, {
+							label: "50%",
+						},
+						{
+							label: "75%",
+						},
+						{
+							label: "100%",
+						},
+					},
 				},
 			},
 		},
@@ -358,14 +383,14 @@ func (mb *menuBar) handleClick(x, y int32) {
 const (
 	optionH       = 24
 	subOptionH    = 24
-	lineH         = 12
+	lineH         = 8
 	panelPadding  = 8
 	optionPadding = 0
 	minW          = 140
 	expandableW   = 120
 	itemSpacer    = 6
 
-	iconGutter = 22
+	iconGutter = 24
 	iconSize   = 12
 )
 
@@ -510,7 +535,7 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 		textRect := subOption.Rect
 
 		if subOption.Icon != "" {
-			icon := mb.getIcon(r, subOption.Icon)
+			icon := mb.getIcon(r, subOption.Icon, colText)
 
 			if icon != nil {
 				rect := sdl.Rect{
@@ -557,7 +582,7 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 		}
 
 		if option.Icon != "" {
-			icon := mb.getIcon(r, option.Icon)
+			icon := mb.getIcon(r, option.Icon, color)
 			if icon != nil {
 				iconRect := sdl.Rect{
 					X: option.Rect.X + 6,
@@ -581,7 +606,7 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 				W: 16,
 			}
 
-			r.Copy(mb.getArrow(r), nil, &arrowRect)
+			r.Copy(mb.getArrow(r, color), nil, &arrowRect)
 		}
 
 	}

@@ -19,6 +19,7 @@
 ],
 "settings": {
 "show_fps": true,
-"current_speed": "200%"
+"current_speed": "100%",
+"muted": false
 }
 }
