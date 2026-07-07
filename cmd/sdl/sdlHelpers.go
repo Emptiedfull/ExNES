@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/veandco/go-sdl2/gfx"
 	"github.com/veandco/go-sdl2/sdl"
@@ -53,14 +55,13 @@ func createArrow(r *sdl.Renderer, w, h int32, col sdl.Color) (*sdl.Texture, erro
 
 	texture.SetBlendMode(sdl.BLENDMODE_BLEND)
 
-	priv := r.GetRenderTarget()
 	r.SetRenderTarget(texture)
 	r.SetDrawColor(0, 0, 0, 0)
 	r.Clear()
 
 	drawArrowIcon(r, sdl.Rect{X: 0, Y: 0, W: bigW, H: bigH}, col)
 
-	r.SetRenderTarget(priv)
+	r.SetRenderTarget(nil)
 	return texture, nil
 }
 
@@ -89,7 +90,7 @@ func (mb *menuBar) getSaveStateItems() []expandableOption {
 			res[i].label = "empty"
 
 		} else {
-			res[i].label = "filled"
+			res[i].label = save.timestamp
 		}
 
 		res[i].onClick = func() {
@@ -110,7 +111,7 @@ func (mb *menuBar) getLoadItems() []expandableOption {
 	for i, save := range mb.state.saves {
 		if save.filled {
 			option := expandableOption{}
-			option.label = "filled"
+			option.label = save.timestamp
 			option.onClick = func() {
 				mb.console.loadSnapshot(mb.state, i)
 			}
@@ -141,7 +142,13 @@ func (mb *menuBar) resetMenu() {
 	mb.dropdownIndex = -1
 	mb.subOptionHoverIndex = -1
 
-	mb.cache.barDirty = true
+}
+
+func getSaveTimeStamp() string {
+	now := time.Now()
+	formatted := now.Format("01-02 3:04")
+
+	return formatted
 }
 
 func convertColToString(col sdl.Color) string {
@@ -175,5 +182,83 @@ func (mb *menuBar) updateMenuState() {
 func (mb *menuBar) setFlag(flag Menuflag, state bool) {
 	mb.flagsUpdated = true
 	mb.menuFlags[flag] = state
-	mb.cache.barDirty = true
+
+}
+
+func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color) {
+	itemEntry := text + convertColToString(col)
+	entry, ok := m.cache.textCache[itemEntry]
+	if !ok {
+		entry = textCache{}
+		surface, err := m.Font.RenderUTF8Blended(text, col)
+		if err != nil {
+			log.Fatal("bad", err)
+		}
+		defer surface.Free()
+
+		entry.W = int32(surface.W / m.scale)
+		entry.H = int32(surface.H / m.scale)
+
+		texture, err := r.CreateTextureFromSurface(surface)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		entry.texture = texture
+		m.cache.textCache[itemEntry] = entry
+
+	}
+
+	dst := sdl.Rect{
+		X: rect.X + offet,
+		Y: rect.Y + (rect.H-entry.H)/2,
+		W: entry.W,
+		H: entry.H,
+	}
+
+	r.Copy(entry.texture, nil, &dst)
+
+}
+
+const upfactor = 8
+
+func (mb *menuBar) getHoverPill(r *sdl.Renderer, w, h int32) *sdl.Texture {
+	entry, ok := mb.cache.hoverCache[w]
+	if ok {
+		return entry
+	}
+
+	texture, err := createHover(r, colHover, w, h)
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+
+	mb.cache.hoverCache[w] = texture
+	return texture
+}
+
+func createHover(r *sdl.Renderer, col sdl.Color, w, h int32) (*sdl.Texture, error) {
+	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
+	defer sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
+	bigW := w * upfactor
+	bigH := h * upfactor
+
+	tex, err := r.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_TARGET, bigW, bigH)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create texture fuck: %v", err)
+	}
+
+	tex.SetBlendMode(sdl.BLENDMODE_BLEND)
+
+	r.SetRenderTarget(tex)
+	r.SetDrawColor(0, 0, 0, 0)
+	r.Clear()
+
+	bigR := int32(10 * upfactor)
+
+	gfx.RoundedBoxColor(r, 0, 0, bigW-1, bigH-1, bigR, col)
+
+	r.SetRenderTarget(nil)
+	return tex, nil
 }

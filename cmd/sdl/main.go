@@ -23,10 +23,13 @@ import (
 
 func main() {
 
+	getSaveTimeStamp()
 	displayChannel := make(chan Core.ScreenInfo, 100)
+	pauseChannel := make(chan bool)
 	console := initConsole(displayChannel)
 	g := &game{
-		core: console,
+		core:         console,
+		pauseChannel: pauseChannel,
 	}
 
 	state := loadState()
@@ -182,7 +185,7 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 				if e.Button == sdl.BUTTON_LEFT && e.Type == sdl.MOUSEBUTTONDOWN {
 					mb.handleClick(e.X, e.Y)
 				}
-				fmt.Println("button:", e.Button)
+
 			default:
 
 			}
@@ -194,14 +197,12 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 			select {
 			case s := <-updateChan:
 				renderFrame(gameTexture, renderer, s.Buffer, gameRect)
-				if console.core.Ppu.Frame%10 == 0 {
-					console.core.TakeSnapshot()
-				}
+
 			default:
 				renderer.Copy(gameTexture, nil, gameRect)
 			}
-
 			mb.renderBar(renderer)
+
 			renderer.Present()
 		}
 

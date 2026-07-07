@@ -31,9 +31,19 @@ func openRom(console *game, state *localState, mb *menuBar) {
 func (console *game) clickSnapshot(state *localState, index int) {
 
 	state.saves[index].snapshot = console.core.SaveState()
+	state.saves[index].timestamp = getSaveTimeStamp()
 
 }
 
 func (console *game) loadSnapshot(state *localState, index int) {
 	console.core.LoadSnapshot(*state.saves[index].snapshot)
+
+}
+
+func (console *game) PauseGame() {
+	console.pauseChannel <- true
+}
+
+func (console *game) UnPauseGame() {
+	console.pauseChannel <- false
 }

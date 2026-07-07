@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/veandco/go-sdl2/gfx"
 	"github.com/veandco/go-sdl2/sdl"
@@ -21,6 +20,15 @@ const (
 	none Menuflag = iota
 	gameRunning
 	saveAvailable
+	gamePlaying
+	gamePaused
+)
+
+type MenuIcon int
+
+const (
+	pause MenuIcon = iota
+	play
 )
 
 type menuBar struct {
@@ -50,9 +58,6 @@ type TextureCache struct {
 	textCache  map[string]textCache
 	hoverCache map[int32]*sdl.Texture
 	arrowCache *sdl.Texture
-	barCache   *sdl.Texture
-
-	barDirty bool
 }
 
 type menuItem struct {
@@ -74,6 +79,9 @@ type ItemOption struct {
 	ExpandableItems []expandableOption
 
 	isLine bool
+
+	hasIcon bool
+	Icon    MenuIcon
 }
 
 type expandableOption struct {
@@ -160,13 +168,23 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			options: []ItemOption{
 				{
 					enabled:      false,
-					affectedFlag: gameRunning,
+					affectedFlag: gamePlaying,
 					label:        "Pause",
+					onClick: func() {
+						console.PauseGame()
+						mb.setFlag(gamePlaying, false)
+						mb.setFlag(gamePaused, true)
+					},
 				},
 				{
 					enabled:      false,
-					affectedFlag: gameRunning,
+					affectedFlag: gamePaused,
 					label:        "Play",
+					onClick: func() {
+						console.UnPauseGame()
+						mb.setFlag(gamePlaying, true)
+						mb.setFlag(gamePaused, false)
+					},
 				},
 			},
 		},
@@ -189,8 +207,6 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 }
 
 func (mb *menuBar) handleMouse(x, y int32) {
-
-	a, b, c := mb.hoverIndex, mb.optionHoverIndex, mb.subOptionHoverIndex
 
 	if mb.hoverIndex != -1 {
 		item := mb.Items[mb.hoverIndex]
@@ -226,10 +242,6 @@ func (mb *menuBar) handleMouse(x, y int32) {
 			mb.optionHoverIndex = -1
 		}
 
-	}
-
-	if mb.hoverIndex != a || mb.optionHoverIndex != b || mb.subOptionHoverIndex != c {
-		mb.cache.barDirty = true
 	}
 
 }
@@ -355,57 +367,34 @@ func (mb *menuBar) positionLayout() {
 
 func (mb *menuBar) renderBar(r *sdl.Renderer) {
 
-	if mb.cache.barCache == nil {
-		texture, err := r.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_TARGET, mb.W, mb.H+400)
-		if err != nil {
-			log.Fatal(err)
-		}
+	mb.updateMenuState()
 
-		texture.SetBlendMode(sdl.BLENDMODE_BLEND)
-		mb.cache.barCache = texture
-		mb.cache.barDirty = true
-	}
+	r.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 255)
+	r.FillRect(&sdl.Rect{X: 0, Y: 0, W: mb.W, H: mb.H + 4})
 
-	if mb.cache.barDirty {
-		r.SetRenderTarget(mb.cache.barCache)
-		// r.SetScale(float32(mb.scale), float32(mb.scale))
+	for i, item := range mb.Items {
+		r.SetDrawColor(230, 210, 66, 255)
 
-		r.SetDrawColor(0, 0, 0, 0)
-		r.Clear()
+		if i == mb.hoverIndex {
 
-		r.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 255)
-		r.FillRect(&sdl.Rect{X: 0, Y: 0, W: mb.W, H: mb.H + 4})
+			pill := mb.getHoverPill(r, item.Rect.W, item.Rect.H)
+			r.Copy(pill, nil, &sdl.Rect{X: item.Rect.X, Y: item.Rect.Y, W: item.Rect.W, H: item.Rect.H})
 
-		for i, item := range mb.Items {
-			r.SetDrawColor(230, 210, 66, 255)
+			for j, option := range mb.Items[i].options {
+				if j == mb.optionHoverIndex && !option.isLine && option.enabled {
+					pill = mb.getHoverPill(r, option.Rect.W, option.Rect.H)
+					r.Copy(pill, nil, &option.Rect)
 
-			if i == mb.hoverIndex {
-
-				pill := mb.getHoverPill(r, item.Rect.W, item.Rect.H)
-				r.Copy(pill, nil, &sdl.Rect{X: item.Rect.X, Y: item.Rect.Y, W: item.Rect.W, H: item.Rect.H})
-
-				for j, option := range mb.Items[i].options {
-					if j == mb.optionHoverIndex && !option.isLine && option.enabled {
-						pill = mb.getHoverPill(r, option.Rect.W, option.Rect.H)
-						r.Copy(pill, nil, &option.Rect)
-
-						mb.renderSupDropdown(r, &mb.Items[i].options[j])
-					}
+					mb.renderSupDropdown(r, &mb.Items[i].options[j])
 				}
-				mb.renderDropdown(r, &mb.Items[i])
-
 			}
-
-			mb.drawText(item.label, item.Rect, r, 12, colText)
+			mb.renderDropdown(r, &mb.Items[i])
 
 		}
 
-		r.SetRenderTarget(nil)
-		mb.cache.barDirty = false
+		mb.drawText(item.label, item.Rect, r, 12, colText)
 
 	}
-
-	r.Copy(mb.cache.barCache, nil, &sdl.Rect{X: 0, Y: 0, W: mb.W, H: mb.H + 400})
 
 }
 
@@ -480,83 +469,4 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 
 	}
 
-}
-
-func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color) {
-	itemEntry := text + convertColToString(col)
-	entry, ok := m.cache.textCache[itemEntry]
-	if !ok {
-		entry = textCache{}
-		surface, err := m.Font.RenderUTF8Blended(text, col)
-		if err != nil {
-			log.Fatal("bad", err)
-		}
-		defer surface.Free()
-
-		entry.W = int32(surface.W / m.scale)
-		entry.H = int32(surface.H / m.scale)
-
-		texture, err := r.CreateTextureFromSurface(surface)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		entry.texture = texture
-		m.cache.textCache[itemEntry] = entry
-
-	}
-
-	dst := sdl.Rect{
-		X: rect.X + offet,
-		Y: rect.Y + (rect.H-entry.H)/2,
-		W: entry.W,
-		H: entry.H,
-	}
-
-	r.Copy(entry.texture, nil, &dst)
-
-}
-
-const upfactor = 8
-
-func (mb *menuBar) getHoverPill(r *sdl.Renderer, w, h int32) *sdl.Texture {
-	entry, ok := mb.cache.hoverCache[w]
-	if ok {
-		return entry
-	}
-
-	texture, err := createHover(r, colHover, w, h)
-	if err != nil {
-		log.Fatal(err)
-		return nil
-	}
-
-	mb.cache.hoverCache[w] = texture
-	return texture
-}
-
-func createHover(r *sdl.Renderer, col sdl.Color, w, h int32) (*sdl.Texture, error) {
-	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
-	defer sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
-	bigW := w * upfactor
-	bigH := h * upfactor
-
-	tex, err := r.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_TARGET, bigW, bigH)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create texture fuck: %v", err)
-	}
-
-	tex.SetBlendMode(sdl.BLENDMODE_BLEND)
-
-	priv := r.GetRenderTarget()
-	r.SetRenderTarget(tex)
-	r.SetDrawColor(0, 0, 0, 0)
-	r.Clear()
-
-	bigR := int32(10 * upfactor)
-
-	gfx.RoundedBoxColor(r, 0, 0, bigW-1, bigH-1, bigR, col)
-
-	r.SetRenderTarget(priv)
-	return tex, nil
 }

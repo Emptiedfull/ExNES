@@ -13,19 +13,8 @@ import (
 type game struct {
 	core        *Core.Console
 	audioDevice sdl.AudioDeviceID
-}
 
-func startGame(filepath string, dev sdl.AudioDeviceID, screenChannel chan Core.ScreenInfo) *Core.Console {
-	console := Core.Quickstart(filepath)
-	console.Apu = Core.NewApu(44100, console)
-	console.ScreenChannel = screenChannel
-
-	go beginSampleLoop(dev, console)
-
-	// go frameMonitor(console)
-
-	return console
-
+	pauseChannel chan bool
 }
 
 func (console *game) LoadRom(filepath string, mb *menuBar) error {
@@ -40,10 +29,11 @@ func (console *game) LoadRom(filepath string, mb *menuBar) error {
 	fmt.Println("error:", err)
 	fmt.Println("starting the game")
 
-	go beginSampleLoop(console.audioDevice, console.core)
+	go beginSampleLoop(console.audioDevice, console.core, console.pauseChannel)
 	sdl.PauseAudioDevice(console.audioDevice, false)
 
 	mb.setFlag(gameRunning, true)
+	mb.setFlag(gamePlaying, true)
 
 	return nil
 }
@@ -79,13 +69,25 @@ func backpressureThreshold(freq int32) uint32 {
 	return bytesPerSecond * bufferMillis / 1000
 }
 
-func beginSampleLoop(dev sdl.AudioDeviceID, console *Core.Console) {
+func beginSampleLoop(dev sdl.AudioDeviceID, console *Core.Console, pauseChannel chan bool) {
 	const samples = 512
 
 	sampleBuf := make([]float32, samples)
 	threshold := backpressureThreshold(44100)
 
 	for {
+
+		select {
+		case paused := <-pauseChannel:
+			if paused {
+				for state := range pauseChannel {
+					if !state {
+						break
+					}
+				}
+			}
+		default:
+		}
 
 		for i := range samples {
 			for !console.Apu.HasSample() {
