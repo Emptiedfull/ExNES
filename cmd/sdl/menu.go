@@ -15,8 +15,17 @@ func setUpMenu() {
 	fmt.Println("redit")
 }
 
+type Menuflag int
+
+const (
+	none Menuflag = iota
+	gameRunning
+	saveAvailable
+)
+
 type menuBar struct {
-	state *localState
+	state   *localState
+	console *game
 
 	Items []menuItem
 	Font  *ttf.Font
@@ -27,6 +36,10 @@ type menuBar struct {
 	subOptionHoverIndex int
 
 	cache TextureCache
+
+	flagsUpdated bool
+	menuFlags    map[Menuflag]bool
+	affected     map[Menuflag][]*ItemOption // [flag]affected FUCK U THIS ISNT AI
 
 	W     int32
 	H     int32
@@ -50,7 +63,9 @@ type ItemOption struct {
 	Rect    sdl.Rect
 	onClick func()
 
-	disabled bool
+	affectedFlag Menuflag
+
+	enabled bool
 
 	Expandable      bool
 	ExpandableItems []expandableOption
@@ -71,8 +86,9 @@ type textCache struct {
 }
 
 func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menuW, dpiscale int32) *menuBar {
-	mb := &menuBar{
 
+	mb := &menuBar{
+		console:             console,
 		dropdownIndex:       -1,
 		hoverIndex:          -1,
 		optionHoverIndex:    -1,
@@ -82,6 +98,9 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 		H:                   menuH,
 		scale:               dpiscale,
 		state:               state,
+
+		menuFlags: map[Menuflag]bool{},
+		affected:  map[Menuflag][]*ItemOption{},
 	}
 
 	cache := TextureCache{
@@ -98,11 +117,13 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			options: []ItemOption{
 				{
 					label:   "Load Rom",
-					onClick: func() { openRom(console, state) },
+					onClick: func() { openRom(console, state, mb) },
+					enabled: true,
 				},
 				{
 					label:           "Recent files",
 					Expandable:      true,
+					enabled:         true,
 					ExpandableItems: getRecentItems(state.RecentFiles, console, mb),
 				},
 				{
@@ -111,14 +132,23 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				{
 					label:           "Save state",
 					Expandable:      true,
-					ExpandableItems: getSaveStateItems(state, console),
-					disabled:        true,
+					ExpandableItems: mb.getSaveStateItems(),
+					enabled:         false,
+					affectedFlag:    gameRunning,
+				},
+				{
+					label:           "Load state",
+					Expandable:      true,
+					ExpandableItems: make([]expandableOption, 0),
+					enabled:         false,
+					affectedFlag:    saveAvailable,
 				},
 				{
 					isLine: true,
 				},
 				{
 					label:   "exit",
+					enabled: true,
 					onClick: func() { state.running = false },
 				}},
 		},
@@ -126,10 +156,14 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			label: "Emulation",
 			options: []ItemOption{
 				{
-					label: "Pause",
+					enabled:      false,
+					affectedFlag: gameRunning,
+					label:        "Pause",
 				},
 				{
-					label: "Play",
+					enabled:      false,
+					affectedFlag: gameRunning,
+					label:        "Play",
 				},
 			},
 		},
@@ -145,7 +179,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			},
 		},
 	}
-
+	mb.setupFlags()
 	mb.positionLayout()
 
 	return mb
@@ -184,7 +218,7 @@ func (mb *menuBar) handleMouse(x, y int32) {
 	for i, item := range mb.Items {
 		if pointInRect(item.Rect, x, y) {
 			mb.hoverIndex = i
-
+			mb.optionHoverIndex = -1
 		}
 
 	}
@@ -311,6 +345,7 @@ func (mb *menuBar) positionLayout() {
 }
 
 func (mb *menuBar) renderBar(r *sdl.Renderer) {
+	mb.updateMenuState()
 	r.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 255)
 	r.FillRect(&sdl.Rect{X: 0, Y: 0, W: mb.W, H: mb.H + 4})
 
@@ -323,7 +358,7 @@ func (mb *menuBar) renderBar(r *sdl.Renderer) {
 			r.Copy(pill, nil, &sdl.Rect{X: item.Rect.X, Y: item.Rect.Y, W: item.Rect.W, H: item.Rect.H})
 
 			for j, option := range mb.Items[i].options {
-				if j == mb.optionHoverIndex && !option.isLine && !option.disabled {
+				if j == mb.optionHoverIndex && !option.isLine && option.enabled {
 					pill = mb.getHoverPill(r, option.Rect.W, option.Rect.H)
 					r.Copy(pill, nil, &option.Rect)
 
@@ -391,7 +426,7 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 		}
 
 		color := colText
-		if option.disabled {
+		if !option.enabled {
 			color = colTextDim
 		}
 
@@ -414,7 +449,7 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 }
 
 func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color) {
-	entry, ok := m.cache.textCache[text]
+	entry, ok := m.cache.textCache[text+convertColToString(col)]
 	if !ok {
 		entry = textCache{}
 		surface, err := m.Font.RenderUTF8Blended(text, col)

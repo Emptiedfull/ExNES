@@ -7,13 +7,13 @@ import (
 	"github.com/sqweek/dialog"
 )
 
-func openRom(console *game, state *localState) {
+func openRom(console *game, state *localState, mb *menuBar) {
 	filename, err := dialog.File().Filter("", ".nes").Title("Load Rom").Load()
 	if err != nil {
 		fmt.Println("error opening rom", err)
 	}
 
-	err = console.LoadRom(filename)
+	err = console.LoadRom(filename, mb)
 	if err != nil {
 		fmt.Println("error loading rom", err)
 	}
@@ -26,4 +26,13 @@ func openRom(console *game, state *localState) {
 		})
 	}
 
+}
+
+func (console *game) clickSnapshot(state *localState, index int) {
+	state.saves[index].snapshot = console.core.SaveState()
+
+}
+
+func (console *game) loadSnapshot(state *localState, index int) {
+	console.core.LoadSnapshot(*state.saves[index].snapshot)
 }

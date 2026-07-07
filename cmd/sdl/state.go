@@ -10,7 +10,13 @@ import (
 type localState struct {
 	RecentFiles []recentRom `json:"recent"`
 	running     bool
-	snapshots   []*Core.Snapshot
+	saves       []romSave
+}
+
+type romSave struct {
+	snapshot  *Core.Snapshot
+	timestamp string
+	filled    bool
 }
 
 func newState() *localState {
@@ -39,7 +45,7 @@ func loadState() *localState {
 
 	}
 
-	s.snapshots = make([]*Core.Snapshot, 10)
+	s.saves = make([]romSave, 10)
 
 	return s
 }

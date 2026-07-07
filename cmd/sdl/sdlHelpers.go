@@ -71,7 +71,7 @@ func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOp
 			label: rom.Name,
 			onClick: func() {
 
-				console.LoadRom(rom.Location)
+				console.LoadRom(rom.Location, mb)
 				mb.resetMenu()
 			},
 		}
@@ -80,19 +80,58 @@ func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOp
 	return res
 }
 
-func getSaveStateItems(state *localState, console *game) []expandableOption {
-	res := make([]expandableOption, len(state.snapshots))
+func (mb *menuBar) getSaveStateItems() []expandableOption {
+	res := make([]expandableOption, len(mb.state.saves))
 
-	for i, save := range state.snapshots {
-		if save == nil {
+	for i, save := range mb.state.saves {
+		if !save.filled {
 			res[i].label = "empty"
 
+		} else {
+			res[i].label = "filled"
 		}
 
-		res[i].onClick = func() { console.clickSnapshot(state, i) }
+		res[i].onClick = func() {
+
+			mb.console.clickSnapshot(mb.state, i)
+			mb.state.saves[i].filled = true
+			mb.updateSavesMenus()
+
+		}
 	}
 
 	return res
+}
+
+func (mb *menuBar) getLoadItems() []expandableOption {
+	res := make([]expandableOption, 0)
+
+	for i, save := range mb.state.saves {
+		if save.filled {
+			option := expandableOption{}
+			option.label = "filled"
+			option.onClick = func() {
+				mb.console.loadSnapshot(mb.state, i)
+			}
+			res = append(res, option)
+		}
+
+	}
+
+	return res
+}
+
+func (mb *menuBar) updateSavesMenus() {
+	mb.Items[0].options[3].ExpandableItems = mb.getSaveStateItems()
+	loadItems := mb.getLoadItems()
+	mb.Items[0].options[4].ExpandableItems = loadItems
+
+	if len(loadItems) > 0 {
+		// mb.menuFlags[saveAvailable] = true
+		mb.setFlag(saveAvailable, true)
+	}
+
+	mb.positionLayout()
 }
 
 func (mb *menuBar) resetMenu() {
@@ -100,4 +139,37 @@ func (mb *menuBar) resetMenu() {
 	mb.optionHoverIndex = -1
 	mb.dropdownIndex = -1
 	mb.subOptionHoverIndex = -1
+}
+
+func convertColToString(col sdl.Color) string {
+	return fmt.Sprintf("R: %v G: %v B:%v", col.R, col.G, col.B)
+}
+
+func (mb *menuBar) setupFlags() {
+	for i := range mb.Items {
+		for j := range mb.Items[i].options {
+			option := &mb.Items[i].options[j]
+			if option.affectedFlag != none {
+				mb.affected[option.affectedFlag] = append(mb.affected[option.affectedFlag], option)
+			}
+		}
+	}
+}
+
+func (mb *menuBar) updateMenuState() {
+
+	if !mb.flagsUpdated {
+		return
+	}
+
+	for flag, affected := range mb.affected {
+		for _, option := range affected {
+			option.enabled = mb.menuFlags[flag]
+		}
+	}
+}
+
+func (mb *menuBar) setFlag(flag Menuflag, state bool) {
+	mb.flagsUpdated = true
+	mb.menuFlags[flag] = state
 }

@@ -7,6 +7,10 @@
 {
 "name": "popeye.nes",
 "location": "/Users/test/Projects/ExNES/games/NROM/popeye.nes"
+},
+{
+"name": ".",
+"location": ""
 }
 ]
 }
