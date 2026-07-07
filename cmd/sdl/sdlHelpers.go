@@ -73,6 +73,9 @@ func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOp
 		res[i] = expandableOption{
 			label: rom.Name,
 			onClick: func() {
+				// if mb.menuFlags[gameRunning]{
+				// 	console =
+				// }
 
 				console.LoadRom(rom.Location, mb)
 				mb.resetMenu()
@@ -125,6 +128,29 @@ func (mb *menuBar) getLoadItems() []expandableOption {
 	}
 
 	return res
+}
+
+func (mb *menuBar) updateSettingsMenu() {
+	state := mb.state.Settings
+
+	saveOption := &mb.Items[2].options[0].ExpandableItems[0]
+	speedOptions := mb.Items[2].options[0].ExpandableItems[2:5]
+
+	for i := range speedOptions {
+		fmt.Println(speedOptions[i].label)
+		if speedOptions[i].label == state.Current_speed {
+			speedOptions[i].Icon = "./icons/check.svg"
+			// mb.Items[2].options[0].ExpandableItems[2+i].Icon = "./icons/check.svg"
+		}
+	}
+
+	if state.Show_fps {
+		saveOption.Icon = "./icons/check.svg"
+	} else {
+		saveOption.Icon = ""
+	}
+
+	mb.positionLayout()
 }
 
 func (mb *menuBar) updateSavesMenus() {
@@ -282,4 +308,22 @@ func (mb *menuBar) getIcon(r *sdl.Renderer, path string) *sdl.Texture {
 	mb.cache.iconCache[path] = texture
 	return texture
 
+}
+
+func (mb *menuBar) renderFps(r *sdl.Renderer) {
+	if mb.state.Settings.Show_fps {
+		label := fmt.Sprintf("%d Fps", mb.console.fps)
+
+		rect := sdl.Rect{
+			X: mb.W - 50,
+			Y: mb.H + menu_height,
+			W: 80,
+			H: 30,
+		}
+
+		// r.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 240)
+		// r.FillRect(&rect)
+
+		mb.drawText(label, rect, r, 0, colText)
+	}
 }

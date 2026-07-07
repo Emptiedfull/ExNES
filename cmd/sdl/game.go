@@ -3,6 +3,7 @@ package main
 import (
 	"exnes/Core"
 	"fmt"
+	"log"
 	"os"
 	"time"
 	"unsafe"
@@ -13,8 +14,12 @@ import (
 type game struct {
 	core        *Core.Console
 	audioDevice sdl.AudioDeviceID
+	romPath     string
 
-	pauseChannel chan bool
+	pauseChannel  chan bool
+	screenChannel chan Core.ScreenInfo
+
+	fps int
 }
 
 func (console *game) LoadRom(filepath string, mb *menuBar) error {
@@ -27,10 +32,12 @@ func (console *game) LoadRom(filepath string, mb *menuBar) error {
 	err = console.core.InitRom(file)
 	console.core.Cpu.Reset()
 	fmt.Println("error:", err)
-	fmt.Println("starting the game")
 
 	go beginSampleLoop(console.audioDevice, console.core, console.pauseChannel)
+	go console.frameMonitor(console.core)
 	sdl.PauseAudioDevice(console.audioDevice, false)
+
+	console.romPath = filepath
 
 	mb.setFlag(gameRunning, true)
 	mb.setFlag(gamePlaying, true)
@@ -38,25 +45,44 @@ func (console *game) LoadRom(filepath string, mb *menuBar) error {
 	return nil
 }
 
-func initConsole(screenChannel chan Core.ScreenInfo) *Core.Console {
-	console := Core.InitializeConsole()
+func (g *game) initConsole(screenChannel chan Core.ScreenInfo) {
+	g.core = Core.InitializeConsole()
 
-	console.Apu = Core.NewApu(44100, console)
-	console.ScreenChannel = screenChannel
+	g.core.Apu = Core.NewApu(44100, g.core)
+	g.core.ScreenChannel = screenChannel
+	g.screenChannel = screenChannel
 
-	return console
 }
 
-func frameMonitor(console *Core.Console) {
+func (g *game) reloadROM() {
+
+	g.core.PowerCycle()
+
+	file, err := os.Open(g.romPath)
+
+	if err != nil {
+		log.Fatal("AHHHH:", err)
+	}
+
+	g.core.InitRom(file)
+	g.core.Cpu.Reset()
+
+}
+
+func (g *game) frameMonitor(console *Core.Console) {
+
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
 	last := 0
 
 	for range ticker.C {
+		if console == nil {
+			continue
+		}
 		framesRun := console.Ppu.Frame - last
 
-		fmt.Println("fps:", framesRun)
+		g.fps = framesRun
 
 		last = console.Ppu.Frame
 	}

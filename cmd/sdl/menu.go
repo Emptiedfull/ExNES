@@ -91,6 +91,8 @@ type expandableOption struct {
 	onClick func()
 
 	Icon string
+
+	isLine bool
 }
 
 type textCache struct {
@@ -172,7 +174,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				}},
 		},
 		{
-			label: "Emulation",
+			label: "Game",
 			options: []ItemOption{
 				{
 					enabled:      false,
@@ -181,6 +183,24 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					label:        "Reset",
 					onClick: func() {
 						console.core.Cpu.Reset()
+					},
+				},
+				{
+					enabled:      false,
+					affectedFlag: gameRunning,
+					Icon:         "./icons/refresh.svg",
+					label:        "Power cycle",
+					onClick: func() {
+						console.core.PowerCycle()
+					},
+				},
+				{
+					label:        "Reload Rom",
+					affectedFlag: gameRunning,
+					Icon:         "./icons/download.svg",
+					enabled:      false,
+					onClick: func() {
+						console.reloadROM()
 					},
 				},
 				{
@@ -211,10 +231,36 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			},
 		},
 		{
-			label: "input",
+			label: "Settings",
 			options: []ItemOption{
 				{
-					label: "Set controls",
+					label:        "speed",
+					Icon:         "./icons/gauge.svg",
+					enabled:      true,
+					affectedFlag: gameRunning,
+					Expandable:   true,
+					ExpandableItems: []expandableOption{
+						{
+							label: "Show Fps",
+							onClick: func() {
+								mb.state.Settings.Show_fps = !mb.state.Settings.Show_fps
+								mb.updateSettingsMenu()
+							},
+						},
+						{
+							isLine: true,
+						},
+						{
+							label: "50%",
+						}, {
+							label: "100%",
+						}, {
+							label: "200%",
+						},
+						{
+							isLine: true,
+						},
+					},
 				},
 				{
 					label: "pair controls",
@@ -223,6 +269,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 		},
 	}
 	mb.setupFlags()
+	mb.updateSettingsMenu()
 	mb.positionLayout()
 
 	return mb
@@ -365,14 +412,20 @@ func (mb *menuBar) positionLayout() {
 				for k := range option.ExpandableItems {
 					subOption := &option.ExpandableItems[k]
 
+					opH := int32(subOptionH)
+
+					if subOption.isLine {
+						opH = lineH
+					}
+
 					subOption.Rect = sdl.Rect{
 						X: subX,
 						Y: subY,
-						H: subOptionH,
+						H: opH,
 						W: expandableW,
 					}
 
-					subY += optionH
+					subY += opH
 				}
 			}
 
@@ -441,6 +494,14 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 	gfx.RoundedBoxColor(r, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBG)
 
 	for i, subOption := range option.ExpandableItems {
+
+		if subOption.isLine {
+			midY := subOption.Rect.Y + subOption.Rect.H/2
+			r.SetDrawColor(colHover.R, colHover.G, colHover.B, 255)
+			r.DrawLine(subOption.Rect.X+10, midY, subOption.Rect.X+subOption.Rect.W-10, midY)
+			continue
+
+		}
 
 		if i == mb.subOptionHoverIndex {
 			pill := mb.getHoverPill(r, subOption.Rect.W, subOption.Rect.H)

@@ -26,11 +26,13 @@ func main() {
 	getSaveTimeStamp()
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	pauseChannel := make(chan bool)
-	console := initConsole(displayChannel)
+
 	g := &game{
-		core:         console,
+		fps:          60,
 		pauseChannel: pauseChannel,
 	}
+
+	g.initConsole(displayChannel)
 
 	state := loadState()
 
@@ -202,6 +204,7 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 				renderer.Copy(gameTexture, nil, gameRect)
 			}
 			mb.renderBar(renderer)
+			mb.renderFps(renderer)
 
 			renderer.Present()
 		}

@@ -207,6 +207,17 @@ func (c *Console) StartConsoleCycle() {
 
 }
 
+func (c *Console) PowerCycle() {
+	c.Cpu.Reset()
+	c.Cpu.mem = &bus{
+		cpu:      c.Cpu,
+		internal: [2048]byte{},
+	}
+
+	c.Ppu.reset()
+	c.Apu = NewApu(c.Apu.SampleRate, c)
+}
+
 func (c *Console) RunDisplayUpdates() {
 	if c.Ppu.ScreenChanged {
 		S := ScreenInfo{

@@ -11,6 +11,14 @@
 {
 "name": "contra.nes",
 "location": "/Users/test/Projects/ExNES/games/Mapper2/contra.nes"
+},
+{
+"name": ".",
+"location": ""
 }
-]
+],
+"settings": {
+"show_fps": true,
+"current_speed": "100%"
+}
 }

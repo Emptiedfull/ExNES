@@ -11,6 +11,12 @@ type localState struct {
 	RecentFiles []recentRom `json:"recent"`
 	running     bool
 	saves       []romSave
+	Settings    state_setting `json:"settings"`
+}
+
+type state_setting struct {
+	Show_fps      bool   `json:"show_fps"`
+	Current_speed string `json:"current_speed"`
 }
 
 type romSave struct {

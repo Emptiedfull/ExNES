@@ -19,8 +19,7 @@ type ppu struct {
 
 	BackBuffer []uint8
 
-	mirroring       int
-	mirroringChange bool
+	mirroring int
 
 	ScreenChanged bool
 
@@ -136,6 +135,25 @@ type registersFlags struct {
 	bufferedData uint8
 
 	emphasisIndex int
+}
+
+func (p *ppu) reset() {
+	p.Dot = 0
+	p.Scanline = 0
+	p.Frame = 0
+
+	isRam := p.mem.CHR_isRam
+	p.mem = ppu_mem{}
+	p.mem.CHR_isRam = isRam
+
+	if p.BackBuffer != nil {
+		clear(p.BackBuffer)
+	}
+	if p.DebugBuffer != nil {
+		clear(p.DebugBuffer)
+	}
+
+	p.ScreenChanged = false
 }
 
 func (p *ppu) MirrorNameTable(addr uint16) uint16 {
