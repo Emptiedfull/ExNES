@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/veandco/go-sdl2/gfx"
+	"github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -88,9 +89,11 @@ func (mb *menuBar) getSaveStateItems() []expandableOption {
 	for i, save := range mb.state.saves {
 		if !save.filled {
 			res[i].label = "empty"
+			res[i].Icon = "./icons/save-plus.svg"
 
 		} else {
 			res[i].label = save.timestamp
+			res[i].Icon = "./icons/save-check.svg"
 		}
 
 		res[i].onClick = func() {
@@ -112,6 +115,7 @@ func (mb *menuBar) getLoadItems() []expandableOption {
 		if save.filled {
 			option := expandableOption{}
 			option.label = save.timestamp
+			option.Icon = "./icons/save-check.svg"
 			option.onClick = func() {
 				mb.console.loadSnapshot(mb.state, i)
 			}
@@ -261,4 +265,21 @@ func createHover(r *sdl.Renderer, col sdl.Color, w, h int32) (*sdl.Texture, erro
 
 	r.SetRenderTarget(nil)
 	return tex, nil
+}
+
+func (mb *menuBar) getIcon(r *sdl.Renderer, path string) *sdl.Texture {
+	texture, ok := mb.cache.iconCache[path]
+	if ok {
+		return texture
+	}
+
+	texture, err := img.LoadTexture(r, path)
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+
+	mb.cache.iconCache[path] = texture
+	return texture
+
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/veandco/go-sdl2/gfx"
+	_ "github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -58,6 +59,7 @@ type TextureCache struct {
 	textCache  map[string]textCache
 	hoverCache map[int32]*sdl.Texture
 	arrowCache *sdl.Texture
+	iconCache  map[string]*sdl.Texture
 }
 
 type menuItem struct {
@@ -80,14 +82,15 @@ type ItemOption struct {
 
 	isLine bool
 
-	hasIcon bool
-	Icon    MenuIcon
+	Icon string
 }
 
 type expandableOption struct {
 	label   string
 	Rect    sdl.Rect
 	onClick func()
+
+	Icon string
 }
 
 type textCache struct {
@@ -117,6 +120,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 	cache := TextureCache{
 		textCache:  map[string]textCache{},
 		hoverCache: map[int32]*sdl.Texture{},
+		iconCache:  map[string]*sdl.Texture{},
 	}
 
 	mb.cache = cache
@@ -130,6 +134,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					label:   "Load Rom",
 					onClick: func() { openRom(console, state, mb) },
 					enabled: true,
+					Icon:    "./icons/file-down.svg",
 				},
 				{
 					label:           "Recent files",
@@ -143,12 +148,14 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				{
 					label:           "Save state",
 					Expandable:      true,
+					Icon:            "./icons/save-pen.svg",
 					ExpandableItems: mb.getSaveStateItems(),
 					enabled:         false,
 					affectedFlag:    gameRunning,
 				},
 				{
 					label:           "Load state",
+					Icon:            "./icons/save.svg",
 					Expandable:      true,
 					ExpandableItems: make([]expandableOption, 0),
 					enabled:         false,
@@ -158,8 +165,9 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					isLine: true,
 				},
 				{
-					label:   "exit",
+					label:   "Exit",
 					enabled: true,
+					Icon:    "./icons/x.svg",
 					onClick: func() { state.running = false },
 				}},
 		},
@@ -168,8 +176,21 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			options: []ItemOption{
 				{
 					enabled:      false,
+					affectedFlag: gameRunning,
+					Icon:         "./icons/reset.svg",
+					label:        "Reset",
+					onClick: func() {
+						console.core.Cpu.Reset()
+					},
+				},
+				{
+					isLine: true,
+				},
+				{
+					enabled:      false,
 					affectedFlag: gamePlaying,
 					label:        "Pause",
+					Icon:         "./icons/pause.svg",
 					onClick: func() {
 						console.PauseGame()
 						mb.setFlag(gamePlaying, false)
@@ -180,6 +201,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					enabled:      false,
 					affectedFlag: gamePaused,
 					label:        "Play",
+					Icon:         "./icons/play.svg",
 					onClick: func() {
 						console.UnPauseGame()
 						mb.setFlag(gamePlaying, true)
@@ -291,10 +313,13 @@ const (
 	subOptionH    = 24
 	lineH         = 12
 	panelPadding  = 8
-	optionPadding = 26
+	optionPadding = 0
 	minW          = 140
 	expandableW   = 120
 	itemSpacer    = 6
+
+	iconGutter = 22
+	iconSize   = 12
 )
 
 func (mb *menuBar) positionLayout() {
@@ -421,7 +446,24 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 			pill := mb.getHoverPill(r, subOption.Rect.W, subOption.Rect.H)
 			r.Copy(pill, nil, &option.ExpandableItems[i].Rect)
 		}
-		mb.drawText(subOption.label, subOption.Rect, r, 12, colText)
+		textRect := subOption.Rect
+
+		if subOption.Icon != "" {
+			icon := mb.getIcon(r, subOption.Icon)
+
+			if icon != nil {
+				rect := sdl.Rect{
+					X: subOption.Rect.X + 6,
+					Y: subOption.Rect.Y + (subOptionH-iconSize)/2,
+					H: iconSize,
+					W: iconSize,
+				}
+
+				r.Copy(icon, nil, &rect)
+			}
+		}
+
+		mb.drawText(subOption.label, textRect, r, iconGutter, colText)
 	}
 
 }
@@ -444,7 +486,7 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 		if option.isLine {
 			midY := option.Rect.Y + option.Rect.H/2
 			r.SetDrawColor(colHover.R, colHover.G, colHover.B, 255)
-			r.DrawLine(option.Rect.X+12, midY, option.Rect.X+option.Rect.W-12, midY)
+			r.DrawLine(option.Rect.X+10, midY, option.Rect.X+option.Rect.W-10, midY)
 			continue
 		}
 
@@ -453,7 +495,21 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 			color = colTextDim
 		}
 
-		mb.drawText(option.label, option.Rect, r, 14, color)
+		if option.Icon != "" {
+			icon := mb.getIcon(r, option.Icon)
+			if icon != nil {
+				iconRect := sdl.Rect{
+					X: option.Rect.X + 6,
+					Y: option.Rect.Y + (option.Rect.H-iconSize)/2,
+					H: iconSize,
+					W: iconSize,
+				}
+
+				r.Copy(icon, nil, &iconRect)
+			}
+		}
+
+		mb.drawText(option.label, option.Rect, r, iconGutter, color)
 
 		if option.Expandable {
 
