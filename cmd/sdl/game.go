@@ -154,3 +154,16 @@ func handleInputs(console *Core.Console, e *sdl.KeyboardEvent) {
 
 	console.Player1.UpdateBtnBool(controlMap[e.Keysym.Sym], pressed)
 }
+
+func (console *game) changeSpeed(multipler float64) {
+
+	if multipler > 1 {
+		desiredfps := 60 * multipler
+		internal := desiredfps / 40
+		multipler = internal
+	}
+
+	targetFrequency := 44100 / multipler
+	console.core.Apu = Core.NewApu(targetFrequency, console.core)
+
+}

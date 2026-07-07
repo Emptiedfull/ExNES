@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/veandco/go-sdl2/gfx"
@@ -137,10 +138,22 @@ func (mb *menuBar) updateSettingsMenu() {
 	speedOptions := mb.Items[2].options[0].ExpandableItems[2:5]
 
 	for i := range speedOptions {
-		fmt.Println(speedOptions[i].label)
+
 		if speedOptions[i].label == state.Current_speed {
 			speedOptions[i].Icon = "./icons/check.svg"
 			// mb.Items[2].options[0].ExpandableItems[2+i].Icon = "./icons/check.svg"
+		} else {
+			speedOptions[i].Icon = ""
+		}
+
+		speedOptions[i].onClick = func() {
+			label := speedOptions[i].label
+			speedPerc, _ := strconv.Atoi(label[0 : len(label)-1])
+
+			mb.console.changeSpeed(float64(speedPerc) / 100.0)
+
+			mb.state.Settings.Current_speed = label
+			mb.updateSettingsMenu()
 		}
 	}
 
@@ -320,9 +333,6 @@ func (mb *menuBar) renderFps(r *sdl.Renderer) {
 			W: 80,
 			H: 30,
 		}
-
-		// r.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 240)
-		// r.FillRect(&rect)
 
 		mb.drawText(label, rect, r, 0, colText)
 	}

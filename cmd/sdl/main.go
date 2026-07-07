@@ -38,6 +38,13 @@ func main() {
 
 	defer state.saveState()
 
+	go func() {
+
+		time.Sleep(5 * time.Second)
+		fmt.Println("activating test")
+		g.changeSpeed(2)
+	}()
+
 	startWindow(g, displayChannel, state)
 
 }
