@@ -21,6 +21,10 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
+type Windows map[uint32]Window
+
+var windows = make(Windows)
+
 func main() {
 
 	getSaveTimeStamp()
@@ -40,7 +44,32 @@ func main() {
 
 	defer state.saveState()
 
-	startWindow(g, displayChannel, state)
+	if err := ttf.Init(); err != nil {
+		log.Fatal("fuck init failed:", err)
+	}
+
+	font, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(14*2))
+	if err != nil {
+		log.Fatal("something bad here:", err)
+	}
+
+	font.SetHinting(ttf.HINTING_LIGHT)
+
+	if err := sdl.Init(sdl.INIT_AUDIO | sdl.INIT_VIDEO); err != nil {
+		panic(err)
+	}
+	defer sdl.Quit()
+
+	gameWin, err := openGameWindow(font, g, state)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	windows[gameWin.getID()] = gameWin
+
+	startLoop(state)
+
+	// startWindow(g, displayChannel, state)
 
 }
 
@@ -61,6 +90,51 @@ var (
 	colPanelBG     = sdl.Color{R: 40, G: 40, B: 44, A: 240}
 	colPanelBorder = sdl.Color{R: 68, G: 60, B: 86, A: 255}
 )
+
+func startLoop(state *localState) {
+
+	for state.running {
+
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+
+			switch e := event.(type) {
+			case *sdl.QuitEvent:
+				state.running = false
+			case *sdl.WindowEvent:
+				id := e.WindowID
+
+				if windows[id] != nil {
+					if e.Event == sdl.WINDOWEVENT_CLOSE {
+						windows[id].close()
+					}
+				}
+
+			case *sdl.MouseMotionEvent:
+				id := e.WindowID
+				if window, ok := windows[id]; ok {
+					window.handleMouse(e)
+				}
+
+			case *sdl.MouseButtonEvent:
+				id := e.WindowID
+				if window, ok := windows[id]; ok {
+					window.handleClick(e)
+				}
+
+			case *sdl.KeyboardEvent:
+				id := e.WindowID
+				if window, ok := windows[id]; ok {
+					window.handleInput(e)
+				}
+			}
+
+		}
+
+		for _, window := range windows {
+			window.render()
+		}
+	}
+}
 
 func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localState) {
 
@@ -94,7 +168,6 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 	W_H, _ := window.GetSize()
 	D_H, _, _ := renderer.GetOutputSize()
 
-	fmt.Println(W_H, D_H)
 	dpi_scale := D_H / W_H
 	fmt.Println("dpi sclae:", dpi_scale)
 
@@ -108,9 +181,6 @@ func startWindow(console *game, updateChan chan Core.ScreenInfo, state *localSta
 	}
 
 	font.SetHinting(ttf.HINTING_LIGHT)
-
-	renderer.SetDrawColor(colBarBG.R, colBarBG.G, colBarBG.B, 255)
-	renderer.FillRect(&sdl.Rect{X: 0, Y: 0, W: windowW, H: windowH})
 
 	mb := createNewMenu(font, console, state, (menu_height * 2), windowW, dpi_scale)
 	mb.renderBar(renderer)

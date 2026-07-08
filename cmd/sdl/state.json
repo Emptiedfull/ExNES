@@ -18,9 +18,9 @@
 }
 ],
 "settings": {
-"show_fps": true,
+"show_fps": false,
 "current_speed": "100%",
-"muted": true,
+"muted": false,
 "current_volume": "100%"
 }
 }

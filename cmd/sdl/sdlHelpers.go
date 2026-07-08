@@ -75,9 +75,11 @@ func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOp
 			enabled: true,
 			label:   rom.Name,
 			onClick: func() {
-				// if mb.menuFlags[gameRunning]{
-				// 	console =
-				// }
+				if mb.menuFlags[gameRunning] {
+					console.romPath = rom.Location
+					console.reloadROM()
+					return
+				}
 
 				console.LoadRom(rom.Location, mb)
 				mb.resetMenu()
@@ -183,6 +185,7 @@ func (mb *menuBar) updateSoundMenu() {
 	volumeOptions := mb.Items[2].options[1].ExpandableItems[2:6]
 
 	if state.Muted {
+		mb.console.changeVolume("0%")
 		muteOption.Icon = "./icons/check.svg"
 		muteOption.onClick = func() {
 			mb.state.Settings.Muted = false
@@ -194,12 +197,13 @@ func (mb *menuBar) updateSoundMenu() {
 			mb.state.Settings.Muted = true
 			mb.updateSoundMenu()
 		}
+		mb.console.changeVolume(state.Current_volume)
 	}
 
 	for i := range volumeOptions {
 		label := volumeOptions[i].label
 
-		if state.Muted {
+		if !state.Muted {
 			volumeOptions[i].enabled = true
 		} else {
 			volumeOptions[i].enabled = false

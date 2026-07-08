@@ -130,7 +130,7 @@ func (game *game) beginSampleLoop() {
 			sdl.Delay(1)
 		}
 		game.core.RunDisplayUpdates()
-		adjustVolume(sampleBuf, game.volume)
+		adjustVolume(sampleBuf, 1)
 		sdl.QueueAudio(game.audioDevice, float32ToBytes(sampleBuf))
 	}
 
