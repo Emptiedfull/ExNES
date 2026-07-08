@@ -21,10 +21,12 @@ type controlWindow struct {
 	renderer *sdl.Renderer
 	id       uint32
 	open     bool
+
+	boxes []sdl.Rect
 }
 
 func openControlWindow() (Window, error) {
-	win, err := sdl.CreateWindow("controls", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 500, 400, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI)
+	win, err := sdl.CreateWindow("controls", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 650, 400, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE)
 	if err != nil {
 		log.Fatal("WINDOW BAD", err)
 	}
@@ -41,18 +43,26 @@ func openControlWindow() (Window, error) {
 		log.Fatal("ID BAD", err)
 	}
 
-	return &controlWindow{
+	controlWin := &controlWindow{
 		id:       id,
 		window:   win,
 		renderer: renderer,
 		open:     true,
-	}, nil
+	}
+
+	controlWin.setUp()
+
+	return controlWin, nil
 
 }
 
 func (*controlWindow) handleInput(e *sdl.KeyboardEvent) {}
 
-func (*controlWindow) render() {}
+func (win *controlWindow) render() {
+
+	win.renderBoxes()
+	win.renderer.Present()
+}
 
 func (win *controlWindow) getID() uint32 {
 	return win.id

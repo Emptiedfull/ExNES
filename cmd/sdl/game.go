@@ -200,3 +200,9 @@ func (console *game) changeVolume(volumeStr string) {
 
 	console.volume = volume
 }
+
+func renderFrame(texture *sdl.Texture, renderer *sdl.Renderer, buffer []byte, gameRect *sdl.Rect) {
+	texture.Update(nil, unsafe.Pointer(&buffer[0]), 256*4)
+	renderer.Copy(texture, nil, gameRect)
+
+}
