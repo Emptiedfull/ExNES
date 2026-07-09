@@ -131,6 +131,22 @@ func compareCycles(cpuLog []Core.CycleStep, testLog []cycleInfo) error {
 	if len(cpuLog) != len(testLog) {
 		return fmt.Errorf("cycles not matching, cpuLog: %v testLog: %v", cpuLog, testLog)
 	}
+
+	for i := range cpuLog {
+		c := cpuLog[i]
+		t := testLog[i]
+		if cpuLog[i].Addr != testLog[i].Addr {
+			return fmt.Errorf("wrong address, got: %v wanted: %v", c.Addr, t.Addr)
+		}
+
+		if c.Mode != t.Op {
+			return fmt.Errorf("wrong operation: got: %v wanted: %v", c.Mode, t.Op)
+		}
+
+		if c.Val != t.Val {
+			return fmt.Errorf("wrong value, got: %v wanted: %v", c.Val, t.Val)
+		}
+	}
 	return nil
 }
 
