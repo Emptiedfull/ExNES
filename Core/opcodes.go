@@ -183,6 +183,10 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
+				c.Mem.Write(uint16(c.temp.pointer), c.val)
+
+				return false
+			case 3:
 				var f bool
 				c.temp.val, f = performASL(c.temp.val)
 				if f {
@@ -191,8 +195,6 @@ var FetchTable = []opCode{
 					c.clearFlag(Carry)
 				}
 				c.SetFlagNZ(c.temp.val)
-				return false
-			case 3:
 				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
@@ -214,6 +216,7 @@ var FetchTable = []opCode{
 				c.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
+				c.Mem.Write(uint16(c.pointer), c.val)
 				c.val = c.ASL(c.val)
 				return false
 			case 3:
@@ -236,10 +239,12 @@ var FetchTable = []opCode{
 		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
+				c.Mem.Read(c.PC)
+				c.temp.val = c.P | 0x30
 				return false
 			case 1:
-				tempStatus := c.P | 0x30
-				c.pushStack(tempStatus)
+
+				c.pushStack(c.temp.val)
 				return true
 			default:
 				return true
@@ -263,6 +268,7 @@ var FetchTable = []opCode{
 		AddressingMode: Accumulator,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			var f bool
 			c.A, f = performASL(c.A)
 			if f {
@@ -302,6 +308,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
+				c.Mem.Read(builduint16(c.low, c.high))
 				return true
 			default:
 				fmt.Println("something really wrong at 0x0C")
@@ -348,6 +355,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				return false
 			case 3:
+				c.Mem.Write(builduint16(c.temp.low, c.temp.high), c.temp.val)
 				var carry bool
 				c.temp.val, carry = performASL(c.temp.val)
 				c.updateFlag(Carry, carry)
@@ -529,6 +537,7 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
+				c.Mem.Read(uint16(c.pointer))
 				return true
 			default:
 				fmt.Println("something really wrong at 0x14")
@@ -570,12 +579,14 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
 				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				var carry bool
 				c.temp.val, carry = performASL(c.temp.val)
 				c.updateFlag(Carry, carry)
@@ -646,6 +657,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
+				c.Mem.Read(builduint16(c.low, c.high))
 				baseAddr := builduint16(c.temp.low, c.temp.high)
 				newAddr := baseAddr + uint16(c.Y)
 				c.temp.addr = newAddr
@@ -1014,7 +1026,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-
+				c.Mem.Write(uint16(c.pointer), c.val)
 				c.temp.val = c.ROL(c.val)
 
 				return false
@@ -1043,6 +1055,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
+				c.Mem.Write(uint16(c.pointer), c.val)
 				c.val = c.ROL(c.val)
 				return false
 			case 3:
@@ -1252,17 +1265,23 @@ var FetchTable = []opCode{
 
 				return false
 			case 1:
+				c.Mem.Read(c.PC)
 				offset := int8(c.temp.val)
-				oldPC := c.PC
 
-				c.PC = uint16(int32(oldPC) + int32(offset))
+				c.temp.addr = uint16(int32(c.PC) + int32(offset))
 
-				if crossedPage(oldPC, c.PC) {
+				if crossedPage(c.PC, c.temp.addr) {
+
 					return false
 				} else {
+					c.PC = c.temp.addr
 					return true
 				}
 			case 2:
+				wrongAddr := (c.PC & 0xFF00) | (c.temp.addr & 0x00FF)
+				c.Mem.Read(wrongAddr)
+
+				c.PC = c.temp.addr
 				return true
 			default:
 				fmt.Println("bad somethign at 0x30")
@@ -1486,18 +1505,26 @@ var FetchTable = []opCode{
 			case 2:
 				base := builduint16(c.temp.low, c.temp.high)
 				c.temp.addr = base + uint16(c.Y)
+
+				wrongAddr := (base & 0xFF00) | (c.temp.addr & 0x00FF)
+				val := c.Mem.Read(wrongAddr)
+
 				if crossedPage(base, c.temp.addr) {
 					return false
 				}
-				fallthrough
+
+				c.A &= val
+				c.SetFlagNZ(c.A)
+				return true
 			case 3:
+
 				val := c.Mem.Read(c.temp.addr)
 				c.A &= val
 				c.SetFlagNZ(c.A)
 				return true
-
 			default:
-				return false
+				fmt.Println("something bad at 0x39")
+				return true
 			}
 		},
 	},
@@ -1686,6 +1713,7 @@ var FetchTable = []opCode{
 		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
+				c.Mem.Read(c.PC)
 				return false
 			case 1:
 				return false
@@ -1886,6 +1914,7 @@ var FetchTable = []opCode{
 		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
+				c.Mem.Read(c.PC)
 				return false
 			case 1:
 				c.pushStack(c.A)
@@ -2058,18 +2087,25 @@ var FetchTable = []opCode{
 				}
 				return false
 			case 1:
+				c.Mem.Read(c.PC)
 				offset := int8(c.temp.val)
 				oldPC := c.PC
 
-				c.PC = uint16(int32(oldPC) + int32(offset))
+				c.temp.addr = uint16(int32(oldPC) + int32(offset))
 
-				if !crossedPage(oldPC, c.PC) {
+				if !crossedPage(oldPC, c.temp.addr) {
+					c.PC = c.temp.addr
 					return true
 				} else {
 					return false
 				}
 
 			case 2:
+				oldPC := c.PC
+				wrongAddr := (oldPC & 0xFF00) | (c.temp.addr & 0x00FF)
+				c.Mem.Read(wrongAddr)
+
+				c.PC = c.temp.addr
 				return true
 			default:
 				fmt.Println("bad at 0x50")
@@ -2396,7 +2432,9 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(addr)
 				c.temp.addr = addr + uint16(c.X)
+				c.Mem.Read(c.temp.addr)
 
 				if crossedPage(addr, c.temp.addr) {
 					return false
@@ -2598,6 +2636,7 @@ var FetchTable = []opCode{
 				c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(c.PC)
 				return true
 			default:
 				fmt.Println("something wrong at 0x04")
@@ -2638,6 +2677,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
+				c.Mem.Write(uint16(c.pointer), c.val)
 				c.temp.val = c.ROR(c.temp.val)
 				return false
 			case 3:
@@ -2869,18 +2909,23 @@ var FetchTable = []opCode{
 				}
 				return false
 			case 1:
+				c.Mem.Read(c.PC)
 				offset := int8(c.temp.val)
-				oldPC := c.PC
 
-				c.PC = uint16(int32(oldPC) + int32(offset))
+				c.temp.addr = uint16(int32(c.PC) + int32(offset))
 
-				if !crossedPage(oldPC, c.PC) {
+				if !crossedPage(c.PC, c.temp.addr) {
+					c.PC = c.temp.addr
 					return true
 				} else {
 					return false
 				}
 
 			case 2:
+				wrongAdrr := (c.PC & 0xFF00) | (c.temp.addr & 0x00FF)
+				c.Mem.Read(wrongAdrr)
+
+				c.PC = c.temp.addr
 				return true
 			default:
 				fmt.Println("bad at 0x70")
@@ -2999,6 +3044,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -3073,6 +3119,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.setFlag(Interrupt)
 			return true
 		},
@@ -3114,6 +3161,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			return true
 		},
 	},
@@ -3194,6 +3242,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				baseAddr := builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(baseAddr)
 				c.temp.addr = baseAddr + uint16(c.X)
 
 				if crossedPage(baseAddr, c.temp.addr) {
@@ -3589,17 +3638,21 @@ var FetchTable = []opCode{
 				return false
 
 			case 1:
+				c.Mem.Read(c.PC)
 				offset := int8(c.temp.val)
-				oldPc := c.PC
 
-				c.PC = uint16(int32(oldPc) + int32(offset))
+				c.temp.addr = uint16(int32(c.PC) + int32(offset))
 
-				if crossedPage(oldPc, c.PC) {
+				if crossedPage(c.PC, c.temp.addr) {
 					return false
 				} else {
+					c.PC = c.temp.addr
 					return true
 				}
 			case 2:
+				wrongAddr := (c.PC & 0xFF00) | (c.temp.addr & 0x00FF)
+				c.Mem.Read(wrongAddr)
+				c.PC = c.temp.addr
 				return true
 			default:
 				fmt.Println("something bad 0x90")
@@ -3733,6 +3786,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.Y
 				return false
 			case 2:
@@ -3772,6 +3826,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.A = c.Y
 			c.SetFlagNZ(c.A)
 			return true
@@ -4190,6 +4245,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.Y = c.A
 			c.SetFlagNZ(c.Y)
 			return true
@@ -4211,6 +4267,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.X = c.A
 
 			c.SetFlagNZ(c.X)
@@ -4349,17 +4406,22 @@ var FetchTable = []opCode{
 				}
 				return false
 			case 1:
+				c.Mem.Read(c.PC)
 				offset := int8(c.temp.val)
-				oldPC := c.PC
 
-				c.PC = uint16(int32(oldPC) + int32(offset))
+				c.temp.addr = uint16(int32(c.PC) + int32(offset))
 
-				if crossedPage(oldPC, c.PC) {
+				if crossedPage(c.PC, c.temp.addr) {
+					c.PC = c.temp.addr
 					return false
 				} else {
 					return true
 				}
 			case 2:
+				wrongAddr := (c.PC & 0xFF00) | (c.temp.addr & 0x00FF)
+				c.Mem.Read(wrongAddr)
+
+				c.PC = c.temp.addr
 				return true
 			default:
 				fmt.Println("something wrong at 0xB0")
@@ -4462,6 +4524,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -4593,6 +4656,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.X = c.S
 			c.SetFlagNZ(c.X)
 			return true
@@ -4952,6 +5016,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.Y++
 			c.SetFlagNZ(c.Y)
 			return true
@@ -5358,7 +5423,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
-
+			c.Mem.Read(c.PC)
 			return true
 		},
 	},
@@ -5651,6 +5716,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				c.temp.val++
 				c.SetFlagNZ(c.temp.val)
 				return false
@@ -5842,16 +5908,18 @@ var FetchTable = []opCode{
 				return false
 			case 1:
 				offset := int8(c.temp.val)
-				oldPc := c.PC
 
-				c.PC = uint16(int32(oldPc) + int32(offset))
+				c.temp.addr = uint16(int32(c.PC) + int32(offset))
 
-				if crossedPage(oldPc, c.PC) {
+				if crossedPage(c.PC, c.temp.addr) {
+					c.PC = c.temp.addr
 					return false
 				} else {
 					return true
 				}
 			case 2:
+				wrongAddr := (c.PC & 0xFF00) | (c.temp.addr & 0x00FF)
+				c.Mem.Read(wrongAddr)
 				return true
 			default:
 				fmt.Println("something bad at 0xF0")
@@ -6040,6 +6108,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.setFlag(Decimal)
 			return true
 		},
@@ -6079,6 +6148,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			return true
 		},
 	},
