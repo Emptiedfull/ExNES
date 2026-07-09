@@ -24,6 +24,8 @@ type ppu struct {
 	ScreenChanged bool
 
 	DebugBuffer []uint8
+
+	ppuOpenBus uint8
 }
 
 type FullPalette [8][64][3]byte
@@ -219,10 +221,11 @@ func (p *ppu) Write(addr uint16, val uint8) {
 }
 
 func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
+	var val uint8
 	switch reg {
 	case 2:
 		var result uint8
-		result |= (openBusVal & 0x1F)
+		result |= (p.ppuOpenBus & 0x1F)
 
 		result = AssignBit(result, 6, p.Mem.register.Sprite0Hit)
 		result = AssignBit(result, 5, p.Mem.register.sprietOverflow)
@@ -235,18 +238,18 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 		p.Mem.Vblank_flag = false
 		p.Mem.internal.w = false
 
-		return result
+		val = result
 	case 4:
 		data := p.Mem.oamData[p.Mem.register.OAMADDR]
 
 		if (p.Mem.register.OAMADDR & 0x03) == 0x02 {
 			data = data & 0xE3
+			data |= (p.ppuOpenBus & 0x1C)
 		}
 
-		return data
-
+		val = data
 	case 7:
-		val := p.read(p.Mem.internal.v)
+		val = p.read(p.Mem.internal.v)
 
 		if p.Mem.internal.v%0x4000 < 0x3F00 {
 			buffered := p.Mem.register.bufferedData
@@ -255,7 +258,7 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 		} else {
 			p.Mem.register.bufferedData = p.read(p.Mem.internal.v - 0x1000)
 
-			val = (val & 0x3F) | (openBusVal & 0xC0)
+			val = (val & 0x3F) | (p.ppuOpenBus & 0xC0)
 		}
 
 		if p.Mem.register.AddrIncrement {
@@ -265,13 +268,17 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 		}
 		p.Mem.internal.v &= 0x3FFF
 
-		return val
 	default:
-		return 0
+		return p.ppuOpenBus
 	}
+
+	p.ppuOpenBus = val
+
+	return val
 }
 
 func (p *ppu) WriteReg(reg uint16, val uint8) {
+	p.ppuOpenBus = val
 	switch reg {
 	case 0: //PPUCTRL
 

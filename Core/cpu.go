@@ -197,23 +197,30 @@ func (b *bus) Read(addr uint16) uint8 {
 		b.Log = append(b.Log, CycleStep{Mode: "read", Addr: int(addr), Val: int(val)})
 		return val
 	}
+
 	var val uint8 = 0
 	switch {
 	case addr <= 0x1FFF:
 		val = b.internal[addr&0x07FF]
 	case addr == 0x4015:
-		val = b.Cpu.console.Apu.readStatus()
+		return (b.Cpu.console.Apu.readStatus() & 0xDF) | (b.Cpu.console.OpenBusVal & 0x20)
 	case addr == 0x4016:
-
-		return b.Cpu.console.Player1.readState()
+		val = (b.Cpu.console.Player1.readState() & 0x01) | (b.Cpu.console.OpenBusVal & 0xE0)
+		b.Cpu.console.OpenBusVal = val
+		return val
 	case addr == 0x4017:
-		return b.Cpu.console.Player2.readState()
+		val = (b.Cpu.console.Player2.readState() & 0x01) | (b.Cpu.console.OpenBusVal & 0xE0)
+		b.Cpu.console.OpenBusVal = val
+		return val
 
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		val = b.Cpu.console.Ppu.ReadReg(RegIndex, b.Cpu.console.OpenBusVal)
 	case addr >= 0x6000:
 		val = b.Cpu.console.mapper.ReadPRG(addr)
+	default:
+
+		return b.Cpu.console.OpenBusVal
 	}
 
 	b.Cpu.console.OpenBusVal = val
@@ -228,12 +235,14 @@ func (b *bus) Write(addr uint16, val uint8) {
 		b.Log = append(b.Log, CycleStep{Mode: "write", Addr: int(addr), Val: int(val)})
 		return
 	}
+	b.Cpu.console.OpenBusVal = val
 
 	switch {
 	case addr <= 0x1FFF:
 		b.internal[addr&0x07FF] = val
 	case addr == 0x4014:
 		b.Cpu.console.ExecuteOAMDMA(val)
+
 	case addr == 0x4016:
 		b.Cpu.console.Player1.writeStrobe(val & 1)
 		b.Cpu.console.Player2.writeStrobe(val & 1)

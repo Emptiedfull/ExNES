@@ -5038,16 +5038,17 @@ var FetchTable = []opCode{
 				return false
 			case 4:
 				c.addr = builduint16(c.low, c.high)
-				c.Mem.Read(c.addr)
+
 				c.val = c.Mem.Read(c.addr)
 
-				c.val--
 				return false
 			case 5:
 				c.Mem.Write(c.addr, c.val)
+				c.val--
 				return false
 			case 6:
 				c.COMPARE(c.A, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0xC3")
@@ -5404,16 +5405,17 @@ var FetchTable = []opCode{
 				c.temp.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
-				c.Mem.Read(c.addr)
+				c.Mem.Read(builduint16(c.low+c.Y, c.high))
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 4:
 
 				c.val = c.Mem.Read(c.addr)
-				c.val--
+
 				return false
 			case 5:
 				c.Mem.Write(c.addr, c.val)
+				c.val--
 				return false
 			case 6:
 				c.COMPARE(c.A, c.val)
