@@ -245,7 +245,7 @@ func (a *APU) tick() {
 	a.Triangle.StepTimer()
 
 	if a.Dmc.stall > 0 {
-		val := a.Console.Cpu.mem.Read(a.Dmc.currentAddr)
+		val := a.Console.Cpu.Mem.Read(a.Dmc.currentAddr)
 		a.Dmc.LoadSample(val)
 
 		a.Console.Cpu.Stall += 4

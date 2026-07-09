@@ -40,7 +40,7 @@ type Cpu struct {
 	isJamming bool
 }
 
-type cycleStep struct {
+type CycleStep struct {
 	Addr int
 	Val  int
 	Mode string
@@ -111,7 +111,12 @@ func (c *Cpu) executeNmiCycle() int {
 
 }
 
-func (c *Cpu) tick() {
+func (c *Cpu) ResetTemp() {
+	c.temp = temp{}
+
+}
+
+func (c *Cpu) Tick() {
 	// if c.TotalCycles%100000 == 0 {
 	// 	fmt.Printf("PC=%04X cycle=%d\n", c.PC, c.TotalCycles)
 	// }
@@ -168,9 +173,13 @@ type bus struct {
 	Cpu      *Cpu
 	internal [2048]byte
 
-	flatMode bool
-	flatMem  []uint8
-	log      []cycleStep
+	FlatMode bool
+	FlatMem  []uint8
+	Log      []CycleStep
+}
+
+func GetBus() *bus {
+	return &bus{}
 }
 
 func (b *bus) returnInternal() [2048]byte {
@@ -183,9 +192,9 @@ func (b *bus) loadInternal(x [2048]byte) {
 
 func (b *bus) Read(addr uint16) uint8 {
 
-	if b.flatMode {
-		val := b.flatMem[addr]
-		b.log = append(b.log, cycleStep{Mode: "read", Addr: int(addr), Val: int(val)})
+	if b.FlatMode {
+		val := b.FlatMem[addr]
+		b.Log = append(b.Log, CycleStep{Mode: "read", Addr: int(addr), Val: int(val)})
 		return val
 	}
 	var val uint8 = 0
@@ -214,9 +223,9 @@ func (b *bus) Read(addr uint16) uint8 {
 
 func (b *bus) Write(addr uint16, val uint8) {
 
-	if b.flatMode {
-		b.flatMem[addr] = val
-		b.log = append(b.log, cycleStep{Mode: "write", Addr: int(addr), Val: int(val)})
+	if b.FlatMode {
+		b.FlatMem[addr] = val
+		b.Log = append(b.Log, CycleStep{Mode: "write", Addr: int(addr), Val: int(val)})
 		return
 	}
 

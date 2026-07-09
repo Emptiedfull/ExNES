@@ -141,6 +141,7 @@ var FetchTable = []opCode{
 				c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(c.PC)
 				return true
 			default:
 				fmt.Println("something wrong at 0x04")
@@ -626,6 +627,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.clearFlag(Carry)
 			return true
 		},
@@ -670,6 +672,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			return true
 		},
 	},
@@ -1089,6 +1092,7 @@ var FetchTable = []opCode{
 		AddressingMode: Accumulator,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			var carry bool
 			c.A, carry = performROL(c.A, c.getFlag(Carry))
 			c.updateFlag(Carry, carry)
@@ -1462,6 +1466,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.setFlag(Carry)
 			return true
 		},
@@ -1502,6 +1507,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			return true
 		},
 	},
@@ -1904,6 +1910,7 @@ var FetchTable = []opCode{
 		AddressingMode: Accumulator,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			var carry bool
 			c.A, carry = performLSR(c.A)
 			c.updateFlag(Carry, carry)
@@ -2263,6 +2270,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.clearFlag(Interrupt)
 			return true
 		},
@@ -2305,6 +2313,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			return true
 		},
 	},
@@ -2704,7 +2713,7 @@ var FetchTable = []opCode{
 		AddressingMode: Accumulator,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
-
+			c.Mem.Read(c.PC)
 			c.A = c.ROR(c.A)
 			return true
 		},
@@ -2716,6 +2725,7 @@ var FetchTable = []opCode{
 		Size:           2,
 		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
+
 			mid := c.A & val
 
 			c.A = c.ROR(mid)
@@ -3424,6 +3434,7 @@ var FetchTable = []opCode{
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
 			c.Y--
+			c.Mem.Read(c.PC)
 			c.SetFlagNZ(c.Y)
 			return true
 		},
@@ -3444,6 +3455,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.A = c.X
 			c.SetFlagNZ(c.A)
 			return true
@@ -3795,6 +3807,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.S = c.X
 			return true
 		},
@@ -4540,6 +4553,7 @@ var FetchTable = []opCode{
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
 			c.clearFlag(oVerflow)
+			c.Mem.Read(c.PC)
 			return true
 		},
 	},
@@ -4957,6 +4971,7 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
+			c.Mem.Read(c.PC)
 			c.X--
 			c.SetFlagNZ(c.X)
 			return true
@@ -5305,6 +5320,7 @@ var FetchTable = []opCode{
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
 			c.clearFlag(Decimal)
+			c.Mem.Read(c.PC)
 			return true
 		},
 	},
@@ -6187,6 +6203,44 @@ var FetchTable = []opCode{
 				return true
 			default:
 				fmt.Println("something bad at 0xF9")
+				return true
+			}
+		},
+	},
+	0xFF: {
+		Name:           "ISC",
+		AddressingMode: AbsoluteX,
+		Size:           3,
+		Execute: func(c *Cpu, step int) bool {
+			switch step {
+			case 0:
+				c.low = c.fetchone()
+				return false
+			case 1:
+				c.high = c.fetchone()
+				return false
+
+			case 2:
+				base := builduint16(c.low, c.high)
+				c.addr = base + uint16(c.X)
+
+				wrongAddr := (base & 0xFF00) | uint16(uint8(base)+c.X)
+				c.Mem.Read(wrongAddr)
+				return false
+
+			case 3:
+				c.val = c.Mem.Read(c.addr)
+				return false
+			case 4:
+				c.Mem.Write(c.addr, c.val)
+				return false
+			case 5:
+				c.val++
+				c.Mem.Write(c.addr, c.val)
+				c.SBC(c.val)
+				return true
+			default:
+				fmt.Println("wrong bad fuck")
 				return true
 			}
 		},

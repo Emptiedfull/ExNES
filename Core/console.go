@@ -235,7 +235,7 @@ func (c *Console) tick() {
 		c.Cpu.Stall--
 		c.Cpu.TotalCycles++
 	} else {
-		c.Cpu.tick()
+		c.Cpu.Tick()
 	}
 	for range 3 {
 		c.Ppu.step()
