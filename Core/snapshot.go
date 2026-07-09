@@ -47,7 +47,7 @@ type CpuSnapshot struct {
 	X  uint8
 	Y  uint8
 
-	mem cpu_mem
+	Mem Cpu_Mem
 	t   temp
 
 	nmiPending   bool
@@ -62,13 +62,13 @@ type CpuSnapshot struct {
 	isJamming bool
 }
 
-type cpu_mem struct {
+type Cpu_Mem struct {
 	internal [2048]byte
 	external []byte
 }
 
 type PpuSnapshot struct {
-	mem ppu_mem
+	Mem ppu_Mem
 
 	Dot      int
 	Scanline int
@@ -164,7 +164,7 @@ func (c *Console) createEmptySnapshot() Snapshot {
 
 func (p *ppu) TakePpuSnapshot(S *PpuSnapshot) {
 
-	S.mem = p.mem
+	S.Mem = p.Mem
 
 	S.Dot = p.Dot
 	S.Scanline = p.Scanline
@@ -182,7 +182,7 @@ func (b *SnapshotBuffer) AddSnapshot(shot Snapshot) {
 
 }
 
-func (c cpu) TakeCpuSnapshot(S *CpuSnapshot) {
+func (c Cpu) TakeCpuSnapshot(S *CpuSnapshot) {
 
 	S.PC = c.PC
 	S.S = c.S
@@ -190,8 +190,8 @@ func (c cpu) TakeCpuSnapshot(S *CpuSnapshot) {
 	S.X = c.X
 	S.Y = c.Y
 
-	S.mem = cpu_mem{
-		internal: c.mem.returnInternal(),
+	S.Mem = Cpu_Mem{
+		internal: c.Mem.returnInternal(),
 	}
 
 	S.t = c.console.Cpu.temp
@@ -238,7 +238,7 @@ func (c *Console) LoadSnapshot(snap Snapshot) {
 }
 
 func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
-	p.mem = snap.mem
+	p.Mem = snap.Mem
 
 	p.Dot = snap.Dot
 	p.Scanline = snap.Scanline
@@ -249,14 +249,14 @@ func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
 	p.ScreenChanged = snap.screenChanged
 }
 
-func (c *cpu) LoadCpuSnapshot(snap CpuSnapshot) {
+func (c *Cpu) LoadCpuSnapshot(snap CpuSnapshot) {
 	c.PC = snap.PC
 	c.S = snap.S
 	c.P = snap.P
 	c.X = snap.X
 	c.Y = snap.Y
 
-	c.mem.loadInternal(snap.mem.internal)
+	c.Mem.loadInternal(snap.Mem.internal)
 
 	c.nmiPending = snap.nmiPending
 	c.executingNmi = snap.executingNmi

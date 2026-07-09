@@ -1,6 +1,6 @@
 package Core
 
-func (c *cpu) SetFlagNZ(val uint8) {
+func (c *Cpu) SetFlagNZ(val uint8) {
 	if val == 0 {
 		c.P |= Zero
 	} else {
@@ -21,31 +21,31 @@ func BoolToUint16(b bool) uint16 {
 	return 0
 }
 
-func (c *cpu) pushStack(val uint8) {
+func (c *Cpu) pushStack(val uint8) {
 	stackAdrr := 0x0100 + uint16(c.S)
-	c.mem.Write(stackAdrr, val)
+	c.Mem.Write(stackAdrr, val)
 	c.S--
 }
 
-func (c *cpu) popStack() uint8 {
+func (c *Cpu) popStack() uint8 {
 	c.S++
 	stackAddr := 0x0100 + uint16(c.S)
-	return c.mem.Read(stackAddr)
+	return c.Mem.Read(stackAddr)
 }
 
-func (c *cpu) clearFlag(flag flags) {
+func (c *Cpu) clearFlag(flag flags) {
 	c.P &^= flag
 }
 
-func (c *cpu) setFlag(flag flags) {
+func (c *Cpu) setFlag(flag flags) {
 	c.P |= flag
 }
 
-func (c *cpu) getFlag(flag flags) bool {
+func (c *Cpu) getFlag(flag flags) bool {
 	return (c.P & flag) != 0
 }
 
-func (c *cpu) updateFlag(flag flags, setting bool) {
+func (c *Cpu) updateFlag(flag flags, setting bool) {
 	if setting {
 		c.setFlag(flag)
 	} else {
@@ -53,8 +53,8 @@ func (c *cpu) updateFlag(flag flags, setting bool) {
 	}
 }
 
-func (c *cpu) fetchone() uint8 {
-	val := c.mem.Read(c.PC)
+func (c *Cpu) fetchone() uint8 {
+	val := c.Mem.Read(c.PC)
 	c.PC++
 	return uint8(val)
 }
@@ -74,7 +74,7 @@ func performASL(val uint8) (shifted uint8, carry bool) {
 	return val, c
 }
 
-func (c *cpu) ASL(val uint8) (shifted uint8) {
+func (c *Cpu) ASL(val uint8) (shifted uint8) {
 
 	s, carry := performASL(val)
 
@@ -82,7 +82,7 @@ func (c *cpu) ASL(val uint8) (shifted uint8) {
 	return s
 }
 
-func (c *cpu) ADC(val uint8) {
+func (c *Cpu) ADC(val uint8) {
 
 	var CAR uint8 = 0
 	if c.getFlag(Carry) {
@@ -90,13 +90,13 @@ func (c *cpu) ADC(val uint8) {
 	}
 
 	ACC := uint16(c.A)
-	MEM := uint16(val)
+	Mem := uint16(val)
 
-	result := ACC + MEM + uint16(CAR)
+	result := ACC + Mem + uint16(CAR)
 
 	c.updateFlag(Carry, result > 0xFF)
 
-	overflow := ((ACC ^ result) & (MEM ^ result) & 0x80) != 0
+	overflow := ((ACC ^ result) & (Mem ^ result) & 0x80) != 0
 	c.updateFlag(oVerflow, overflow)
 
 	c.A = uint8(result & 0xFF)
@@ -104,7 +104,7 @@ func (c *cpu) ADC(val uint8) {
 	c.SetFlagNZ(c.A)
 }
 
-func (c *cpu) SBC(val uint8) {
+func (c *Cpu) SBC(val uint8) {
 	inverted := ^val
 
 	a := c.A
@@ -126,7 +126,7 @@ func (c *cpu) SBC(val uint8) {
 	c.SetFlagNZ(c.A)
 }
 
-func (c *cpu) ROR(val uint8) uint8 {
+func (c *Cpu) ROR(val uint8) uint8 {
 	var oldcarry uint8 = 0
 	if c.getFlag(Carry) {
 		oldcarry = 1
@@ -141,7 +141,7 @@ func (c *cpu) ROR(val uint8) uint8 {
 	return result
 }
 
-func (c *cpu) COMPARE(A, B uint8) uint8 {
+func (c *Cpu) COMPARE(A, B uint8) uint8 {
 	result := A - B
 
 	c.updateFlag(Carry, A >= B)
@@ -162,7 +162,7 @@ func performROL(val uint8, carry bool) (uint8, bool) {
 	return res, newCarry
 }
 
-func (c *cpu) ROL(val uint8) uint8 {
+func (c *Cpu) ROL(val uint8) uint8 {
 	r, co := performROL(val, c.getFlag(Carry))
 	c.updateFlag(Carry, co)
 	return r
@@ -174,7 +174,7 @@ func performLSR(val uint8) (shifted uint8, carry bool) {
 	return val, c
 }
 
-func (c *cpu) LSR(val uint8) uint8 {
+func (c *Cpu) LSR(val uint8) uint8 {
 	r, co := performLSR(val)
 	c.updateFlag(Carry, co)
 	return r

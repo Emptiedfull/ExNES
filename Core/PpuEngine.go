@@ -39,7 +39,7 @@ func (p *ppu) cycleTick() {
 
 func (p *ppu) step() {
 
-	rendering := p.mem.register.ShowBG || p.mem.register.ShowSprites
+	rendering := p.Mem.register.ShowBG || p.Mem.register.ShowSprites
 	if p.Scanline == 0 && p.Dot == 0 && p.Frame%2 == 1 && rendering {
 		p.Dot = 1
 	}
@@ -58,43 +58,43 @@ func (p *ppu) step() {
 		}
 
 		if renderLine && fetchCycle {
-			p.mem.temp.tileData <<= 4
+			p.Mem.temp.tileData <<= 4
 			switch p.Dot % 8 {
 			case 0:
 				var data uint32
 				for range 8 {
-					a := p.mem.temp.attrTableByte
-					p1 := (p.mem.temp.lowTileByte & 0x80) >> 7
-					p2 := (p.mem.temp.highTileByte & 0x80) >> 6
-					p.mem.temp.lowTileByte <<= 1
-					p.mem.temp.highTileByte <<= 1
+					a := p.Mem.temp.attrTableByte
+					p1 := (p.Mem.temp.lowTileByte & 0x80) >> 7
+					p2 := (p.Mem.temp.highTileByte & 0x80) >> 6
+					p.Mem.temp.lowTileByte <<= 1
+					p.Mem.temp.highTileByte <<= 1
 					data <<= 4
 					data |= uint32(a | p1 | p2)
 				}
-				p.mem.temp.tileData |= uint64(data)
+				p.Mem.temp.tileData |= uint64(data)
 			case 1:
-				addr := 0x2000 | (p.mem.internal.v & 0x0FFF)
+				addr := 0x2000 | (p.Mem.internal.v & 0x0FFF)
 
-				p.mem.temp.nameTableByte = p.read(addr)
+				p.Mem.temp.nameTableByte = p.read(addr)
 			case 3:
-				v := p.mem.internal.v
+				v := p.Mem.internal.v
 				addr := 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
 				shift := ((v >> 4) & 4) | (v & 2)
-				p.mem.temp.attrTableByte = ((p.read(addr) >> shift) & 3) << 2
+				p.Mem.temp.attrTableByte = ((p.read(addr) >> shift) & 3) << 2
 			case 5:
-				fineY := (p.mem.internal.v >> 12) & 7
-				table := getTableAddr(p.mem.register.BgPattern)
-				tile := p.mem.temp.nameTableByte
+				fineY := (p.Mem.internal.v >> 12) & 7
+				table := getTableAddr(p.Mem.register.BgPattern)
+				tile := p.Mem.temp.nameTableByte
 				addr := 0x1000*uint16(table) + uint16(tile)*16 + fineY
 
-				p.mem.temp.lowTileByte = p.read(addr)
+				p.Mem.temp.lowTileByte = p.read(addr)
 			case 7:
 
-				fineY := (p.mem.internal.v >> 12) & 7
-				table := getTableAddr(p.mem.register.BgPattern)
-				tile := p.mem.temp.nameTableByte
+				fineY := (p.Mem.internal.v >> 12) & 7
+				table := getTableAddr(p.Mem.register.BgPattern)
+				tile := p.Mem.temp.nameTableByte
 				addr := 0x1000*uint16(table) + uint16(tile)*16 + fineY
-				p.mem.temp.highTileByte = p.read(addr + 8)
+				p.Mem.temp.highTileByte = p.read(addr + 8)
 
 			}
 		}
@@ -102,36 +102,36 @@ func (p *ppu) step() {
 		if prefetch && p.Dot >= 280 && p.Dot <= 304 {
 			//copying y scroll
 
-			p.mem.internal.v = (p.mem.internal.v & 0x841F) | (p.mem.internal.t & 0x7BE0)
+			p.Mem.internal.v = (p.Mem.internal.v & 0x841F) | (p.Mem.internal.t & 0x7BE0)
 		}
 
 		if renderLine {
 			if fetchCycle && p.Dot%8 == 0 {
 				// x increment
-				if p.mem.internal.v&0x001F == 31 {
-					p.mem.internal.v &= 0xFFE0
-					p.mem.internal.v ^= 0x400
+				if p.Mem.internal.v&0x001F == 31 {
+					p.Mem.internal.v &= 0xFFE0
+					p.Mem.internal.v ^= 0x400
 				} else {
-					p.mem.internal.v++
+					p.Mem.internal.v++
 				}
 			}
 			if p.Dot == 257 {
-				p.mem.internal.v = (p.mem.internal.v & 0xFBE0) | (p.mem.internal.t & 0x041F)
+				p.Mem.internal.v = (p.Mem.internal.v & 0xFBE0) | (p.Mem.internal.t & 0x041F)
 			}
 
 			if p.Dot == 256 {
 				// y increment
-				if p.mem.internal.v&0x7000 != 0x7000 {
-					p.mem.internal.v += 0x1000
+				if p.Mem.internal.v&0x7000 != 0x7000 {
+					p.Mem.internal.v += 0x1000
 				} else {
-					p.mem.internal.v &= 0x8FFF
+					p.Mem.internal.v &= 0x8FFF
 
-					y := (p.mem.internal.v & 0x03E0) >> 5
+					y := (p.Mem.internal.v & 0x03E0) >> 5
 
 					switch y {
 					case 29:
 						y = 0
-						p.mem.internal.v ^= 0x0800
+						p.Mem.internal.v ^= 0x0800
 
 					case 31:
 						y = 0
@@ -139,7 +139,7 @@ func (p *ppu) step() {
 						y++
 					}
 
-					p.mem.internal.v = (p.mem.internal.v & 0xFC1F) | (y << 5)
+					p.Mem.internal.v = (p.Mem.internal.v & 0xFC1F) | (y << 5)
 				}
 
 			}
@@ -152,23 +152,23 @@ func (p *ppu) step() {
 				p.evalSprites()
 
 			} else {
-				p.mem.temp.sprintCount = 0
+				p.Mem.temp.sprintCount = 0
 			}
 		}
 	}
 
 	if p.Scanline == 241 && p.Dot == 1 {
-		p.mem.Vblank_flag = true
-		if p.mem.register.NmiEnable {
+		p.Mem.Vblank_flag = true
+		if p.Mem.register.NmiEnable {
 			p.console.Cpu.nmiPending = true
 			// fmt.Println("requesting nmi", p.console.Cpu.TotalCycles)
 		}
 	}
 
 	if prefetch && p.Dot == 1 {
-		p.mem.Vblank_flag = false
-		p.mem.register.Sprite0Hit = false
-		p.mem.register.sprietOverflow = false
+		p.Mem.Vblank_flag = false
+		p.Mem.register.Sprite0Hit = false
+		p.Mem.register.sprietOverflow = false
 	}
 
 	p.cycleTick()
@@ -176,7 +176,7 @@ func (p *ppu) step() {
 
 func (p *ppu) evalSprites() {
 	var h int
-	if !p.mem.register.SpriteSize {
+	if !p.Mem.register.SpriteSize {
 		h = 8
 	} else {
 		h = 16
@@ -185,9 +185,9 @@ func (p *ppu) evalSprites() {
 	count := 0
 
 	for i := range 64 {
-		y := p.mem.oamData[i*4+0]
-		a := p.mem.oamData[i*4+2]
-		x := p.mem.oamData[i*4+3]
+		y := p.Mem.oamData[i*4+0]
+		a := p.Mem.oamData[i*4+2]
+		x := p.Mem.oamData[i*4+3]
 
 		row := p.Scanline - int(y)
 
@@ -196,33 +196,33 @@ func (p *ppu) evalSprites() {
 		}
 
 		if count < 8 {
-			p.mem.temp.spritePatterns[count] = p.fetchSpritePattern(i, row)
-			p.mem.temp.spritePos[count] = x
-			p.mem.temp.spritePriorities[count] = (a >> 5) & 1
-			p.mem.temp.spriteIdx[count] = uint8(i)
+			p.Mem.temp.spritePatterns[count] = p.fetchSpritePattern(i, row)
+			p.Mem.temp.spritePos[count] = x
+			p.Mem.temp.spritePriorities[count] = (a >> 5) & 1
+			p.Mem.temp.spriteIdx[count] = uint8(i)
 		}
 		count++
 	}
 
 	if count > 8 {
 		count = 8
-		p.mem.register.sprietOverflow = true
+		p.Mem.register.sprietOverflow = true
 	}
 
-	p.mem.temp.sprintCount = count
+	p.Mem.temp.sprintCount = count
 }
 
 func (p *ppu) fetchSpritePattern(i, row int) uint32 {
-	tile := p.mem.oamData[i*4+1]
-	attr := p.mem.oamData[i*4+2]
+	tile := p.Mem.oamData[i*4+1]
+	attr := p.Mem.oamData[i*4+2]
 
 	var addr uint16
-	if !p.mem.register.SpriteSize { //small(8)
+	if !p.Mem.register.SpriteSize { //small(8)
 		if attr&0x80 == 0x80 {
 			row = 7 - row
 		}
 
-		table := getTableAddr(p.mem.register.SpritePattern)
+		table := getTableAddr(p.Mem.register.SpritePattern)
 		addr = 0x1000*uint16(table) + uint16(tile)*16 + uint16(row)
 	} else { //big (16)
 		if attr&0x80 == 0x80 {
@@ -281,11 +281,11 @@ func (p *ppu) renderPixel() {
 	bg := p.getBgPixel()
 	i, sprite := p.getSpritePixel()
 
-	if x < 8 && !p.mem.register.ShowLeftBG {
+	if x < 8 && !p.Mem.register.ShowLeftBG {
 		bg = 0
 	}
 
-	if x < 8 && !p.mem.register.ShowLeftSprite {
+	if x < 8 && !p.Mem.register.ShowLeftSprite {
 		sprite = 0
 	}
 
@@ -300,12 +300,12 @@ func (p *ppu) renderPixel() {
 	} else if b && !s {
 		color = bg
 	} else {
-		if p.mem.temp.spriteIdx[i] == 0 && x < 255 {
-			p.mem.register.Sprite0Hit = true
+		if p.Mem.temp.spriteIdx[i] == 0 && x < 255 {
+			p.Mem.register.Sprite0Hit = true
 
 		}
 
-		if p.mem.temp.spritePriorities[i] == 0 {
+		if p.Mem.temp.spritePriorities[i] == 0 {
 			color = sprite | 0x10
 		} else {
 			color = bg
@@ -315,7 +315,7 @@ func (p *ppu) renderPixel() {
 	// c := NesPaletteLUT[p.readPallete(uint16(color)%64)]
 	in := p.readPallete(uint16(color) % 64)
 
-	p.pushRGB(p.console.palette[p.mem.register.emphasisIndex][in], x, y)
+	p.pushRGB(p.console.palette[p.Mem.register.emphasisIndex][in], x, y)
 	// p.pushRGB([3]byte{c.R, c.G, c.B}, x, y)
 
 }
@@ -335,12 +335,12 @@ func (p *ppu) readPallete(addr uint16) uint8 {
 		addr -= 16
 	}
 
-	return p.mem.Pallete[addr]
+	return p.Mem.Pallete[addr]
 }
 
 func (p *ppu) getBgPixel() uint8 {
-	if p.mem.register.ShowBG {
-		data := p.fetchTileData() >> ((7 - p.mem.internal.x) * 4)
+	if p.Mem.register.ShowBG {
+		data := p.fetchTileData() >> ((7 - p.Mem.internal.x) * 4)
 		return uint8(data & 0x0F)
 	} else {
 		return 0
@@ -348,19 +348,19 @@ func (p *ppu) getBgPixel() uint8 {
 }
 
 func (p *ppu) getSpritePixel() (uint8, uint8) {
-	if !p.mem.register.ShowSprites {
+	if !p.Mem.register.ShowSprites {
 		return 0, 0
 	}
 
-	for i := range p.mem.temp.sprintCount {
-		offset := p.Dot - 1 - int(p.mem.temp.spritePos[i])
+	for i := range p.Mem.temp.sprintCount {
+		offset := p.Dot - 1 - int(p.Mem.temp.spritePos[i])
 		if offset < 0 || offset > 7 {
 			continue
 		}
 
 		offset = 7 - offset
 
-		color := uint8(p.mem.temp.spritePatterns[i] >> uint8(offset*4) & 0x0F)
+		color := uint8(p.Mem.temp.spritePatterns[i] >> uint8(offset*4) & 0x0F)
 		if color%4 == 0 {
 			continue
 		}
@@ -371,5 +371,5 @@ func (p *ppu) getSpritePixel() (uint8, uint8) {
 }
 
 func (p *ppu) fetchTileData() uint32 {
-	return uint32(p.mem.temp.tileData >> 32)
+	return uint32(p.Mem.temp.tileData >> 32)
 }

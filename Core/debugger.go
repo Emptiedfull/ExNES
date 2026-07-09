@@ -34,7 +34,7 @@ type ScreenInfo struct {
 	Buffer []uint8
 }
 
-type cpustate struct {
+type Cpustate struct {
 	Pc     uint16    `json:"pc"`
 	S      uint8     `json:"s"`
 	A      uint8     `json:"a"`

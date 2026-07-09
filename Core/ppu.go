@@ -8,7 +8,7 @@ import (
 //for any readers, please stop here I barely understand what ive done
 
 type ppu struct {
-	mem     ppu_mem
+	Mem     ppu_Mem
 	console *Console
 
 	Dot      int
@@ -81,7 +81,7 @@ type RGB struct {
 	R, G, B uint8
 }
 
-type ppu_mem struct {
+type ppu_Mem struct {
 	CHR_isRam bool
 
 	Vram    [2048]uint8
@@ -142,9 +142,9 @@ func (p *ppu) reset() {
 	p.Scanline = 0
 	p.Frame = 0
 
-	isRam := p.mem.CHR_isRam
-	p.mem = ppu_mem{}
-	p.mem.CHR_isRam = isRam
+	isRam := p.Mem.CHR_isRam
+	p.Mem = ppu_Mem{}
+	p.Mem.CHR_isRam = isRam
 
 	if p.BackBuffer != nil {
 		clear(p.BackBuffer)
@@ -184,14 +184,14 @@ func (p *ppu) read(addr uint16) uint8 {
 	case addr <= 0x3EFF:
 
 		mirrored := p.MirrorNameTable(addr)
-		return p.mem.Vram[mirrored]
+		return p.Mem.Vram[mirrored]
 	case addr <= 0x3FFF:
 		palleteAddr := (addr - 0x3F00) % 32
 
 		isSpriteMirror := BoolToUint16(palleteAddr >= 16) & BoolToUint16(palleteAddr%4 == 0)
 		palleteAddr -= 16 * isSpriteMirror
 
-		return p.mem.Pallete[palleteAddr]
+		return p.Mem.Pallete[palleteAddr]
 	}
 	return 0
 }
@@ -206,7 +206,7 @@ func (p *ppu) Write(addr uint16, val uint8) {
 	case addr <= 0x3EFF:
 		mirroredaddr := p.MirrorNameTable(addr)
 
-		p.mem.Vram[mirroredaddr] = val
+		p.Mem.Vram[mirroredaddr] = val
 	case addr <= 0x3FFF:
 		palleteAddr := (addr - 0x3F00) % 32
 
@@ -214,7 +214,7 @@ func (p *ppu) Write(addr uint16, val uint8) {
 			palleteAddr -= 16
 		}
 
-		p.mem.Pallete[palleteAddr] = val
+		p.Mem.Pallete[palleteAddr] = val
 	}
 }
 
@@ -224,46 +224,46 @@ func (p *ppu) ReadReg(reg uint16, openBusVal uint8) uint8 {
 		var result uint8
 		result |= (openBusVal & 0x1F)
 
-		result = AssignBit(result, 6, p.mem.register.Sprite0Hit)
-		result = AssignBit(result, 5, p.mem.register.sprietOverflow)
+		result = AssignBit(result, 6, p.Mem.register.Sprite0Hit)
+		result = AssignBit(result, 5, p.Mem.register.sprietOverflow)
 
-		if p.mem.Vblank_flag {
+		if p.Mem.Vblank_flag {
 			result = AssignBit(result, 7, true)
 
 		}
 
-		p.mem.Vblank_flag = false
-		p.mem.internal.w = false
+		p.Mem.Vblank_flag = false
+		p.Mem.internal.w = false
 
 		return result
 	case 4:
-		data := p.mem.oamData[p.mem.register.OAMADDR]
+		data := p.Mem.oamData[p.Mem.register.OAMADDR]
 
-		if (p.mem.register.OAMADDR & 0x03) == 0x02 {
+		if (p.Mem.register.OAMADDR & 0x03) == 0x02 {
 			data = data & 0xE3
 		}
 
 		return data
 
 	case 7:
-		val := p.read(p.mem.internal.v)
+		val := p.read(p.Mem.internal.v)
 
-		if p.mem.internal.v%0x4000 < 0x3F00 {
-			buffered := p.mem.register.bufferedData
-			p.mem.register.bufferedData = val
+		if p.Mem.internal.v%0x4000 < 0x3F00 {
+			buffered := p.Mem.register.bufferedData
+			p.Mem.register.bufferedData = val
 			val = buffered
 		} else {
-			p.mem.register.bufferedData = p.read(p.mem.internal.v - 0x1000)
+			p.Mem.register.bufferedData = p.read(p.Mem.internal.v - 0x1000)
 
 			val = (val & 0x3F) | (openBusVal & 0xC0)
 		}
 
-		if p.mem.register.AddrIncrement {
-			p.mem.internal.v += 32
+		if p.Mem.register.AddrIncrement {
+			p.Mem.internal.v += 32
 		} else {
-			p.mem.internal.v += 1
+			p.Mem.internal.v += 1
 		}
-		p.mem.internal.v &= 0x3FFF
+		p.Mem.internal.v &= 0x3FFF
 
 		return val
 	default:
@@ -275,77 +275,77 @@ func (p *ppu) WriteReg(reg uint16, val uint8) {
 	switch reg {
 	case 0: //PPUCTRL
 
-		p.mem.register.NmiEnable = getbitBool(val, 7)
-		p.mem.register.SpriteSize = getbitBool(val, 5)
-		p.mem.register.BgPattern = getbitBool(val, 4)
-		p.mem.register.SpritePattern = getbitBool(val, 3)
+		p.Mem.register.NmiEnable = getbitBool(val, 7)
+		p.Mem.register.SpriteSize = getbitBool(val, 5)
+		p.Mem.register.BgPattern = getbitBool(val, 4)
+		p.Mem.register.SpritePattern = getbitBool(val, 3)
 
-		p.mem.register.AddrIncrement = getbitBool(val, 2)
+		p.Mem.register.AddrIncrement = getbitBool(val, 2)
 
-		p.mem.register.BaseNameTable = val & 0x03
+		p.Mem.register.BaseNameTable = val & 0x03
 
-		p.mem.internal.t = (p.mem.internal.t & 0xF3FF) | ((uint16(val) & 0x03) << 10)
+		p.Mem.internal.t = (p.Mem.internal.t & 0xF3FF) | ((uint16(val) & 0x03) << 10)
 
 	case 1: //PPU MASK
-		p.mem.register.EmpBlue = getbitBool(val, 7)
-		p.mem.register.EmpGreen = getbitBool(val, 6)
-		p.mem.register.EmpRed = getbitBool(val, 5)
-		p.mem.register.ShowSprites = getbitBool(val, 4)
-		p.mem.register.ShowBG = getbitBool(val, 3)
-		p.mem.register.ShowLeftSprite = getbitBool(val, 2)
-		p.mem.register.ShowLeftBG = getbitBool(val, 1)
-		p.mem.register.GreyScale = getbitBool(val, 0)
+		p.Mem.register.EmpBlue = getbitBool(val, 7)
+		p.Mem.register.EmpGreen = getbitBool(val, 6)
+		p.Mem.register.EmpRed = getbitBool(val, 5)
+		p.Mem.register.ShowSprites = getbitBool(val, 4)
+		p.Mem.register.ShowBG = getbitBool(val, 3)
+		p.Mem.register.ShowLeftSprite = getbitBool(val, 2)
+		p.Mem.register.ShowLeftBG = getbitBool(val, 1)
+		p.Mem.register.GreyScale = getbitBool(val, 0)
 
 		empId := 0
-		if p.mem.register.EmpRed {
+		if p.Mem.register.EmpRed {
 			empId |= 0
 		}
 
-		if p.mem.register.EmpGreen {
+		if p.Mem.register.EmpGreen {
 			empId |= 2
 		}
 
-		if p.mem.register.EmpBlue {
+		if p.Mem.register.EmpBlue {
 			empId |= 4
 		}
 
-		p.mem.register.emphasisIndex = empId
+		p.Mem.register.emphasisIndex = empId
 	case 3: //PPU OAMADDR
-		p.mem.register.OAMADDR = val
+		p.Mem.register.OAMADDR = val
 	case 4: //PPU OAMDATA
-		p.mem.oamData[p.mem.register.OAMADDR] = val
-		p.mem.register.OAMADDR++
+		p.Mem.oamData[p.Mem.register.OAMADDR] = val
+		p.Mem.register.OAMADDR++
 	case 5:
-		if !p.mem.internal.w {
-			p.mem.internal.t = (p.mem.internal.t & 0xFFE0) | (uint16(val) >> 3)
-			p.mem.internal.x = val & 0x07
+		if !p.Mem.internal.w {
+			p.Mem.internal.t = (p.Mem.internal.t & 0xFFE0) | (uint16(val) >> 3)
+			p.Mem.internal.x = val & 0x07
 
 		} else {
-			p.mem.internal.t = (p.mem.internal.t & 0x8FFF) | ((uint16(val) & 0x07) << 12)
-			p.mem.internal.t = (p.mem.internal.t & 0xFC1F) | ((uint16(val) & 0xF8) << 2)
+			p.Mem.internal.t = (p.Mem.internal.t & 0x8FFF) | ((uint16(val) & 0x07) << 12)
+			p.Mem.internal.t = (p.Mem.internal.t & 0xFC1F) | ((uint16(val) & 0xF8) << 2)
 
 		}
-		p.mem.internal.w = !p.mem.internal.w
+		p.Mem.internal.w = !p.Mem.internal.w
 	case 6:
-		if !p.mem.internal.w {
-			p.mem.internal.t = (p.mem.internal.t & 0x00FF) | (uint16(val&0x3F) << 8)
+		if !p.Mem.internal.w {
+			p.Mem.internal.t = (p.Mem.internal.t & 0x00FF) | (uint16(val&0x3F) << 8)
 
 		} else {
-			p.mem.internal.t = (p.mem.internal.t & 0xFF00) | uint16(val)
-			p.mem.internal.v = p.mem.internal.t
+			p.Mem.internal.t = (p.Mem.internal.t & 0xFF00) | uint16(val)
+			p.Mem.internal.v = p.Mem.internal.t
 
 		}
-		p.mem.internal.w = !p.mem.internal.w
+		p.Mem.internal.w = !p.Mem.internal.w
 	case 7:
-		p.Write(p.mem.internal.v, val)
+		p.Write(p.Mem.internal.v, val)
 
-		if p.mem.register.AddrIncrement {
-			p.mem.internal.v += 32
+		if p.Mem.register.AddrIncrement {
+			p.Mem.internal.v += 32
 		} else {
-			p.mem.internal.v += 1
+			p.Mem.internal.v += 1
 		}
 
-		p.mem.internal.v &= 0x3FFF
+		p.Mem.internal.v &= 0x3FFF
 	}
 }
 
@@ -354,10 +354,10 @@ func (console *Console) ExecuteOAMDMA(page uint8) {
 	cpuSrc := uint(page) << 8
 
 	for i := uint16(0); i < 256; i++ {
-		dat := console.Cpu.mem.Read(uint16(cpuSrc) + i)
+		dat := console.Cpu.Mem.Read(uint16(cpuSrc) + i)
 
-		console.Ppu.mem.oamData[console.Ppu.mem.register.OAMADDR] = dat
-		console.Ppu.mem.register.OAMADDR++
+		console.Ppu.Mem.oamData[console.Ppu.Mem.register.OAMADDR] = dat
+		console.Ppu.Mem.register.OAMADDR++
 	}
 
 	cycles := 513

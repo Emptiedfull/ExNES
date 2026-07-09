@@ -8,7 +8,7 @@ type opCode struct {
 	Name           string                      `json:"name"`
 	AddressingMode addressingMode              `json:"mode"`
 	Size           uint8                       `json:"size"`
-	Execute        func(c *cpu, step int) bool `json:"-"`
+	Execute        func(c *Cpu, step int) bool `json:"-"`
 }
 
 var FetchTable = []opCode{
@@ -16,7 +16,7 @@ var FetchTable = []opCode{
 		Name:           "BRK",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.fetchone()
@@ -35,11 +35,11 @@ var FetchTable = []opCode{
 				c.setFlag(Interrupt)
 				return false
 			case 4:
-				c.temp.low = c.mem.Read(0xFFFE)
+				c.temp.low = c.Mem.Read(0xFFFE)
 
 				return false
 			case 5:
-				c.temp.high = c.mem.Read(0xFFFF)
+				c.temp.high = c.Mem.Read(0xFFFF)
 				c.PC = builduint16(c.low, c.high)
 				return true
 			default:
@@ -53,7 +53,7 @@ var FetchTable = []opCode{
 		Name:           "ORA",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone() //zero-page base addr
@@ -62,14 +62,14 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 4:
 				baseAddr := builduint16(c.temp.low, c.temp.high)
-				val := c.mem.Read(baseAddr)
+				val := c.Mem.Read(baseAddr)
 				c.A |= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -83,7 +83,7 @@ var FetchTable = []opCode{
 		Name:           "JAM",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 
 			c.isJamming = true
 
@@ -95,7 +95,7 @@ var FetchTable = []opCode{
 		Name:           "SLO",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -104,20 +104,20 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
-				c.low = c.mem.Read(uint16(c.temp.pointer))
+				c.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
-				c.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				c.temp.addr = builduint16(c.low, c.high)
 				return false
 			case 4:
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 5:
 				c.temp.val = c.ASL(c.val)
 				return false
 			case 6:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A |= c.val
 				c.SetFlagNZ(c.A)
@@ -135,7 +135,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.fetchone()
@@ -153,13 +153,13 @@ var FetchTable = []opCode{
 		Name:           "ORA",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.A |= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -173,13 +173,13 @@ var FetchTable = []opCode{
 		Name:           "ASL",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
 				var f bool
@@ -192,7 +192,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 3:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				return true
@@ -204,19 +204,19 @@ var FetchTable = []opCode{
 		Name:           "SLO",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.val = c.mem.Read(uint16(c.temp.pointer))
+				c.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
 				c.val = c.ASL(c.val)
 				return false
 			case 3:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 
 				c.A |= c.val
 				c.SetFlagNZ(c.A)
@@ -232,7 +232,7 @@ var FetchTable = []opCode{
 		Name:           "PHP impl",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				return false
@@ -249,7 +249,7 @@ var FetchTable = []opCode{
 		Name:           "ORA",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 			c.A |= val
 			c.SetFlagNZ(c.A)
@@ -261,7 +261,7 @@ var FetchTable = []opCode{
 		Name:           "ASL A",
 		AddressingMode: Accumulator,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			var f bool
 			c.A, f = performASL(c.A)
 			if f {
@@ -277,7 +277,7 @@ var FetchTable = []opCode{
 		Name:           "ANC",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 
 			c.A &= val
@@ -292,7 +292,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -313,7 +313,7 @@ var FetchTable = []opCode{
 		Name:           "ORA",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -323,7 +323,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
-				c.A |= c.mem.Read(addr)
+				c.A |= c.Mem.Read(addr)
 				c.SetFlagNZ(c.A)
 				return true
 			default:
@@ -335,7 +335,7 @@ var FetchTable = []opCode{
 		Name:           "ASL",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -344,7 +344,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				c.temp.val = c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				c.temp.val = c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				return false
 			case 3:
 				var carry bool
@@ -353,7 +353,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(builduint16(c.temp.low, c.temp.high), c.temp.val)
+				c.Mem.Write(builduint16(c.temp.low, c.temp.high), c.temp.val)
 				return true
 			default:
 				return true
@@ -366,7 +366,7 @@ var FetchTable = []opCode{
 		Name:           "SLO",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -376,13 +376,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.temp.low, c.temp.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 3:
 				c.val = c.ASL(c.val)
 				return false
 			case 4:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A |= c.val
 				c.SetFlagNZ(c.A)
@@ -400,7 +400,7 @@ var FetchTable = []opCode{
 		Name:           "BPL",
 		AddressingMode: Relative,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.val = c.fetchone()
@@ -433,16 +433,16 @@ var FetchTable = []opCode{
 		Name:           "ORA",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16((c.temp.pointer + 1) & 0xFF))
+				c.temp.high = c.Mem.Read(uint16((c.temp.pointer + 1) & 0xFF))
 				return false
 			case 3:
 				baseAddr := (uint16(c.temp.high)<<8 | uint16(c.temp.low))
@@ -455,7 +455,7 @@ var FetchTable = []opCode{
 				fallthrough
 
 			case 4:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A |= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -470,7 +470,7 @@ var FetchTable = []opCode{
 		Name:           "JAM",
 		AddressingMode: Implied,
 		Size:           10,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 
 			return true
@@ -481,29 +481,29 @@ var FetchTable = []opCode{
 		Name:           "SLO IND Y",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 3:
 				baseAddr := builduint16(c.low, c.high)
 				c.addr = baseAddr + uint16(c.Y)
 				return false
 			case 4:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
 				c.val = c.ASL(c.val)
 				return false
 			case 6:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A |= c.val
 				c.SetFlagNZ(c.A)
@@ -519,7 +519,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -540,7 +540,7 @@ var FetchTable = []opCode{
 		Name:           "ORA",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -549,7 +549,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.A |= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -563,7 +563,7 @@ var FetchTable = []opCode{
 		Name:           "ASL Oper,X",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -572,7 +572,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
 				var carry bool
@@ -581,7 +581,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				return true
@@ -593,7 +593,7 @@ var FetchTable = []opCode{
 		Name:           "SLO",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -602,13 +602,13 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
 				c.val = c.ASL(c.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 
 				c.A |= c.val
 				c.SetFlagNZ(c.A)
@@ -625,7 +625,7 @@ var FetchTable = []opCode{
 		Name:           "CLC",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.clearFlag(Carry)
 			return true
 		},
@@ -635,7 +635,7 @@ var FetchTable = []opCode{
 		Name:           "ORA ABS,Y",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -654,7 +654,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A |= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -669,7 +669,7 @@ var FetchTable = []opCode{
 	0x1A: {
 		Name:           "NOP",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			return true
 		},
 	},
@@ -678,7 +678,7 @@ var FetchTable = []opCode{
 		Name:           "SLO",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 
 			case 0:
@@ -691,13 +691,13 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
 				c.val = c.ASL(c.val)
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A |= c.val
 				c.SetFlagNZ(c.A)
@@ -713,7 +713,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -743,7 +743,7 @@ var FetchTable = []opCode{
 		Name:           "ORA",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -762,7 +762,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A |= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -778,7 +778,7 @@ var FetchTable = []opCode{
 		Name:           "ASL",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -791,7 +791,7 @@ var FetchTable = []opCode{
 				c.temp.addr = baseAddr + uint16(c.X)
 				return false
 			case 3:
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
 				var carry bool
@@ -800,7 +800,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 5:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Println("something bad at 0x1E")
@@ -813,7 +813,7 @@ var FetchTable = []opCode{
 		Name:           "SLO",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -825,13 +825,13 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.X)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
 				c.val = c.ASL(c.val)
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A |= c.val
 				c.SetFlagNZ(c.A)
@@ -850,7 +850,7 @@ var FetchTable = []opCode{
 		Name:           "JSR",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -879,7 +879,7 @@ var FetchTable = []opCode{
 		Name:           "AND",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -888,14 +888,14 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 4:
 				baseAddr := builduint16(c.temp.low, c.temp.high)
-				val := c.mem.Read(baseAddr)
+				val := c.Mem.Read(baseAddr)
 				c.A &= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -910,7 +910,7 @@ var FetchTable = []opCode{
 		Name:           "JAM",
 		AddressingMode: Implied,
 		Size:           10,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 
 			return true
@@ -921,30 +921,30 @@ var FetchTable = []opCode{
 		Name:           "RLA",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Read(uint16(c.temp.pointer))
+				c.Mem.Read(uint16(c.temp.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 4:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
 				c.val = c.ROL(c.val)
 				return false
 			case 6:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				c.A &= c.val
 				c.SetFlagNZ(c.A)
 				return true
@@ -959,13 +959,13 @@ var FetchTable = []opCode{
 		Name:           "BITS",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 
 				c.updateFlag(Zero, (c.A&val) == 0)
 				c.updateFlag(Negative, (val&0x80) != 0)
@@ -982,13 +982,13 @@ var FetchTable = []opCode{
 		Name:           "AND",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.A &= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -1002,13 +1002,13 @@ var FetchTable = []opCode{
 		Name:           "ROL",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
 
@@ -1016,7 +1016,7 @@ var FetchTable = []opCode{
 
 				return false
 			case 3:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				c.SetFlagNZ(c.val)
 				return true
 			default:
@@ -1031,19 +1031,19 @@ var FetchTable = []opCode{
 		Name:           "RLA",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.val = c.mem.Read(uint16(c.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
 				c.val = c.ROL(c.val)
 				return false
 			case 3:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 
 				c.A &= c.val
 				c.SetFlagNZ(c.A)
@@ -1059,7 +1059,7 @@ var FetchTable = []opCode{
 		Name:           "PLP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				return false
@@ -1078,7 +1078,7 @@ var FetchTable = []opCode{
 		Name:           "AND",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 			c.A &= val
 			c.SetFlagNZ(c.A)
@@ -1088,7 +1088,7 @@ var FetchTable = []opCode{
 		Name:           "ROL",
 		AddressingMode: Accumulator,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			var carry bool
 			c.A, carry = performROL(c.A, c.getFlag(Carry))
 			c.updateFlag(Carry, carry)
@@ -1101,7 +1101,7 @@ var FetchTable = []opCode{
 		Name:           "ANC",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 
 			c.A &= val
@@ -1116,7 +1116,7 @@ var FetchTable = []opCode{
 		Name:           "BITS",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1125,7 +1125,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 
 				c.updateFlag(Zero, (c.A&val) == 0)
 				c.updateFlag(Negative, (val&0x80) != 0)
@@ -1143,7 +1143,7 @@ var FetchTable = []opCode{
 		Name:           "AND",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1153,7 +1153,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
-				val := c.mem.Read(addr)
+				val := c.Mem.Read(addr)
 
 				c.A &= val
 				c.SetFlagNZ(c.A)
@@ -1170,7 +1170,7 @@ var FetchTable = []opCode{
 		Name:           "ROL",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1180,7 +1180,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.temp.addr = builduint16(c.temp.low, c.temp.high)
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 3:
 				var carry bool
@@ -1189,7 +1189,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Println("soemthing gap at 2E")
@@ -1202,7 +1202,7 @@ var FetchTable = []opCode{
 		Name:           "RLA",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -1212,13 +1212,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 3:
 				c.val = c.ROL(c.val)
 				return false
 			case 4:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A &= c.val
 				c.SetFlagNZ(c.A)
@@ -1237,7 +1237,7 @@ var FetchTable = []opCode{
 		Name:           "BMI",
 		AddressingMode: Relative,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.val = c.fetchone()
@@ -1270,16 +1270,16 @@ var FetchTable = []opCode{
 		Name:           "AND",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 3:
 				base := builduint16(c.temp.low, c.temp.high)
@@ -1291,7 +1291,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 4:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A &= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -1306,7 +1306,7 @@ var FetchTable = []opCode{
 		Name:           "JAM",
 		AddressingMode: Implied,
 		Size:           10,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 
 			return true
@@ -1317,28 +1317,28 @@ var FetchTable = []opCode{
 		Name:           "RLA IND Y",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 4:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
 				c.val = c.ROL(c.val)
 				return false
 			case 6:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A &= c.val
 				c.SetFlagNZ(c.A)
@@ -1354,7 +1354,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -1375,7 +1375,7 @@ var FetchTable = []opCode{
 		Name:           "AND",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -1384,7 +1384,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.A &= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -1399,7 +1399,7 @@ var FetchTable = []opCode{
 		Name:           "ROL",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -1408,13 +1408,13 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
 				c.val = c.ROL(c.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				c.SetFlagNZ(c.val)
 				return true
 			default:
@@ -1429,7 +1429,7 @@ var FetchTable = []opCode{
 		Name:           "RLA",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -1438,13 +1438,13 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
 				c.val = c.ROL(c.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 
 				c.A &= c.val
 				c.SetFlagNZ(c.A)
@@ -1461,7 +1461,7 @@ var FetchTable = []opCode{
 		Name:           "SEC",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.setFlag(Carry)
 			return true
 		},
@@ -1470,7 +1470,7 @@ var FetchTable = []opCode{
 		Name:           "AND",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1486,7 +1486,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 3:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A &= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -1501,7 +1501,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			return true
 		},
 	},
@@ -1510,7 +1510,7 @@ var FetchTable = []opCode{
 		Name:           "RLA",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -1522,13 +1522,13 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
 				c.val = c.ROL(c.val)
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A &= c.val
 				c.SetFlagNZ(c.A)
@@ -1545,7 +1545,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1575,7 +1575,7 @@ var FetchTable = []opCode{
 		Name:           "AND",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1591,7 +1591,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 3:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A &= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -1605,7 +1605,7 @@ var FetchTable = []opCode{
 		Name:           "ROL ABS,X",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1618,7 +1618,7 @@ var FetchTable = []opCode{
 				c.temp.addr += uint16(c.X)
 				return false
 			case 3:
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
 				var carry bool
@@ -1627,7 +1627,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 5:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Println("something bad at 0x3E")
@@ -1640,7 +1640,7 @@ var FetchTable = []opCode{
 		Name:           "RLA",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -1652,13 +1652,13 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.X)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
 				c.val = c.ROL(c.val)
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A &= c.val
 				c.SetFlagNZ(c.A)
@@ -1677,7 +1677,7 @@ var FetchTable = []opCode{
 		Name:           "RTI",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				return false
@@ -1705,7 +1705,7 @@ var FetchTable = []opCode{
 		Name:           "EOR",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -1714,13 +1714,13 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 4:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.A ^= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -1734,7 +1734,7 @@ var FetchTable = []opCode{
 	0x42: {
 		Name:           "JAM",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 
 			return true
@@ -1745,7 +1745,7 @@ var FetchTable = []opCode{
 		Name:           "SRE",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -1754,20 +1754,20 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 4:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
 				c.val = c.LSR(c.val)
 				return false
 			case 6:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A ^= c.val
 				c.SetFlagNZ(c.A)
@@ -1783,7 +1783,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.fetchone()
@@ -1801,13 +1801,13 @@ var FetchTable = []opCode{
 		Name:           "EOR",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.A ^= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -1820,13 +1820,13 @@ var FetchTable = []opCode{
 		Name:           "LSR",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
 				var carry bool
@@ -1835,7 +1835,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 3:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				fmt.Println("something bad at 0x46")
@@ -1848,19 +1848,19 @@ var FetchTable = []opCode{
 		Name:           "SRE",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
 				c.val = c.LSR(c.val)
 				return false
 			case 3:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 
 				c.A ^= c.val
 				c.SetFlagNZ(c.A)
@@ -1877,7 +1877,7 @@ var FetchTable = []opCode{
 		Name:           "PHA",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				return false
@@ -1893,7 +1893,7 @@ var FetchTable = []opCode{
 		Name:           "EOR",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 			c.A ^= val
 			c.SetFlagNZ(c.A)
@@ -1903,7 +1903,7 @@ var FetchTable = []opCode{
 		Name:           "LSR",
 		AddressingMode: Accumulator,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			var carry bool
 			c.A, carry = performLSR(c.A)
 			c.updateFlag(Carry, carry)
@@ -1916,7 +1916,7 @@ var FetchTable = []opCode{
 		Name:           "ALR",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 			mid := c.A & val
 
@@ -1931,7 +1931,7 @@ var FetchTable = []opCode{
 		Name:           "JMP",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1954,7 +1954,7 @@ var FetchTable = []opCode{
 		Name:           "EOR",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1963,7 +1963,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.A ^= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -1976,7 +1976,7 @@ var FetchTable = []opCode{
 		Name:           "LSR",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -1986,7 +1986,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.temp.addr = builduint16(c.temp.low, c.temp.high)
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 3:
 				var carry bool
@@ -1995,7 +1995,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Print("bad 0x4E")
@@ -2008,7 +2008,7 @@ var FetchTable = []opCode{
 		Name:           "SRE",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -2018,13 +2018,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 3:
 				c.val = c.LSR(c.val)
 				return false
 			case 4:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A ^= c.val
 				c.SetFlagNZ(c.A)
@@ -2042,7 +2042,7 @@ var FetchTable = []opCode{
 		Name:           "BVC",
 		AddressingMode: Relative,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.val = c.fetchone()
@@ -2074,16 +2074,16 @@ var FetchTable = []opCode{
 		Name:           "EOR",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 3:
 				addr := builduint16(c.temp.low, c.temp.high)
@@ -2094,7 +2094,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 4:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A ^= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -2108,7 +2108,7 @@ var FetchTable = []opCode{
 	0x52: {
 		Name:           "JAM",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 			return true
 		},
@@ -2118,28 +2118,28 @@ var FetchTable = []opCode{
 		Name:           "SRE",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 4:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
 				c.val = c.LSR(c.val)
 				return false
 			case 6:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A ^= c.val
 				c.SetFlagNZ(c.A)
@@ -2156,7 +2156,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.fetchone()
@@ -2176,7 +2176,7 @@ var FetchTable = []opCode{
 		Name:           "EOR",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -2185,7 +2185,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.A ^= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -2199,7 +2199,7 @@ var FetchTable = []opCode{
 		Name:           "LSR",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -2208,7 +2208,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
 				var carry bool
@@ -2217,7 +2217,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				fmt.Println("bad at 0x56")
@@ -2230,7 +2230,7 @@ var FetchTable = []opCode{
 		Name:           "SRE",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -2239,13 +2239,13 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
 				c.val = c.LSR(c.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 
 				c.A ^= c.val
 				c.SetFlagNZ(c.A)
@@ -2262,7 +2262,7 @@ var FetchTable = []opCode{
 		Name:           "CLI",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.clearFlag(Interrupt)
 			return true
 		},
@@ -2271,7 +2271,7 @@ var FetchTable = []opCode{
 		Name:           "EOR",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -2289,7 +2289,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A ^= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -2304,7 +2304,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			return true
 		},
 	},
@@ -2313,7 +2313,7 @@ var FetchTable = []opCode{
 		Name:           "SRE ABS Y",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -2325,13 +2325,13 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
 				c.val = c.LSR(c.val)
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A ^= c.val
 				c.SetFlagNZ(c.A)
@@ -2347,7 +2347,7 @@ var FetchTable = []opCode{
 		Name:           "NOP ABS X",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -2377,7 +2377,7 @@ var FetchTable = []opCode{
 		Name:           "EOR",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -2395,7 +2395,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A ^= val
 				c.SetFlagNZ(c.A)
 				return true
@@ -2408,7 +2408,7 @@ var FetchTable = []opCode{
 		Name:           "LSR",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -2421,7 +2421,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.X)
 				return false
 			case 3:
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
 				var carry bool
@@ -2430,7 +2430,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 5:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Println("bad at 0x5E")
@@ -2443,7 +2443,7 @@ var FetchTable = []opCode{
 		Name:           "SRE",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -2455,13 +2455,13 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.X)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
 				c.val = c.LSR(c.val)
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.A ^= c.val
 				c.SetFlagNZ(c.A)
@@ -2479,7 +2479,7 @@ var FetchTable = []opCode{
 		Name:           "RTS",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				return false
@@ -2505,24 +2505,24 @@ var FetchTable = []opCode{
 		Name:           "ADC",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Read(uint16(c.pointer))
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 
 				return false
 			case 2:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 4:
-				c.temp.val = c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				c.temp.val = c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.ADC(c.temp.val)
 				return true
 			default:
@@ -2535,7 +2535,7 @@ var FetchTable = []opCode{
 	0x62: {
 		Name:           "JAM",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 
 			return true
@@ -2546,7 +2546,7 @@ var FetchTable = []opCode{
 		Name:           "RRA",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -2555,21 +2555,21 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.low = c.mem.Read(uint16(c.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
-				c.temp.high = c.mem.Read(uint16(c.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 4:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ROR(c.val)
 				return false
 			case 6:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				c.ADC(c.val)
 				return true
 			default:
@@ -2583,7 +2583,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.fetchone()
@@ -2601,13 +2601,13 @@ var FetchTable = []opCode{
 		Name:           "ADC",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.ADC(val)
 				return true
 			default:
@@ -2620,19 +2620,19 @@ var FetchTable = []opCode{
 		Name:           "ROR",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
 				c.temp.val = c.ROR(c.temp.val)
 				return false
 			case 3:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				fmt.Println("bad at 0x66")
@@ -2645,19 +2645,19 @@ var FetchTable = []opCode{
 		Name:           "RRA",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
 				c.val = c.ROR(c.val)
 				return false
 			case 3:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 
 				c.ADC(c.val)
 				return true
@@ -2673,7 +2673,7 @@ var FetchTable = []opCode{
 		Name:           "PLA",
 		AddressingMode: Accumulator,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				return false
@@ -2693,7 +2693,7 @@ var FetchTable = []opCode{
 		Name:           "ADC",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 			c.ADC(val)
 			return true
@@ -2703,7 +2703,7 @@ var FetchTable = []opCode{
 		Name:           "ROR",
 		AddressingMode: Accumulator,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 
 			c.A = c.ROR(c.A)
 			return true
@@ -2714,7 +2714,7 @@ var FetchTable = []opCode{
 		Name:           "ARR",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 			mid := c.A & val
 
@@ -2732,7 +2732,7 @@ var FetchTable = []opCode{
 		Name:           "JMP IND",
 		AddressingMode: Indirect,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -2743,15 +2743,15 @@ var FetchTable = []opCode{
 			case 2:
 				c.temp.addr = builduint16(c.temp.low, c.temp.high)
 
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 
 				return false
 			case 3:
 				var high uint8
 				if c.temp.low == 0xFF {
-					high = c.mem.Read(c.temp.addr & 0xFF00)
+					high = c.Mem.Read(c.temp.addr & 0xFF00)
 				} else {
-					high = c.mem.Read(c.temp.addr + 1)
+					high = c.Mem.Read(c.temp.addr + 1)
 				}
 
 				c.PC = builduint16(c.temp.val, high)
@@ -2766,7 +2766,7 @@ var FetchTable = []opCode{
 		Name:           "ADC",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -2775,7 +2775,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.ADC(val)
 				return true
 			default:
@@ -2788,7 +2788,7 @@ var FetchTable = []opCode{
 		Name:           "ROR",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -2798,13 +2798,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.temp.addr = builduint16(c.temp.low, c.temp.high)
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 3:
 				c.temp.val = c.ROR(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Println("something bad at 0x6E")
@@ -2817,7 +2817,7 @@ var FetchTable = []opCode{
 		Name:           "RRA",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -2827,13 +2827,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 3:
 				c.val = c.ROR(c.val)
 				return false
 			case 4:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 
 				c.ADC(c.val)
 				return true
@@ -2850,7 +2850,7 @@ var FetchTable = []opCode{
 		Name:           "BVS",
 		AddressingMode: Relative,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.val = c.fetchone()
@@ -2882,16 +2882,16 @@ var FetchTable = []opCode{
 		Name:           "ADC",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16(c.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
 				baseaddr := builduint16(c.temp.low, c.temp.high)
@@ -2903,7 +2903,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 4:
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				c.ADC(c.temp.val)
 				return true
 
@@ -2917,7 +2917,7 @@ var FetchTable = []opCode{
 	0x72: {
 		Name:           "JAM",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 			return true
 		},
@@ -2927,28 +2927,28 @@ var FetchTable = []opCode{
 		Name:           "RRA IND Y",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 4:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
 				c.val = c.ROR(c.val)
 				return false
 			case 6:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				c.ADC(c.val)
 				return true
 			default:
@@ -2962,7 +2962,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -2983,7 +2983,7 @@ var FetchTable = []opCode{
 		Name:           "ADC",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -2992,7 +2992,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.ADC(val)
 				return true
 			default:
@@ -3005,7 +3005,7 @@ var FetchTable = []opCode{
 		Name:           "ROR",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -3014,13 +3014,13 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
 				c.temp.val = c.ROR(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				fmt.Println("bad at 0x76")
@@ -3033,7 +3033,7 @@ var FetchTable = []opCode{
 		Name:           "RRA",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -3042,13 +3042,13 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
 				c.val = c.ROR(c.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				c.ADC(c.val)
 				return true
 			default:
@@ -3062,7 +3062,7 @@ var FetchTable = []opCode{
 		Name:           "SEI",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.setFlag(Interrupt)
 			return true
 		},
@@ -3071,7 +3071,7 @@ var FetchTable = []opCode{
 		Name:           "ADC",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3089,7 +3089,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 3:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.ADC(val)
 				return true
 			default:
@@ -3103,7 +3103,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			return true
 		},
 	},
@@ -3112,7 +3112,7 @@ var FetchTable = []opCode{
 		Name:           "RRA",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3124,13 +3124,13 @@ var FetchTable = []opCode{
 				c.temp.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.temp.addr)
+				c.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
 				c.val = c.ROR(c.val)
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				c.ADC(c.val)
 				return true
 			default:
@@ -3144,7 +3144,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3174,7 +3174,7 @@ var FetchTable = []opCode{
 		Name:           "ADC",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3192,7 +3192,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 3:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.ADC(val)
 				return true
 			default:
@@ -3205,7 +3205,7 @@ var FetchTable = []opCode{
 		Name:           "ROR",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3217,13 +3217,13 @@ var FetchTable = []opCode{
 				c.temp.addr = builduint16(c.temp.low, c.temp.high) + uint16(c.X)
 				return false
 			case 3:
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
 				c.temp.val = c.ROR(c.temp.val)
 				return false
 			case 5:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Println("somethign bad at 0x7E")
@@ -3236,7 +3236,7 @@ var FetchTable = []opCode{
 		Name:           "RRA",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -3248,13 +3248,13 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.X)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
 				c.val = c.ROR(c.val)
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				c.ADC(c.val)
 				return true
 			default:
@@ -3268,7 +3268,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.fetchone()
 			return true
 		},
@@ -3278,7 +3278,7 @@ var FetchTable = []opCode{
 		Name:           "STA",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -3287,14 +3287,14 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 4:
 				adrr := builduint16(c.temp.low, c.temp.high)
-				c.mem.Write(adrr, c.A)
+				c.Mem.Write(adrr, c.A)
 				return true
 			default:
 				fmt.Println("something bad at 0x81")
@@ -3306,7 +3306,7 @@ var FetchTable = []opCode{
 	0x82: {
 		Name:           "NOP",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.fetchone()
 			return true
 		},
@@ -3316,25 +3316,25 @@ var FetchTable = []opCode{
 		Name:           "SAX",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Read(uint16(c.pointer))
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 
 				return false
 			case 2:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				c.val = c.A & c.X
 				return false
 			case 4:
-				c.mem.Write(builduint16(c.low, c.high), c.val)
+				c.Mem.Write(builduint16(c.low, c.high), c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0x83")
@@ -3347,13 +3347,13 @@ var FetchTable = []opCode{
 		Name:           "STY",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Write(uint16(c.temp.pointer), c.Y)
+				c.Mem.Write(uint16(c.temp.pointer), c.Y)
 				return true
 			default:
 				fmt.Println("something bad at 0x84")
@@ -3365,13 +3365,13 @@ var FetchTable = []opCode{
 		Name:           "STA",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Write(uint16(c.temp.pointer), c.A)
+				c.Mem.Write(uint16(c.temp.pointer), c.A)
 				return true
 			default:
 				fmt.Println("something bad at 0x85")
@@ -3383,13 +3383,13 @@ var FetchTable = []opCode{
 		Name:           "STX",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Write(uint16(c.temp.pointer), c.X)
+				c.Mem.Write(uint16(c.temp.pointer), c.X)
 				return true
 			default:
 				fmt.Println("something bad at 0x86")
@@ -3402,14 +3402,14 @@ var FetchTable = []opCode{
 		Name:           "SAX",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
 				c.val = c.A & c.X
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0x87")
@@ -3422,7 +3422,7 @@ var FetchTable = []opCode{
 		Name:           "DEY",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.Y--
 			c.SetFlagNZ(c.Y)
 			return true
@@ -3433,7 +3433,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.fetchone()
 			return true
 		},
@@ -3443,7 +3443,7 @@ var FetchTable = []opCode{
 		Name:           "TXA",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.A = c.X
 			c.SetFlagNZ(c.A)
 			return true
@@ -3454,7 +3454,7 @@ var FetchTable = []opCode{
 		Name:           "ANE",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 
 			imm := c.fetchone()
 
@@ -3471,7 +3471,7 @@ var FetchTable = []opCode{
 		Name:           "STY",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3481,7 +3481,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
-				c.mem.Write(addr, c.Y)
+				c.Mem.Write(addr, c.Y)
 				return true
 			default:
 				fmt.Println("Something bad at 0x8C")
@@ -3493,7 +3493,7 @@ var FetchTable = []opCode{
 		Name:           "STA",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3503,7 +3503,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
-				c.mem.Write(addr, c.A)
+				c.Mem.Write(addr, c.A)
 				return true
 			default:
 				fmt.Println("something bad at 0x8D")
@@ -3516,7 +3516,7 @@ var FetchTable = []opCode{
 		Name:           "STX",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3526,7 +3526,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
-				c.mem.Write(addr, c.X)
+				c.Mem.Write(addr, c.X)
 				return true
 			default:
 				fmt.Println("something bad at 0x8E")
@@ -3539,7 +3539,7 @@ var FetchTable = []opCode{
 		Name:           "SAX",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -3550,7 +3550,7 @@ var FetchTable = []opCode{
 			case 2:
 				c.addr = builduint16(c.low, c.high)
 				c.val = c.A & c.X
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("soemthing wrong at 0x8F")
@@ -3565,7 +3565,7 @@ var FetchTable = []opCode{
 		Name:           "BCC",
 		AddressingMode: Relative,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.val = c.fetchone()
@@ -3599,23 +3599,23 @@ var FetchTable = []opCode{
 		Name:           "STA",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 3:
 				base := builduint16(c.temp.low, c.temp.high)
 				c.temp.addr = base + uint16(c.Y)
 				return false
 			case 4:
-				c.mem.Write(c.temp.addr, c.A)
+				c.Mem.Write(c.temp.addr, c.A)
 				return true
 
 			default:
@@ -3628,7 +3628,7 @@ var FetchTable = []opCode{
 	0x92: {
 		Name:           "JAM",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 			return true
 		},
@@ -3638,19 +3638,19 @@ var FetchTable = []opCode{
 		Name:           "SHA",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
-				c.mem.Read(builduint16(c.low, c.high))
+				c.Mem.Read(builduint16(c.low, c.high))
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 4:
@@ -3662,7 +3662,7 @@ var FetchTable = []opCode{
 				}
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0x93")
@@ -3675,7 +3675,7 @@ var FetchTable = []opCode{
 		Name:           "STY",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -3684,7 +3684,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.mem.Write(uint16(c.temp.pointer), c.Y)
+				c.Mem.Write(uint16(c.temp.pointer), c.Y)
 				return true
 			default:
 				fmt.Print("something bad at 0x94")
@@ -3696,7 +3696,7 @@ var FetchTable = []opCode{
 		Name:           "STA",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -3705,7 +3705,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.mem.Write(uint16(c.temp.pointer), c.A)
+				c.Mem.Write(uint16(c.temp.pointer), c.A)
 				return true
 			default:
 				fmt.Print("something bad at 0x95")
@@ -3715,7 +3715,7 @@ var FetchTable = []opCode{
 	},
 	0x96: {
 		Name: "STX ZP Y",
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -3724,7 +3724,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.Y
 				return false
 			case 2:
-				c.mem.Write(uint16(c.temp.pointer), c.X)
+				c.Mem.Write(uint16(c.temp.pointer), c.X)
 				return true
 			default:
 				fmt.Print("something bad at 0x96")
@@ -3737,7 +3737,7 @@ var FetchTable = []opCode{
 		Name:           "SAX",
 		AddressingMode: ZeroPageY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -3747,7 +3747,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.val = c.A & c.X
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0x97")
@@ -3759,7 +3759,7 @@ var FetchTable = []opCode{
 		Name:           "TYA",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.A = c.Y
 			c.SetFlagNZ(c.A)
 			return true
@@ -3769,7 +3769,7 @@ var FetchTable = []opCode{
 		Name:           "STA",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3782,7 +3782,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.Y)
 				return false
 			case 3:
-				c.mem.Write(c.temp.addr, c.A)
+				c.Mem.Write(c.temp.addr, c.A)
 				return true
 			default:
 				fmt.Println("bad at 0x99")
@@ -3794,7 +3794,7 @@ var FetchTable = []opCode{
 		Name:           "TXS",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.S = c.X
 			return true
 		},
@@ -3804,7 +3804,7 @@ var FetchTable = []opCode{
 		Name:           "TAS",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -3814,7 +3814,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high)
-				c.mem.Read(c.addr)
+				c.Mem.Read(c.addr)
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				c.S = c.A & c.X
 				highbyteModifier := c.high + 1
@@ -3826,7 +3826,7 @@ var FetchTable = []opCode{
 
 				return false
 			case 3:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0x9B")
@@ -3839,7 +3839,7 @@ var FetchTable = []opCode{
 		Name:           "SHY",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -3859,7 +3859,7 @@ var FetchTable = []opCode{
 				}
 
 				dummyAddr := (high << 8) | uint16(eff)
-				c.mem.Read(dummyAddr)
+				c.Mem.Read(dummyAddr)
 				return false
 			case 3:
 				effLow := c.low + c.X
@@ -3873,7 +3873,7 @@ var FetchTable = []opCode{
 
 				targetAddr := (targetHigh << 8) | uint16(effLow)
 
-				c.mem.Write(targetAddr, valToStore)
+				c.Mem.Write(targetAddr, valToStore)
 				return true
 			default:
 				fmt.Println("soemthign wrong at 0x9C")
@@ -3886,7 +3886,7 @@ var FetchTable = []opCode{
 		Name:           "STA",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -3899,7 +3899,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.X)
 				return false
 			case 3:
-				c.mem.Write(c.temp.addr, c.A)
+				c.Mem.Write(c.temp.addr, c.A)
 				return true
 			default:
 				fmt.Println("bad at 0x9D")
@@ -3912,7 +3912,7 @@ var FetchTable = []opCode{
 		Name:           "SHX",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -3932,7 +3932,7 @@ var FetchTable = []opCode{
 				}
 
 				dummyAddr := (high << 8) | uint16(eff)
-				c.mem.Read(dummyAddr)
+				c.Mem.Read(dummyAddr)
 				return false
 			case 3:
 				effLow := c.low + c.Y
@@ -3946,7 +3946,7 @@ var FetchTable = []opCode{
 
 				targetAddr := (targetHigh << 8) | uint16(effLow)
 
-				c.mem.Write(targetAddr, valToStore)
+				c.Mem.Write(targetAddr, valToStore)
 				return true
 			default:
 				fmt.Println("soemthign wrong at 0x9C")
@@ -3959,7 +3959,7 @@ var FetchTable = []opCode{
 		Name:           "SHA",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -3979,7 +3979,7 @@ var FetchTable = []opCode{
 				}
 
 				dummyAddr := (high << 8) | uint16(eff)
-				c.mem.Read(dummyAddr)
+				c.Mem.Read(dummyAddr)
 				return false
 			case 3:
 				effLow := c.low + c.Y
@@ -3993,7 +3993,7 @@ var FetchTable = []opCode{
 
 				targetAddr := (targetHigh << 8) | uint16(effLow)
 
-				c.mem.Write(targetAddr, valToStore)
+				c.Mem.Write(targetAddr, valToStore)
 				return true
 			default:
 				fmt.Println("soemthign wrong at 0x9C")
@@ -4006,7 +4006,7 @@ var FetchTable = []opCode{
 		Name:           "LDY",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.Y = c.fetchone()
 			c.SetFlagNZ(c.Y)
 			return true
@@ -4016,7 +4016,7 @@ var FetchTable = []opCode{
 		Name:           "LDA IND X",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -4025,14 +4025,14 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 4:
 				addr := builduint16(c.temp.low, c.temp.high)
-				val := c.mem.Read(addr)
+				val := c.Mem.Read(addr)
 
 				c.A = val
 				c.SetFlagNZ(c.A)
@@ -4047,7 +4047,7 @@ var FetchTable = []opCode{
 		Name:           "LDX",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.X = c.fetchone()
 			c.SetFlagNZ(c.X)
 			return true
@@ -4057,24 +4057,24 @@ var FetchTable = []opCode{
 		Name:           "LAX",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Read(uint16(c.pointer))
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 				return false
 			case 2:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 4:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 
 				c.A = c.val
 				c.X = c.val
@@ -4091,13 +4091,13 @@ var FetchTable = []opCode{
 		Name:           "LDY",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.Y = val
 				c.SetFlagNZ(c.Y)
 				return true
@@ -4111,13 +4111,13 @@ var FetchTable = []opCode{
 		Name:           "LDA",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.A = val
 				c.SetFlagNZ(c.A)
 				return true
@@ -4131,13 +4131,13 @@ var FetchTable = []opCode{
 		Name:           "LDX",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.X = val
 				c.SetFlagNZ(c.X)
 				return true
@@ -4152,13 +4152,13 @@ var FetchTable = []opCode{
 		Name:           "LAX",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 
 				c.A = c.val
 				c.X = c.val
@@ -4176,7 +4176,7 @@ var FetchTable = []opCode{
 		Name:           "TAY",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.Y = c.A
 			c.SetFlagNZ(c.Y)
 			return true
@@ -4186,7 +4186,7 @@ var FetchTable = []opCode{
 		Name:           "LDA",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.A = c.fetchone()
 
 			c.SetFlagNZ(c.A)
@@ -4197,7 +4197,7 @@ var FetchTable = []opCode{
 		Name:           "TAX",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.X = c.A
 
 			c.SetFlagNZ(c.X)
@@ -4210,7 +4210,7 @@ var FetchTable = []opCode{
 		Name:           "LXA",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			imm := c.fetchone()
 
 			const magic uint8 = 0xEE
@@ -4229,7 +4229,7 @@ var FetchTable = []opCode{
 		Name:           "LDY",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -4238,7 +4238,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.Y = val
 				c.SetFlagNZ(c.Y)
 				return true
@@ -4252,7 +4252,7 @@ var FetchTable = []opCode{
 		Name:           "LDA",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -4261,7 +4261,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.A = val
 				c.SetFlagNZ(c.A)
 				return true
@@ -4275,7 +4275,7 @@ var FetchTable = []opCode{
 		Name:           "LDY",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -4284,7 +4284,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.X = val
 				c.SetFlagNZ(c.X)
 				return true
@@ -4299,7 +4299,7 @@ var FetchTable = []opCode{
 		Name:           "LAX",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -4308,7 +4308,7 @@ var FetchTable = []opCode{
 				c.high = c.fetchone()
 				return false
 			case 2:
-				c.val = c.mem.Read(builduint16(c.low, c.high))
+				c.val = c.Mem.Read(builduint16(c.low, c.high))
 
 				c.A = c.val
 				c.X = c.val
@@ -4326,7 +4326,7 @@ var FetchTable = []opCode{
 		Name:           "BCS",
 		AddressingMode: Relative,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.val = c.fetchone()
@@ -4358,16 +4358,16 @@ var FetchTable = []opCode{
 		Name:           "LDA",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 3:
 				addr := builduint16(c.temp.low, c.temp.high)
@@ -4379,7 +4379,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 4:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.A = val
 				c.SetFlagNZ(c.A)
 				return true
@@ -4392,7 +4392,7 @@ var FetchTable = []opCode{
 	0xB2: {
 		Name:           "JAM",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 			return true
 		},
@@ -4402,21 +4402,21 @@ var FetchTable = []opCode{
 		Name:           "LAX",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
 
 				baseAddr := builduint16(c.low, c.high)
-				c.mem.Read(baseAddr)
+				c.Mem.Read(baseAddr)
 				c.addr = baseAddr + uint16(c.Y)
 
 				if crossedPage(baseAddr, c.addr) {
@@ -4425,7 +4425,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 4:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 
 				c.A = c.val
 				c.X = c.val
@@ -4443,7 +4443,7 @@ var FetchTable = []opCode{
 		Name:           "LDY",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -4452,7 +4452,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.Y = c.mem.Read(uint16(c.temp.pointer))
+				c.Y = c.Mem.Read(uint16(c.temp.pointer))
 				c.SetFlagNZ(c.Y)
 				return true
 			default:
@@ -4465,7 +4465,7 @@ var FetchTable = []opCode{
 		Name:           "LDA",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -4474,7 +4474,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.A = c.mem.Read(uint16(c.temp.pointer))
+				c.A = c.Mem.Read(uint16(c.temp.pointer))
 				c.SetFlagNZ(c.A)
 				return true
 			default:
@@ -4487,7 +4487,7 @@ var FetchTable = []opCode{
 		Name:           "LDX",
 		AddressingMode: ZeroPageY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -4496,7 +4496,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.Y
 				return false
 			case 2:
-				c.X = c.mem.Read(uint16(c.temp.pointer))
+				c.X = c.Mem.Read(uint16(c.temp.pointer))
 				c.SetFlagNZ(c.X)
 				return true
 			default:
@@ -4510,17 +4510,17 @@ var FetchTable = []opCode{
 		Name:           "LAX",
 		AddressingMode: ZeroPageY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Read(uint16(c.pointer))
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.Y
 				return false
 			case 2:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 
 				c.A = c.val
 				c.X = c.val
@@ -4538,7 +4538,7 @@ var FetchTable = []opCode{
 		Name:           "CLV",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.clearFlag(oVerflow)
 			return true
 		},
@@ -4547,7 +4547,7 @@ var FetchTable = []opCode{
 		Name:           "LDA",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -4565,7 +4565,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				c.A = c.mem.Read(c.temp.addr)
+				c.A = c.Mem.Read(c.temp.addr)
 				c.SetFlagNZ(c.A)
 				return true
 			default:
@@ -4578,7 +4578,7 @@ var FetchTable = []opCode{
 		Name:           "TSX",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.X = c.S
 			c.SetFlagNZ(c.X)
 			return true
@@ -4589,7 +4589,7 @@ var FetchTable = []opCode{
 		Name:           "LAS",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -4599,7 +4599,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				baseAddr := builduint16(c.low, c.high)
-				c.mem.Read(baseAddr)
+				c.Mem.Read(baseAddr)
 				c.addr = baseAddr + uint16(c.Y)
 
 				if crossedPage(baseAddr, c.addr) {
@@ -4609,7 +4609,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 
 				c.val &= c.S
 
@@ -4630,7 +4630,7 @@ var FetchTable = []opCode{
 		Name:           "LDY",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -4648,7 +4648,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				c.Y = c.mem.Read(c.temp.addr)
+				c.Y = c.Mem.Read(c.temp.addr)
 				c.SetFlagNZ(c.Y)
 				return true
 			default:
@@ -4661,7 +4661,7 @@ var FetchTable = []opCode{
 		Name:           "LDA",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -4679,7 +4679,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				c.A = c.mem.Read(c.temp.addr)
+				c.A = c.Mem.Read(c.temp.addr)
 				c.SetFlagNZ(c.A)
 				return true
 			default:
@@ -4692,7 +4692,7 @@ var FetchTable = []opCode{
 		Name:           "LDX",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -4710,7 +4710,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				c.X = c.mem.Read(c.temp.addr)
+				c.X = c.Mem.Read(c.temp.addr)
 				c.SetFlagNZ(c.X)
 				return true
 			default:
@@ -4723,7 +4723,7 @@ var FetchTable = []opCode{
 		Name:           "LAX",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -4733,7 +4733,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				baseAddr := builduint16(c.low, c.high)
-				c.mem.Read(baseAddr)
+				c.Mem.Read(baseAddr)
 				c.addr = baseAddr + uint16(c.Y)
 
 				if crossedPage(baseAddr, c.addr) {
@@ -4742,7 +4742,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 
 				c.A = c.val
 				c.X = c.val
@@ -4759,7 +4759,7 @@ var FetchTable = []opCode{
 		Name:           "CMY",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 			c.COMPARE(c.Y, val)
 			return true
@@ -4769,7 +4769,7 @@ var FetchTable = []opCode{
 		Name:           "CMP",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -4778,13 +4778,13 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 4:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.COMPARE(c.A, val)
 				return true
 			default:
@@ -4797,7 +4797,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.fetchone()
 			return true
 		},
@@ -4807,30 +4807,30 @@ var FetchTable = []opCode{
 		Name:           "DCP",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Read(uint16(c.pointer))
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 				return false
 			case 2:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 4:
 				c.addr = builduint16(c.low, c.high)
-				c.mem.Read(c.addr)
-				c.val = c.mem.Read(c.addr)
+				c.Mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 
 				c.val--
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return false
 			case 6:
 				c.COMPARE(c.A, c.val)
@@ -4846,13 +4846,13 @@ var FetchTable = []opCode{
 		Name:           "CPY",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.COMPARE(c.Y, val)
 				return true
 			default:
@@ -4865,13 +4865,13 @@ var FetchTable = []opCode{
 		Name:           "CPM",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				val := c.mem.Read(uint16(c.temp.pointer))
+				val := c.Mem.Read(uint16(c.temp.pointer))
 				c.COMPARE(c.A, val)
 				return true
 			default:
@@ -4884,13 +4884,13 @@ var FetchTable = []opCode{
 		Name:           "DEC",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 
 				return false
 			case 2:
@@ -4898,7 +4898,7 @@ var FetchTable = []opCode{
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 3:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				fmt.Println("bad at 0xc6")
@@ -4911,17 +4911,17 @@ var FetchTable = []opCode{
 		Name:           "DCP",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				c.val--
 				return false
 			case 2:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return false
 			case 3:
 				c.COMPARE(c.A, c.val)
@@ -4937,7 +4937,7 @@ var FetchTable = []opCode{
 		Name:           "INY",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.Y++
 			c.SetFlagNZ(c.Y)
 			return true
@@ -4947,7 +4947,7 @@ var FetchTable = []opCode{
 		Name:           "CMP",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.COMPARE(c.A, c.fetchone())
 			return true
 		},
@@ -4956,7 +4956,7 @@ var FetchTable = []opCode{
 		Name:           "DEX",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.X--
 			c.SetFlagNZ(c.X)
 			return true
@@ -4966,7 +4966,7 @@ var FetchTable = []opCode{
 		Name:           "SBX",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			val := c.fetchone()
 
 			temp := c.A & c.X
@@ -4984,7 +4984,7 @@ var FetchTable = []opCode{
 		Name:           "CPY",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -4993,7 +4993,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.COMPARE(c.Y, val)
 				return true
 			default:
@@ -5006,7 +5006,7 @@ var FetchTable = []opCode{
 		Name:           "CPM",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -5015,7 +5015,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.COMPARE(c.A, val)
 				return true
 			default:
@@ -5028,7 +5028,7 @@ var FetchTable = []opCode{
 		Name:           "DEC",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -5038,14 +5038,14 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.temp.addr = builduint16(c.temp.low, c.temp.high)
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 3:
 				c.temp.val--
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Println("seomtgin bad at 0xCE")
@@ -5057,7 +5057,7 @@ var FetchTable = []opCode{
 		Name:           "DCP",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -5067,11 +5067,11 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				c.val--
 				return false
 			case 3:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return false
 			case 4:
 				c.COMPARE(c.A, c.val)
@@ -5086,7 +5086,7 @@ var FetchTable = []opCode{
 		Name:           "BNE",
 		AddressingMode: Relative,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.val = c.fetchone()
@@ -5119,16 +5119,16 @@ var FetchTable = []opCode{
 		Name:           "CMP",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 3:
 				addr := builduint16(c.temp.low, c.temp.high)
@@ -5140,7 +5140,7 @@ var FetchTable = []opCode{
 
 				fallthrough
 			case 4:
-				val := c.mem.Read(c.temp.addr)
+				val := c.Mem.Read(c.temp.addr)
 				c.COMPARE(c.A, val)
 
 				return true
@@ -5154,7 +5154,7 @@ var FetchTable = []opCode{
 	0xD2: {
 		Name:           "JAM",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 			return true
 		},
@@ -5164,27 +5164,27 @@ var FetchTable = []opCode{
 		Name:           "DCP",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16(c.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
-				c.mem.Read(c.addr)
+				c.Mem.Read(c.addr)
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 4:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				c.val--
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return false
 			case 6:
 				c.COMPARE(c.A, c.val)
@@ -5200,7 +5200,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -5209,7 +5209,7 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
-				c.mem.Read(uint16(c.pointer))
+				c.Mem.Read(uint16(c.pointer))
 				return true
 			default:
 				fmt.Println("something wrong at 0xD4")
@@ -5223,7 +5223,7 @@ var FetchTable = []opCode{
 		Name:           "CMP",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -5232,7 +5232,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.COMPARE(c.A, c.mem.Read(uint16(c.temp.pointer)))
+				c.COMPARE(c.A, c.Mem.Read(uint16(c.temp.pointer)))
 				return true
 			default:
 				fmt.Println("somethign bad at 0xd5")
@@ -5244,7 +5244,7 @@ var FetchTable = []opCode{
 		Name:           "DEC",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -5253,14 +5253,14 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
 				c.temp.val--
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				fmt.Println("somethign bad at 0xd6")
@@ -5273,21 +5273,21 @@ var FetchTable = []opCode{
 		Name:           "DCP",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Read(uint16(c.pointer))
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 				return false
 			case 2:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				c.val--
 				return false
 			case 3:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return false
 			case 4:
 				c.COMPARE(c.A, c.val)
@@ -5303,7 +5303,7 @@ var FetchTable = []opCode{
 		Name:           "CLD",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.clearFlag(Decimal)
 			return true
 		},
@@ -5312,7 +5312,7 @@ var FetchTable = []opCode{
 		Name:           "CMP",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -5329,7 +5329,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 3:
-				c.COMPARE(c.A, c.mem.Read(c.temp.addr))
+				c.COMPARE(c.A, c.Mem.Read(c.temp.addr))
 				return true
 			default:
 				fmt.Println("somethign bad at 0xd9")
@@ -5341,7 +5341,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 
 			return true
 		},
@@ -5351,7 +5351,7 @@ var FetchTable = []opCode{
 		Name:           "DCP",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -5363,11 +5363,11 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				c.val--
 				return false
 			case 4:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return false
 			case 5:
 				c.COMPARE(c.A, c.val)
@@ -5383,7 +5383,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -5413,7 +5413,7 @@ var FetchTable = []opCode{
 		Name:           "CMP",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -5430,7 +5430,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 3:
-				c.COMPARE(c.A, c.mem.Read(c.temp.addr))
+				c.COMPARE(c.A, c.Mem.Read(c.temp.addr))
 				return true
 			default:
 				fmt.Println("somethign bad at 0xdd")
@@ -5442,7 +5442,7 @@ var FetchTable = []opCode{
 		Name:           "DEC",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -5455,14 +5455,14 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.X)
 				return false
 			case 3:
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
 				c.temp.val--
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 5:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Println("somethign bad at 0xd9")
@@ -5475,7 +5475,7 @@ var FetchTable = []opCode{
 		Name:           "DCP",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -5487,11 +5487,11 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.X)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				c.val--
 				return false
 			case 4:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return false
 			case 5:
 				c.COMPARE(c.A, c.val)
@@ -5507,7 +5507,7 @@ var FetchTable = []opCode{
 		Name:           "CPX",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.COMPARE(c.X, c.fetchone())
 			return true
 		},
@@ -5516,7 +5516,7 @@ var FetchTable = []opCode{
 		Name:           "SBC",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -5525,13 +5525,13 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 4:
-				val := c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				val := c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				c.SBC(val)
 				return true
 			default:
@@ -5544,7 +5544,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.fetchone()
 			return true
 		},
@@ -5554,28 +5554,28 @@ var FetchTable = []opCode{
 		Name:           "ISC",
 		AddressingMode: IndirectX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.mem.Read(uint16(c.pointer))
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 				return false
 			case 2:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 4:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				c.val++
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return false
 			case 6:
 				c.SBC(c.val)
@@ -5590,13 +5590,13 @@ var FetchTable = []opCode{
 		Name:           "CPX",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.COMPARE(c.X, c.mem.Read(uint16(c.temp.pointer)))
+				c.COMPARE(c.X, c.Mem.Read(uint16(c.temp.pointer)))
 				return true
 			default:
 				fmt.Println("soemthin bad at 0xE4")
@@ -5608,13 +5608,13 @@ var FetchTable = []opCode{
 		Name:           "SBC",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.SBC(c.mem.Read(uint16(c.temp.pointer)))
+				c.SBC(c.Mem.Read(uint16(c.temp.pointer)))
 				return true
 			default:
 				fmt.Println("soemthin bad at 0xE4")
@@ -5626,20 +5626,20 @@ var FetchTable = []opCode{
 		Name:           "INC",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
 				c.temp.val++
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 3:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				fmt.Println("soemthin bad at 0xE4")
@@ -5652,17 +5652,17 @@ var FetchTable = []opCode{
 		Name:           "ISC",
 		AddressingMode: ZeroPage,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				c.val++
 				return false
 			case 2:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return false
 			case 3:
 				c.SBC(c.val)
@@ -5678,7 +5678,7 @@ var FetchTable = []opCode{
 		Name:           "INX",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.X++
 			c.SetFlagNZ(c.X)
 			return true
@@ -5688,7 +5688,7 @@ var FetchTable = []opCode{
 		Name:           "SBC",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.SBC(c.fetchone())
 			return true
 		},
@@ -5696,7 +5696,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			return true
 		},
 	},
@@ -5705,7 +5705,7 @@ var FetchTable = []opCode{
 		Name:           "USBC",
 		AddressingMode: Immediate,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.SBC(c.fetchone())
 			return true
 		},
@@ -5715,7 +5715,7 @@ var FetchTable = []opCode{
 		Name:           "CPX ABS",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -5724,7 +5724,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				c.COMPARE(c.X, c.mem.Read(builduint16(c.temp.low, c.temp.high)))
+				c.COMPARE(c.X, c.Mem.Read(builduint16(c.temp.low, c.temp.high)))
 				return true
 			default:
 				fmt.Println("bad at 0xEC")
@@ -5736,7 +5736,7 @@ var FetchTable = []opCode{
 		Name:           "SBC",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -5745,7 +5745,7 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				c.SBC(c.mem.Read(builduint16(c.temp.low, c.temp.high)))
+				c.SBC(c.Mem.Read(builduint16(c.temp.low, c.temp.high)))
 				return true
 			default:
 				fmt.Println("bad at 0xED")
@@ -5757,7 +5757,7 @@ var FetchTable = []opCode{
 		Name:           "INC",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -5766,14 +5766,14 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				c.temp.val = c.mem.Read(builduint16(c.temp.low, c.temp.high))
+				c.temp.val = c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				return false
 			case 3:
 				c.temp.val++
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(builduint16(c.temp.low, c.temp.high), c.temp.val)
+				c.Mem.Write(builduint16(c.temp.low, c.temp.high), c.temp.val)
 				return true
 			default:
 				fmt.Println("bad at 0xED")
@@ -5785,7 +5785,7 @@ var FetchTable = []opCode{
 		Name:           "ISC",
 		AddressingMode: Absolute,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -5795,11 +5795,11 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high)
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				c.val++
 				return false
 			case 3:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return false
 			case 4:
 				c.SBC(c.val)
@@ -5814,7 +5814,7 @@ var FetchTable = []opCode{
 		Name:           "BEQ",
 		AddressingMode: Relative,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.val = c.fetchone()
@@ -5847,16 +5847,16 @@ var FetchTable = []opCode{
 		Name:           "SBC",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
-				c.temp.low = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.low = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 2:
-				c.temp.high = c.mem.Read(uint16(c.temp.pointer + 1))
+				c.temp.high = c.Mem.Read(uint16(c.temp.pointer + 1))
 				return false
 			case 3:
 				addr := builduint16(c.temp.low, c.temp.high)
@@ -5867,7 +5867,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 4:
-				c.SBC(c.mem.Read(c.temp.addr))
+				c.SBC(c.Mem.Read(c.temp.addr))
 				return true
 			default:
 				fmt.Println("something bad at 0xf1")
@@ -5878,7 +5878,7 @@ var FetchTable = []opCode{
 	0xF2: {
 		Name:           "JAM",
 		AddressingMode: Implied,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.isJamming = true
 			return true
 		},
@@ -5888,26 +5888,26 @@ var FetchTable = []opCode{
 		Name:           "ISC",
 		AddressingMode: IndirectY,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
 				return false
 			case 1:
-				c.low = c.mem.Read(uint16(c.pointer))
+				c.low = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 2:
-				c.high = c.mem.Read(uint16(c.pointer + 1))
+				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 4:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				c.val++
 				return false
 			case 5:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return false
 			case 6:
 				c.SBC(c.val)
@@ -5923,7 +5923,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -5944,7 +5944,7 @@ var FetchTable = []opCode{
 		Name:           "SBC",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -5953,7 +5953,7 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.SBC(c.mem.Read(uint16(c.pointer)))
+				c.SBC(c.Mem.Read(uint16(c.pointer)))
 				return true
 			default:
 				fmt.Println("something bad at 0xF5")
@@ -5965,7 +5965,7 @@ var FetchTable = []opCode{
 		Name:           "INC",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.pointer = c.fetchone()
@@ -5974,14 +5974,14 @@ var FetchTable = []opCode{
 				c.temp.pointer += c.X
 				return false
 			case 2:
-				c.temp.val = c.mem.Read(uint16(c.temp.pointer))
+				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
 				c.temp.val++
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 4:
-				c.mem.Write(uint16(c.temp.pointer), c.temp.val)
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				return true
 			default:
 				fmt.Println("something bad at 0xF6")
@@ -5994,7 +5994,7 @@ var FetchTable = []opCode{
 		Name:           "ISC",
 		AddressingMode: ZeroPageX,
 		Size:           2,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.pointer = c.fetchone()
@@ -6003,11 +6003,11 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
-				c.val = c.mem.Read(uint16(c.pointer))
+				c.val = c.Mem.Read(uint16(c.pointer))
 				c.val++
 				return false
 			case 3:
-				c.mem.Write(uint16(c.pointer), c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return false
 			case 4:
 				c.SBC(c.val)
@@ -6023,7 +6023,7 @@ var FetchTable = []opCode{
 		Name:           "SED",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			c.setFlag(Decimal)
 			return true
 		},
@@ -6032,7 +6032,7 @@ var FetchTable = []opCode{
 		Name:           "SBC",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -6049,7 +6049,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 3:
-				c.SBC(c.mem.Read(c.temp.addr))
+				c.SBC(c.Mem.Read(c.temp.addr))
 				return true
 			default:
 				fmt.Println("something bad at 0xF9")
@@ -6062,7 +6062,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: Implied,
 		Size:           1,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			return true
 		},
 	},
@@ -6071,7 +6071,7 @@ var FetchTable = []opCode{
 		Name:           "ISC",
 		AddressingMode: AbsoluteY,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.low = c.fetchone()
@@ -6083,11 +6083,11 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 3:
-				c.val = c.mem.Read(c.addr)
+				c.val = c.Mem.Read(c.addr)
 				c.val++
 				return false
 			case 4:
-				c.mem.Write(c.addr, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return false
 			case 5:
 				c.SBC(c.val)
@@ -6103,7 +6103,7 @@ var FetchTable = []opCode{
 		Name:           "NOP",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -6133,7 +6133,7 @@ var FetchTable = []opCode{
 		Name:           "SBC",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -6151,7 +6151,7 @@ var FetchTable = []opCode{
 				}
 				fallthrough
 			case 3:
-				c.SBC(c.mem.Read(c.temp.addr))
+				c.SBC(c.Mem.Read(c.temp.addr))
 				return true
 			default:
 				fmt.Println("something bad at 0xFD")
@@ -6163,7 +6163,7 @@ var FetchTable = []opCode{
 		Name:           "INC",
 		AddressingMode: AbsoluteX,
 		Size:           3,
-		Execute: func(c *cpu, step int) bool {
+		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
 				c.temp.low = c.fetchone()
@@ -6176,14 +6176,14 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.X)
 				return false
 			case 3:
-				c.temp.val = c.mem.Read(c.temp.addr)
+				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
 				c.temp.val++
 				c.SetFlagNZ(c.temp.val)
 				return false
 			case 5:
-				c.mem.Write(c.temp.addr, c.temp.val)
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				return true
 			default:
 				fmt.Println("something bad at 0xF9")

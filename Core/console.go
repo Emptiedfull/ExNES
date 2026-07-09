@@ -11,7 +11,7 @@ import (
 )
 
 type Console struct {
-	Cpu *cpu
+	Cpu *Cpu
 	Ppu *ppu
 	Apu *APU
 
@@ -57,12 +57,12 @@ func (c *Console) UnPause() {
 func (c *Console) LoadRom(filepath string) error {
 	file, err := os.Open(filepath)
 	if err != nil {
-		return fmt.Errorf("unable to read rom file:", err)
+		return fmt.Errorf("unable to read rom file: %v", err)
 	}
 
 	err = c.InitRom(file)
 	if err != nil {
-		return fmt.Errorf("Invalid rom data:", err)
+		return fmt.Errorf("Invalid rom data: %v", err)
 	}
 
 	c.Cpu.Reset()
@@ -118,12 +118,12 @@ func (c *Console) InitRom(data io.Reader) error {
 	var chrData []uint8
 	if chrBanks == 0 {
 		chrData = make([]byte, 8192)
-		c.Ppu.mem.CHR_isRam = true
+		c.Ppu.Mem.CHR_isRam = true
 	} else {
 		chrSize := chrBanks * 8192
 		chrData = make([]byte, chrSize)
 		if _, err := io.ReadFull(data, chrData); err != nil {
-			return fmt.Errorf("failed to read mem: %w", err)
+			return fmt.Errorf("failed to read Mem: %w", err)
 		}
 	}
 
@@ -139,7 +139,7 @@ func InitializeConsole() *Console {
 	c := &Console{
 
 		Ppu: &ppu{},
-		Cpu: &cpu{},
+		Cpu: &Cpu{},
 
 		OpenBusVal: 0,
 		palette:    loadFPal("/Users/test/Projects/ExNES/Core/ntsc.pal"),
@@ -160,8 +160,8 @@ func InitializeConsole() *Console {
 
 	c.Snapshots.Data = make([]Snapshot, 100)
 
-	c.Cpu.mem = &bus{
-		cpu: c.Cpu,
+	c.Cpu.Mem = &bus{
+		Cpu: c.Cpu,
 	}
 
 	return c
@@ -209,8 +209,8 @@ func (c *Console) StartConsoleCycle() {
 
 func (c *Console) PowerCycle() {
 	c.Cpu.Reset()
-	c.Cpu.mem = &bus{
-		cpu:      c.Cpu,
+	c.Cpu.Mem = &bus{
+		Cpu:      c.Cpu,
 		internal: [2048]byte{},
 	}
 

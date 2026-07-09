@@ -13,7 +13,7 @@ const (
 	Negative        = 1 << 7
 )
 
-type cpu struct {
+type Cpu struct {
 	console *Console
 
 	PC uint16 //program counter
@@ -23,7 +23,7 @@ type cpu struct {
 	X  uint8
 	Y  uint8
 
-	mem *bus
+	Mem *bus
 	temp
 
 	nmiPending   bool
@@ -41,12 +41,12 @@ type cpu struct {
 }
 
 type cycleStep struct {
-	Addr uint16
-	Val  uint8
+	Addr int
+	Val  int
 	Mode string
 }
 
-func (c *cpu) triggerIRQ() {
+func (c *Cpu) triggerIRQ() {
 	if c.getFlag(Interrupt) {
 		return
 	}
@@ -57,8 +57,8 @@ func (c *cpu) triggerIRQ() {
 
 	c.setFlag(Interrupt)
 
-	l := c.mem.Read(0xFFFE)
-	h := c.mem.Read(0xFFFF)
+	l := c.Mem.Read(0xFFFE)
+	h := c.Mem.Read(0xFFFF)
 
 	c.PC = builduint16(l, h)
 
@@ -66,7 +66,7 @@ func (c *cpu) triggerIRQ() {
 
 }
 
-func (c *cpu) executeNmiCycle() int {
+func (c *Cpu) executeNmiCycle() int {
 
 	switch c.nmiStep {
 	case 1:
@@ -76,11 +76,11 @@ func (c *cpu) executeNmiCycle() int {
 
 		return 3
 	case 3:
-		c.mem.Write(0x0100+uint16(c.S), uint8(c.PC>>8))
+		c.Mem.Write(0x0100+uint16(c.S), uint8(c.PC>>8))
 		c.S--
 		return 4
 	case 4:
-		c.mem.Write(0x0100+uint16(c.S), uint8(c.PC&0xFF))
+		c.Mem.Write(0x0100+uint16(c.S), uint8(c.PC&0xFF))
 		c.S--
 		return 5
 	case 5:
@@ -88,16 +88,16 @@ func (c *cpu) executeNmiCycle() int {
 		Status = AssignBit(Status, 4, false)
 		Status = AssignBit(Status, 5, true)
 
-		c.mem.Write(0x0100+uint16(c.S), Status)
+		c.Mem.Write(0x0100+uint16(c.S), Status)
 		c.S--
 
 		c.setFlag(Interrupt)
 		return 6
 	case 6:
-		c.low = c.mem.Read(0xFFFA)
+		c.low = c.Mem.Read(0xFFFA)
 		return 7
 	case 7:
-		c.high = c.mem.Read(0xFFFB)
+		c.high = c.Mem.Read(0xFFFB)
 
 		c.PC = builduint16(c.low, c.high)
 
@@ -111,13 +111,13 @@ func (c *cpu) executeNmiCycle() int {
 
 }
 
-func (c *cpu) tick() {
+func (c *Cpu) tick() {
 	// if c.TotalCycles%100000 == 0 {
 	// 	fmt.Printf("PC=%04X cycle=%d\n", c.PC, c.TotalCycles)
 	// }
 
 	if c.isJamming {
-		c.mem.Read(c.PC)
+		c.Mem.Read(c.PC)
 		return
 	}
 
@@ -165,8 +165,12 @@ type temp struct {
 }
 
 type bus struct {
-	cpu      *cpu
+	Cpu      *Cpu
 	internal [2048]byte
+
+	flatMode bool
+	flatMem  []uint8
+	log      []cycleStep
 }
 
 func (b *bus) returnInternal() [2048]byte {
@@ -178,57 +182,69 @@ func (b *bus) loadInternal(x [2048]byte) {
 }
 
 func (b *bus) Read(addr uint16) uint8 {
+
+	if b.flatMode {
+		val := b.flatMem[addr]
+		b.log = append(b.log, cycleStep{Mode: "read", Addr: int(addr), Val: int(val)})
+		return val
+	}
 	var val uint8 = 0
 	switch {
 	case addr <= 0x1FFF:
 		val = b.internal[addr&0x07FF]
 	case addr == 0x4015:
-		val = b.cpu.console.Apu.readStatus()
+		val = b.Cpu.console.Apu.readStatus()
 	case addr == 0x4016:
 
-		return b.cpu.console.Player1.readState()
+		return b.Cpu.console.Player1.readState()
 	case addr == 0x4017:
-		return b.cpu.console.Player2.readState()
+		return b.Cpu.console.Player2.readState()
 
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
-		val = b.cpu.console.Ppu.ReadReg(RegIndex, b.cpu.console.OpenBusVal)
+		val = b.Cpu.console.Ppu.ReadReg(RegIndex, b.Cpu.console.OpenBusVal)
 	case addr >= 0x6000:
-		val = b.cpu.console.mapper.ReadPRG(addr)
+		val = b.Cpu.console.mapper.ReadPRG(addr)
 	}
 
-	b.cpu.console.OpenBusVal = val
+	b.Cpu.console.OpenBusVal = val
 
 	return val
 }
 
 func (b *bus) Write(addr uint16, val uint8) {
 
+	if b.flatMode {
+		b.flatMem[addr] = val
+		b.log = append(b.log, cycleStep{Mode: "write", Addr: int(addr), Val: int(val)})
+		return
+	}
+
 	switch {
 	case addr <= 0x1FFF:
 		b.internal[addr&0x07FF] = val
 	case addr == 0x4014:
-		b.cpu.console.ExecuteOAMDMA(val)
+		b.Cpu.console.ExecuteOAMDMA(val)
 	case addr == 0x4016:
-		b.cpu.console.Player1.writeStrobe(val & 1)
-		b.cpu.console.Player2.writeStrobe(val & 1)
+		b.Cpu.console.Player1.writeStrobe(val & 1)
+		b.Cpu.console.Player2.writeStrobe(val & 1)
 	case addr >= 0x4000 && addr <= 0x4017:
-		b.cpu.console.Apu.writeReg(addr, val)
+		b.Cpu.console.Apu.writeReg(addr, val)
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
-		b.cpu.console.Ppu.WriteReg(RegIndex, val)
+		b.Cpu.console.Ppu.WriteReg(RegIndex, val)
 
 	case addr >= 0x6000:
-		b.cpu.console.mapper.WritePRG(addr, val)
+		b.Cpu.console.mapper.WritePRG(addr, val)
 	case addr <= 0x7FFF:
 	default:
 
 	}
 }
 
-func (c *cpu) Reset() {
-	low := c.mem.Read(0xFFFC)
-	high := c.mem.Read(0xFFFD)
+func (c *Cpu) Reset() {
+	low := c.Mem.Read(0xFFFC)
+	high := c.Mem.Read(0xFFFD)
 
 	c.PC = builduint16(low, high)
 

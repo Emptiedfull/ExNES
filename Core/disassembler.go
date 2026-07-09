@@ -10,7 +10,7 @@ type AssemblyLine struct {
 
 func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 
-	mem := d.Console.Cpu.mem
+	Mem := d.Console.Cpu.Mem
 	if d.Console != nil {
 		if _, ok := d.Disassembly[addr]; ok {
 			return d.Disassembly[addr]
@@ -18,7 +18,7 @@ func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	}
 
 	line := AssemblyLine{}
-	opcode := mem.Read(addr)
+	opcode := Mem.Read(addr)
 	if opcode == 255 {
 		fmt.Println("Invalid opcode recieved pausing state")
 		return line
@@ -30,14 +30,14 @@ func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	case 1:
 		line.Disassembly = info.Name
 	case 2:
-		operand := mem.Read(addr + 1)
+		operand := Mem.Read(addr + 1)
 
-		line.Disassembly, line.Val = formatOpcode(info.Name, info.AddressingMode, uint16(operand), d.Console.Cpu, mem)
-		line.Val = mem.Read(uint16(operand))
+		line.Disassembly, line.Val = formatOpcode(info.Name, info.AddressingMode, uint16(operand), d.Console.Cpu, Mem)
+		line.Val = Mem.Read(uint16(operand))
 	case 3:
-		operand := builduint16(mem.Read(addr+1), mem.Read(addr+2))
-		line.Disassembly, line.Val = formatOpcode(info.Name, info.AddressingMode, uint16(operand), d.Console.Cpu, mem)
-		line.Val = mem.Read(operand)
+		operand := builduint16(Mem.Read(addr+1), Mem.Read(addr+2))
+		line.Disassembly, line.Val = formatOpcode(info.Name, info.AddressingMode, uint16(operand), d.Console.Cpu, Mem)
+		line.Val = Mem.Read(operand)
 	}
 
 	if d.Console != nil {
@@ -47,48 +47,48 @@ func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	return line
 }
 
-func formatOpcode(mnemonic string, mode addressingMode, operand uint16, Cpu *cpu, mem *bus) (string, uint8) {
+func formatOpcode(mnemonic string, mode addressingMode, operand uint16, Cpu *Cpu, Mem *bus) (string, uint8) {
 	switch mode {
 	case Immediate:
 		return fmt.Sprintf("%s #$%02X", mnemonic, operand), uint8(operand)
 
 	case ZeroPage:
-		return fmt.Sprintf("%s $%02x", mnemonic, operand), mem.Read(uint16(operand))
+		return fmt.Sprintf("%s $%02x", mnemonic, operand), Mem.Read(uint16(operand))
 	case ZeroPageX:
-		return fmt.Sprintf("%s $%02x,X", mnemonic, operand), mem.Read(uint16(operand + uint16(Cpu.X)))
+		return fmt.Sprintf("%s $%02x,X", mnemonic, operand), Mem.Read(uint16(operand + uint16(Cpu.X)))
 	case ZeroPageY:
-		return fmt.Sprintf("%s $%02x,Y", mnemonic, operand), mem.Read(uint16(operand) + uint16(Cpu.Y))
+		return fmt.Sprintf("%s $%02x,Y", mnemonic, operand), Mem.Read(uint16(operand) + uint16(Cpu.Y))
 	case Absolute:
-		return fmt.Sprintf("%s $%04X", mnemonic, operand), mem.Read(operand)
+		return fmt.Sprintf("%s $%04X", mnemonic, operand), Mem.Read(operand)
 	case AbsoluteX:
-		return fmt.Sprintf("%s $%04X,X", mnemonic, operand), mem.Read(operand + uint16(Cpu.X))
+		return fmt.Sprintf("%s $%04X,X", mnemonic, operand), Mem.Read(operand + uint16(Cpu.X))
 	case AbsoluteY:
-		return fmt.Sprintf("%s $%04X,Y", mnemonic, operand), mem.Read(operand + uint16(Cpu.Y))
+		return fmt.Sprintf("%s $%04X,Y", mnemonic, operand), Mem.Read(operand + uint16(Cpu.Y))
 	case Indirect:
 
-		low := mem.Read(operand)
+		low := Mem.Read(operand)
 		var high uint8
 		if (operand & 0x00FF) == 0x00FF {
-			high = mem.Read(operand & 0xFF00)
+			high = Mem.Read(operand & 0xFF00)
 		} else {
-			high = mem.Read(operand + 1)
+			high = Mem.Read(operand + 1)
 		}
 
 		target := builduint16(low, high)
 
-		return fmt.Sprintf("%s ($%04X)", mnemonic, operand), mem.Read(target)
+		return fmt.Sprintf("%s ($%04X)", mnemonic, operand), Mem.Read(target)
 	case IndirectX:
 		base := uint16(operand + uint16(Cpu.X))
-		low := mem.Read(base)
-		high := mem.Read(base + 1)
+		low := Mem.Read(base)
+		high := Mem.Read(base + 1)
 
-		return fmt.Sprintf("%s ($%04X),X", mnemonic, operand), mem.Read(builduint16(low, high))
+		return fmt.Sprintf("%s ($%04X),X", mnemonic, operand), Mem.Read(builduint16(low, high))
 	case IndirectY:
 		base := uint16(operand + uint16(Cpu.Y))
-		low := mem.Read(base)
-		high := mem.Read(base + 1)
+		low := Mem.Read(base)
+		high := Mem.Read(base + 1)
 
-		return fmt.Sprintf("%s ($%04X),Y", mnemonic, operand), mem.Read(builduint16(low, high))
+		return fmt.Sprintf("%s ($%04X),Y", mnemonic, operand), Mem.Read(builduint16(low, high))
 	case Relative:
 		offset := int8(uint8(operand))
 		targetAddr := uint16(int32(Cpu.PC) + 2 + int32(offset))
@@ -112,8 +112,8 @@ func (d *Debugger) LookAhead(pc uint16, size int) []AssemblyLine {
 	return lines
 }
 
-func (c *cpu) GetSate() cpustate {
-	state := cpustate{}
+func (c *Cpu) GetSate() Cpustate {
+	state := Cpustate{}
 
 	state.A = c.A
 	state.X = c.X

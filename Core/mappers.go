@@ -43,7 +43,7 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			PRGRAM:        make([]uint8, 0x2000),
 			control:       0x0F,
 			shiftRegister: 0x10,
-			isRam:         c.Ppu.mem.CHR_isRam,
+			isRam:         c.Ppu.Mem.CHR_isRam,
 		}
 	case 2:
 		m = &Mapper2{
