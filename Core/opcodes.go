@@ -59,6 +59,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone() //zero-page base addr
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -101,6 +102,7 @@ var FetchTable = []opCode{
 				c.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 				return false
 			case 2:
@@ -114,6 +116,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 5:
+				c.Mem.Write(c.addr, c.val)
 				c.temp.val = c.ASL(c.val)
 				return false
 			case 6:
@@ -518,6 +521,7 @@ var FetchTable = []opCode{
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ASL(c.val)
 				return false
 			case 6:
@@ -670,12 +674,13 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
-				c.Mem.Read(builduint16(c.low, c.high))
+
 				baseAddr := builduint16(c.temp.low, c.temp.high)
 				newAddr := baseAddr + uint16(c.Y)
 				c.temp.addr = newAddr
 
 				if crossedPage(baseAddr, newAddr) {
+					c.Mem.Read(baseAddr)
 					return false
 				}
 
@@ -717,11 +722,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				c.Mem.Read(builduint16(c.low, c.high))
 				return false
 			case 3:
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ASL(c.val)
 				return false
 			case 5:
@@ -820,12 +827,14 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				baseAddr := builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(baseAddr)
 				c.temp.addr = baseAddr + uint16(c.X)
 				return false
 			case 3:
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				var carry bool
 				c.temp.val, carry = performASL(c.temp.val)
 				c.updateFlag(Carry, carry)
@@ -855,11 +864,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high) + uint16(c.X)
+				c.Mem.Read(builduint16(c.low, c.high))
 				return false
 			case 3:
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ASL(c.val)
 				return false
 			case 5:
@@ -918,6 +929,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -974,6 +986,7 @@ var FetchTable = []opCode{
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ROL(c.val)
 				return false
 			case 6:
@@ -1220,6 +1233,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 3:
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				var carry bool
 				c.temp.val, carry = performROL(c.temp.val, c.getFlag(Carry))
 				c.updateFlag(Carry, carry)
@@ -1252,6 +1266,7 @@ var FetchTable = []opCode{
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 3:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ROL(c.val)
 				return false
 			case 4:
@@ -1375,11 +1390,13 @@ var FetchTable = []opCode{
 				return false
 			case 3:
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				c.Mem.Read(builduint16(c.low, c.high))
 				return false
 			case 4:
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ROL(c.val)
 				return false
 			case 6:
@@ -1485,12 +1502,14 @@ var FetchTable = []opCode{
 				c.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 				return false
 			case 2:
 				c.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
+				c.Mem.Write(uint16(c.pointer), c.val)
 				c.val = c.ROL(c.val)
 				return false
 			case 4:
@@ -1579,12 +1598,14 @@ var FetchTable = []opCode{
 				c.high = c.fetchone()
 				return false
 			case 2:
+				c.Mem.Read(builduint16(c.low, c.high))
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 3:
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ROL(c.val)
 				return false
 			case 5:
@@ -1615,10 +1636,11 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				baseAddr := builduint16(c.low, c.high)
-				c.Mem.Read(baseAddr)
+
 				c.addr = baseAddr + uint16(c.X)
 
 				if crossedPage(baseAddr, c.addr) {
+					c.Mem.Read(baseAddr)
 					return false
 				}
 
@@ -1763,6 +1785,7 @@ var FetchTable = []opCode{
 			case 4:
 				c.temp.high = c.popStack()
 				c.PC = builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(c.PC)
 				return true
 			default:
 				fmt.Println("bad at 0x40")
@@ -1780,6 +1803,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -1820,6 +1844,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -1833,6 +1858,7 @@ var FetchTable = []opCode{
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.LSR(c.val)
 				return false
 			case 6:
@@ -2063,6 +2089,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 3:
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				var carry bool
 				c.temp.val, carry = performLSR(c.temp.val)
 				c.updateFlag(Carry, carry)
@@ -2213,12 +2240,15 @@ var FetchTable = []opCode{
 				c.high = c.Mem.Read(uint16(c.pointer + 1))
 				return false
 			case 3:
-				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				c.addr = builduint16(c.low, c.high)
+				c.Mem.Read(c.addr)
+				c.addr += uint16(c.Y)
 				return false
 			case 4:
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.LSR(c.val)
 				return false
 			case 6:
@@ -2324,12 +2354,14 @@ var FetchTable = []opCode{
 				c.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 				return false
 			case 2:
 				c.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
+				c.Mem.Write(uint16(c.pointer), c.val)
 				c.val = c.LSR(c.val)
 				return false
 			case 4:
@@ -2413,12 +2445,15 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
+				c.Mem.Read(builduint16(c.low, c.high))
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 3:
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.addr, c.val)
+
 				c.val = c.LSR(c.val)
 				return false
 			case 5:
@@ -2481,11 +2516,11 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
-				c.Mem.Read(addr)
+
 				c.temp.addr = addr + uint16(c.X)
-				c.Mem.Read(c.temp.addr)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 
@@ -2514,12 +2549,14 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(addr)
 				c.temp.addr = addr + uint16(c.X)
 				return false
 			case 3:
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				var carry bool
 				c.temp.val, carry = performLSR(c.temp.val)
 				c.updateFlag(Carry, carry)
@@ -2548,12 +2585,15 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
+				c.Mem.Read(builduint16(c.low, c.high))
 				c.addr = builduint16(c.low, c.high) + uint16(c.X)
+
 				return false
 			case 3:
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.LSR(c.val)
 				return false
 			case 5:
@@ -2588,7 +2628,7 @@ var FetchTable = []opCode{
 			case 3:
 				c.temp.high = c.popStack()
 				c.PC = builduint16(c.temp.low, c.temp.high)
-
+				c.Mem.Read(c.PC)
 				return false
 			case 4:
 				c.Mem.Read(c.PC)
@@ -2780,12 +2820,14 @@ var FetchTable = []opCode{
 		Execute: func(c *Cpu, step int) bool {
 			switch step {
 			case 0:
+				c.Mem.Read(c.PC)
 				return false
 			case 1:
 				return false
 			case 2:
 				c.A = c.popStack()
 				c.SetFlagNZ(c.A)
+				c.Mem.Read(uint16(c.P))
 				return true
 			default:
 				fmt.Print("something wrong at 0x68")
@@ -2906,6 +2948,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 3:
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				c.temp.val = c.ROR(c.temp.val)
 				return false
 			case 4:
@@ -2935,6 +2978,7 @@ var FetchTable = []opCode{
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 3:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ROR(c.val)
 				return false
 			case 4:
@@ -3051,11 +3095,13 @@ var FetchTable = []opCode{
 				return false
 			case 3:
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				c.Mem.Read(builduint16(c.low, c.high))
 				return false
 			case 4:
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 5:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ROR(c.val)
 				return false
 			case 6:
@@ -3125,12 +3171,14 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
 				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				c.temp.val = c.ROR(c.temp.val)
 				return false
 			case 4:
@@ -3153,12 +3201,14 @@ var FetchTable = []opCode{
 				c.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 				return false
 			case 2:
 				c.val = c.Mem.Read(uint16(c.pointer))
 				return false
 			case 3:
+				c.Mem.Write(uint16(c.pointer), c.val)
 				c.val = c.ROR(c.val)
 				return false
 			case 4:
@@ -3239,11 +3289,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.temp.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				c.Mem.Read(c.temp.addr)
 				return false
 			case 3:
 				c.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ROR(c.val)
 				return false
 			case 5:
@@ -3271,14 +3323,16 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				baseAddr := builduint16(c.low, c.high)
-				newAddr := baseAddr + uint16(c.X)
+				c.temp.addr = baseAddr + uint16(c.X)
 
-				if crossedPage(baseAddr, newAddr) {
+				if crossedPage(baseAddr, c.temp.addr) {
+					c.Mem.Read(baseAddr)
 					return false
 				}
 
 				fallthrough
 			case 3:
+				c.Mem.Read(c.temp.addr)
 				return true
 			default:
 				fmt.Println("wrong at 0x7C")
@@ -3334,11 +3388,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.temp.addr = builduint16(c.temp.low, c.temp.high) + uint16(c.X)
+				c.Mem.Read(builduint16(c.low, c.high))
 				return false
 			case 3:
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				c.temp.val = c.ROR(c.temp.val)
 				return false
 			case 5:
@@ -3365,11 +3421,13 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high) + uint16(c.X)
+				c.Mem.Read(builduint16(c.low, c.high))
 				return false
 			case 3:
 				c.val = c.Mem.Read(c.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.addr, c.val)
 				c.val = c.ROR(c.val)
 				return false
 			case 5:
@@ -3403,6 +3461,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -3737,6 +3796,7 @@ var FetchTable = []opCode{
 				return false
 			case 3:
 				base := builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(base)
 				c.temp.addr = base + uint16(c.Y)
 				return false
 			case 4:
@@ -3779,6 +3839,7 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 4:
+				c.Mem.Read(c.addr)
 				highbyteModifier := uint8(c.high + 1)
 				c.temp.val = c.A & c.X & highbyteModifier
 
@@ -3909,6 +3970,7 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(addr)
 				c.temp.addr = addr + uint16(c.Y)
 				return false
 			case 3:
@@ -4026,7 +4088,9 @@ var FetchTable = []opCode{
 				c.temp.high = c.fetchone()
 				return false
 			case 2:
+
 				addr := builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(addr)
 				c.temp.addr = addr + uint16(c.X)
 				return false
 			case 3:
@@ -4153,6 +4217,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -4613,6 +4678,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -4704,6 +4770,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.Y)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 
@@ -4789,6 +4856,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.X)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 
@@ -4852,6 +4920,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.Y)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 
@@ -4923,6 +4992,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -5074,6 +5144,7 @@ var FetchTable = []opCode{
 				return false
 			case 3:
 				c.COMPARE(c.A, c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return true
 			default:
 				fmt.Println("soemethign wrong at 0xC7")
@@ -5192,6 +5263,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 3:
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				c.temp.val--
 				c.SetFlagNZ(c.temp.val)
 				return false
@@ -5226,6 +5298,7 @@ var FetchTable = []opCode{
 				return false
 			case 4:
 				c.COMPARE(c.A, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("somethign wrong at 0xCF")
@@ -5291,6 +5364,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.Y)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 
@@ -5336,6 +5410,7 @@ var FetchTable = []opCode{
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
 				return false
 			case 4:
+
 				c.val = c.Mem.Read(c.addr)
 				c.val--
 				return false
@@ -5344,6 +5419,7 @@ var FetchTable = []opCode{
 				return false
 			case 6:
 				c.COMPARE(c.A, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("somethign wrong at 0xD3")
@@ -5408,12 +5484,14 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
 				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				c.temp.val--
 				c.SetFlagNZ(c.temp.val)
 				return false
@@ -5441,6 +5519,7 @@ var FetchTable = []opCode{
 				c.pointer += c.X
 				return false
 			case 2:
+
 				c.val = c.Mem.Read(uint16(c.pointer))
 				c.val--
 				return false
@@ -5449,9 +5528,11 @@ var FetchTable = []opCode{
 				return false
 			case 4:
 				c.COMPARE(c.A, c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0xd7")
+
 				return true
 			}
 		},
@@ -5484,6 +5565,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.Y)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 				fallthrough
@@ -5519,9 +5601,13 @@ var FetchTable = []opCode{
 				c.high = c.fetchone()
 				return false
 			case 2:
-				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				c.addr = builduint16(c.low, c.high)
+				c.Mem.Read(c.addr)
+				c.addr += uint16(c.Y)
+
 				return false
 			case 3:
+
 				c.val = c.Mem.Read(c.addr)
 				c.val--
 				return false
@@ -5530,6 +5616,7 @@ var FetchTable = []opCode{
 				return false
 			case 5:
 				c.COMPARE(c.A, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("somethign wrong at 0xDB")
@@ -5587,6 +5674,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.X)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 				fallthrough
@@ -5613,12 +5701,14 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(addr)
 				c.temp.addr = addr + uint16(c.X)
 				return false
 			case 3:
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				c.temp.val--
 				c.SetFlagNZ(c.temp.val)
 				return false
@@ -5646,8 +5736,10 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				c.addr = builduint16(c.low, c.high) + uint16(c.X)
+				c.Mem.Read(builduint16(c.low, c.high))
 				return false
 			case 3:
+
 				c.val = c.Mem.Read(c.addr)
 				c.val--
 				return false
@@ -5656,6 +5748,7 @@ var FetchTable = []opCode{
 				return false
 			case 5:
 				c.COMPARE(c.A, c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0xDF")
@@ -5683,6 +5776,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -5740,6 +5834,7 @@ var FetchTable = []opCode{
 				return false
 			case 6:
 				c.SBC(c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("somethign wrong at 0xE3")
@@ -5828,6 +5923,7 @@ var FetchTable = []opCode{
 				return false
 			case 3:
 				c.SBC(c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0xE7")
@@ -5933,6 +6029,7 @@ var FetchTable = []opCode{
 				c.temp.val = c.Mem.Read(builduint16(c.temp.low, c.temp.high))
 				return false
 			case 3:
+				c.Mem.Write(builduint16(c.temp.low, c.temp.high), c.temp.val)
 				c.temp.val++
 				c.SetFlagNZ(c.temp.val)
 				return false
@@ -5967,6 +6064,7 @@ var FetchTable = []opCode{
 				return false
 			case 4:
 				c.SBC(c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("somethign wrong at 0xEF")
@@ -6033,6 +6131,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.Y)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 				fallthrough
@@ -6071,6 +6170,7 @@ var FetchTable = []opCode{
 				return false
 			case 3:
 				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				c.Mem.Read(builduint16(c.low, c.high))
 				return false
 			case 4:
 				c.val = c.Mem.Read(c.addr)
@@ -6081,6 +6181,7 @@ var FetchTable = []opCode{
 				return false
 			case 6:
 				c.SBC(c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0xF3")
@@ -6122,6 +6223,7 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
@@ -6143,12 +6245,14 @@ var FetchTable = []opCode{
 				c.temp.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.temp.pointer += c.X
 				return false
 			case 2:
 				c.temp.val = c.Mem.Read(uint16(c.temp.pointer))
 				return false
 			case 3:
+				c.Mem.Write(uint16(c.temp.pointer), c.temp.val)
 				c.temp.val++
 				c.SetFlagNZ(c.temp.val)
 				return false
@@ -6172,6 +6276,7 @@ var FetchTable = []opCode{
 				c.pointer = c.fetchone()
 				return false
 			case 1:
+				c.Mem.Read(uint16(c.pointer))
 				c.pointer += c.X
 				return false
 			case 2:
@@ -6183,6 +6288,7 @@ var FetchTable = []opCode{
 				return false
 			case 4:
 				c.SBC(c.val)
+				c.Mem.Write(uint16(c.pointer), c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0xF7")
@@ -6218,6 +6324,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.Y)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 				fallthrough
@@ -6254,7 +6361,9 @@ var FetchTable = []opCode{
 				c.high = c.fetchone()
 				return false
 			case 2:
-				c.addr = builduint16(c.low, c.high) + uint16(c.Y)
+				c.addr = builduint16(c.low, c.high)
+				c.Mem.Read(c.addr)
+				c.addr += uint16(c.Y)
 				return false
 			case 3:
 				c.val = c.Mem.Read(c.addr)
@@ -6265,6 +6374,7 @@ var FetchTable = []opCode{
 				return false
 			case 5:
 				c.SBC(c.val)
+				c.Mem.Write(c.addr, c.val)
 				return true
 			default:
 				fmt.Println("something wrong at 0xFB")
@@ -6287,14 +6397,16 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				baseAddr := builduint16(c.low, c.high)
-				newAddr := baseAddr + uint16(c.X)
+				c.temp.addr = baseAddr + uint16(c.X)
 
-				if crossedPage(baseAddr, newAddr) {
+				if crossedPage(baseAddr, c.temp.addr) {
+					c.Mem.Read(baseAddr)
 					return false
 				}
 
 				fallthrough
 			case 3:
+				c.Mem.Read(c.temp.addr)
 				return true
 			default:
 				fmt.Println("wrong at 0xFC")
@@ -6321,6 +6433,7 @@ var FetchTable = []opCode{
 				c.temp.addr = addr + uint16(c.X)
 
 				if crossedPage(addr, c.temp.addr) {
+					c.Mem.Read(addr)
 					return false
 				}
 				fallthrough
@@ -6347,12 +6460,14 @@ var FetchTable = []opCode{
 				return false
 			case 2:
 				addr := builduint16(c.temp.low, c.temp.high)
+				c.Mem.Read(addr)
 				c.temp.addr = addr + uint16(c.X)
 				return false
 			case 3:
 				c.temp.val = c.Mem.Read(c.temp.addr)
 				return false
 			case 4:
+				c.Mem.Write(c.temp.addr, c.temp.val)
 				c.temp.val++
 				c.SetFlagNZ(c.temp.val)
 				return false
