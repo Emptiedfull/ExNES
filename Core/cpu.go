@@ -38,6 +38,10 @@ type Cpu struct {
 	Stall       int
 
 	isJamming bool
+
+	dmcHijackRequested bool
+	hijackedThisTick   bool
+	hijacked           bool
 }
 
 type CycleStep struct {
@@ -117,9 +121,6 @@ func (c *Cpu) ResetTemp() {
 }
 
 func (c *Cpu) Tick() {
-	// if c.TotalCycles%100000 == 0 {
-	// 	fmt.Printf("PC=%04X cycle=%d\n", c.PC, c.TotalCycles)
-	// }
 
 	if c.isJamming {
 		c.Mem.Read(c.PC)
@@ -149,6 +150,11 @@ func (c *Cpu) Tick() {
 
 	opcode := FetchTable[c.currentOp]
 	finished := opcode.Execute(c, c.currentstep-1)
+
+	if c.hijackedThisTick {
+		//im gonna be smth here soon i promise
+		return
+	}
 
 	if finished {
 		c.currentstep = 0
@@ -196,6 +202,13 @@ func (b *bus) Read(addr uint16) uint8 {
 		val := b.FlatMem[addr]
 		b.Log = append(b.Log, CycleStep{Mode: "read", Addr: int(addr), Val: int(val)})
 		return val
+	}
+
+	if b.Cpu.dmcHijackRequested {
+		b.Cpu.dmcHijackRequested = false
+		b.Cpu.hijacked = true
+		b.Cpu.hijackedThisTick = true
+		return 0
 	}
 
 	var val uint8 = 0
@@ -276,4 +289,32 @@ func (c *Cpu) Reset() {
 	c.isJamming = false
 	c.temp = temp{}
 
+}
+
+type DMAUnit struct {
+	cpu  *Cpu
+	step int
+}
+
+func (d *DMAUnit) tick() bool {
+	switch d.step {
+	case 0:
+		d.step++
+		return false
+	case 1:
+		d.step++
+		return false
+	case 2:
+		if d.cpu.TotalCycles%2 == 0 {
+			d.step++
+			return false
+		}
+		return true
+	case 3:
+		val := d.cpu.Mem.Read(d.cpu.console.Apu.Dmc.currentAddr)
+		d.cpu.console.Apu.Dmc.sampleBuffer = val
+		d.cpu.console.Apu.Dmc.BufferFull = true
+		return true
+	}
+	return true
 }

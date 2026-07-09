@@ -441,7 +441,7 @@ type DMC struct {
 	excessBits uint8
 	mute       bool
 
-	stall int
+	dmaRequested bool
 }
 
 func NewDMC() *DMC {
@@ -489,7 +489,7 @@ func (d *DMC) setEnable(val bool) {
 func (d *DMC) LoadSample(val uint8) {
 	d.sampleBuffer = val
 	d.BufferFull = true
-	d.stall = 0
+	// d.stall = 0
 
 	d.currentAddr++
 	if d.currentAddr == 0 {
@@ -542,12 +542,13 @@ func (d *DMC) stepOutput() {
 			d.shiftReg = d.sampleBuffer
 			d.BufferFull = false
 
-			if d.excessBytes > 0 {
-				d.stall = 4
-			}
 		} else {
 			d.mute = true
 		}
+	}
+
+	if !d.BufferFull && d.excessBits > 0 && !d.dmaRequested {
+		d.dmaRequested = true
 	}
 }
 

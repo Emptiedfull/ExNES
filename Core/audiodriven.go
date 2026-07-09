@@ -47,7 +47,7 @@ func (c *Console) TickNoAudio() {
 	}
 
 	c.Apu.tick()
-	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
+	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending || c.Cpu.currentstep == 0 {
 		c.Cpu.triggerIRQ()
 	}
 

@@ -37,11 +37,6 @@ type Console struct {
 	palette FullPalette
 }
 
-func Init() {
-	fmt.Print("Core V2")
-
-}
-
 func (c *Console) Pause() {
 	c.pausedMu.Lock()
 	defer c.pausedMu.Unlock()
@@ -242,6 +237,10 @@ func (c *Console) tick() {
 	}
 
 	c.Apu.tick()
+
+	if c.Apu.DmcHijackRequested {
+
+	}
 
 	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
 		c.Cpu.triggerIRQ()

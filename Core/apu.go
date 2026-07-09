@@ -15,7 +15,8 @@ type APU struct {
 
 	Noise *NoiseChannel
 
-	Dmc *DMC
+	Dmc                *DMC
+	DmcHijackRequested bool
 
 	Counter frameCounter
 
@@ -239,16 +240,21 @@ func (a *APU) tick() {
 		a.Pulse1.StepTimer()
 		a.Pulse2.StepTimer()
 		a.Noise.stepTimer()
-		a.Dmc.stepTimer()
+
 	}
 
+	a.Dmc.stepTimer()
 	a.Triangle.StepTimer()
 
-	if a.Dmc.stall > 0 {
-		val := a.Console.Cpu.Mem.Read(a.Dmc.currentAddr)
-		a.Dmc.LoadSample(val)
+	// if a.Dmc.stall > 0 {
+	// 	val := a.Console.Cpu.Mem.Read(a.Dmc.currentAddr)
+	// 	a.Dmc.LoadSample(val)
 
-		a.Console.Cpu.Stall += 4
+	// 	a.Console.Cpu.Stall += 4
+	// }
+
+	if a.Dmc.dmaRequested {
+		a.DmcHijackRequested = true
 	}
 
 	a.CycleAcc++
