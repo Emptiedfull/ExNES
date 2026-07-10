@@ -35,6 +35,8 @@ type Console struct {
 	mapper Mapper
 
 	palette FullPalette
+
+	busHijacked bool
 }
 
 func (c *Console) Pause() {
@@ -147,10 +149,11 @@ func InitializeConsole() *Console {
 
 	c.Cpu.console = c
 	c.Ppu.console = c
+	c.Cpu.dma.cpu = c.Cpu
 	c.Apu = NewApu(44100, c)
 
 	c.OpenBusVal = 0
-	c.Cpu.fetchNew = true
+
 	c.ScreenChannel = make(chan ScreenInfo, 100)
 
 	c.Snapshots.Data = make([]Snapshot, 100)
@@ -230,7 +233,7 @@ func (c *Console) tick() {
 		c.Cpu.Stall--
 		c.Cpu.TotalCycles++
 	} else {
-		c.Cpu.Tick()
+
 	}
 	for range 3 {
 		c.Ppu.step()
@@ -238,10 +241,36 @@ func (c *Console) tick() {
 
 	c.Apu.tick()
 
-	if c.Apu.DmcHijackRequested {
-
+	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
+		c.Cpu.triggerIRQ()
 	}
 
+}
+
+func (c *Console) TickNoAudio() {
+	c.Cpu.TotalCycles++
+	if c.Cpu.Stall > 0 {
+		c.Cpu.Stall--
+
+	} else {
+		if c.busHijacked {
+
+			c.Cpu.dma.kind = dmc
+			if c.Cpu.dma.tick() {
+
+				c.busHijacked = false
+			}
+		} else {
+			c.Cpu.Tick()
+
+		}
+	}
+
+	for range 3 {
+		c.Ppu.step()
+	}
+
+	c.Apu.tick()
 	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
 		c.Cpu.triggerIRQ()
 	}

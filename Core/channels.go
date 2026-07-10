@@ -483,13 +483,18 @@ func (d *DMC) setEnable(val bool) {
 	} else if d.excessBytes == 0 {
 		d.currentAddr = d.sampleAddr
 		d.excessBytes = d.sampleLen
+
+		if !d.BufferFull {
+
+			d.dmaRequested = true
+		}
 	}
 }
 
 func (d *DMC) LoadSample(val uint8) {
+	d.dmaRequested = false
 	d.sampleBuffer = val
 	d.BufferFull = true
-	// d.stall = 0
 
 	d.currentAddr++
 	if d.currentAddr == 0 {
@@ -505,6 +510,7 @@ func (d *DMC) LoadSample(val uint8) {
 			d.IRGPending = true
 		}
 	}
+
 }
 
 func (d *DMC) stepTimer() {
@@ -542,14 +548,15 @@ func (d *DMC) stepOutput() {
 			d.shiftReg = d.sampleBuffer
 			d.BufferFull = false
 
+			if d.excessBytes > 0 {
+				d.dmaRequested = true
+			}
+
 		} else {
 			d.mute = true
 		}
 	}
 
-	if !d.BufferFull && d.excessBits > 0 && !d.dmaRequested {
-		d.dmaRequested = true
-	}
 }
 
 func (d *DMC) Output() uint8 {

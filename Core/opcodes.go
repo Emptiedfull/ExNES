@@ -1118,8 +1118,9 @@ var FetchTable = []opCode{
 				c.Mem.Read(0x0100 | uint16(c.S))
 				return false
 			case 2:
+				c.temp.val = c.Mem.Read(0x0100 | uint16(c.S+1))
 				c.S++
-				c.temp.val = c.Mem.Read(0x0100 | uint16(c.S))
+
 				c.P = (c.temp.val &^ 0x10) | 0x20
 				return true
 			default:
@@ -3615,8 +3616,9 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
-			c.Y--
 			c.Mem.Read(c.PC)
+			c.Y--
+
 			c.SetFlagNZ(c.Y)
 			return true
 		},
@@ -4240,7 +4242,8 @@ var FetchTable = []opCode{
 		AddressingMode: Immediate,
 		Size:           2,
 		Execute: func(c *Cpu, step int) bool {
-			c.X = c.fetchone()
+			val := c.fetchone()
+			c.X = val
 			c.SetFlagNZ(c.X)
 			return true
 		},
@@ -4407,7 +4410,7 @@ var FetchTable = []opCode{
 		Execute: func(c *Cpu, step int) bool {
 			imm := c.fetchone()
 
-			const magic uint8 = 0xEE
+			const magic uint8 = 0xFF
 
 			res := (c.A | magic) & imm
 			c.A = res
@@ -5167,7 +5170,8 @@ var FetchTable = []opCode{
 		AddressingMode: Immediate,
 		Size:           2,
 		Execute: func(c *Cpu, step int) bool {
-			c.COMPARE(c.A, c.fetchone())
+			val := c.fetchone()
+			c.COMPARE(c.A, val)
 			return true
 		},
 	},
@@ -5544,8 +5548,9 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
-			c.clearFlag(Decimal)
 			c.Mem.Read(c.PC)
+			c.clearFlag(Decimal)
+
 			return true
 		},
 	},
@@ -5764,7 +5769,8 @@ var FetchTable = []opCode{
 		AddressingMode: Immediate,
 		Size:           2,
 		Execute: func(c *Cpu, step int) bool {
-			c.COMPARE(c.X, c.fetchone())
+			val := c.fetchone()
+			c.COMPARE(c.X, val)
 			return true
 		},
 	},
@@ -5952,7 +5958,8 @@ var FetchTable = []opCode{
 		AddressingMode: Immediate,
 		Size:           2,
 		Execute: func(c *Cpu, step int) bool {
-			c.SBC(c.fetchone())
+			val := c.fetchone()
+			c.SBC(val)
 			return true
 		},
 	}, 0xEA: {

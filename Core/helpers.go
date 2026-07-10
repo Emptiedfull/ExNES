@@ -27,12 +27,6 @@ func (c *Cpu) pushStack(val uint8) {
 	c.S--
 }
 
-func (c *Cpu) popStack() uint8 {
-	c.S++
-	stackAddr := 0x0100 + uint16(c.S)
-	return c.Mem.Read(stackAddr)
-}
-
 func (c *Cpu) clearFlag(flag flags) {
 	c.P &^= flag
 }

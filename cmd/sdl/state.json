@@ -15,6 +15,18 @@
 {
 "name": "AccuracyCoin.nes",
 "location": "/Users/test/Projects/ExNES/games/NROM/AccuracyCoin.nes"
+},
+{
+"name": "Kung Fu (Japan, USA).nes",
+"location": "/Users/test/Projects/ExNES/games/Kung Fu (Japan, USA).nes"
+},
+{
+"name": "03-immediate.nes",
+"location": "/Users/test/Projects/ExNES/games/03-immediate.nes"
+},
+{
+"name": "all_instrs.nes",
+"location": "/Users/test/Projects/ExNES/games/all_instrs.nes"
 }
 ],
 "settings": {

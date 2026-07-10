@@ -34,21 +34,3 @@ func (a *APU) DriveSamples(output []byte, samplesNeeded uint32) {
 	}
 
 }
-func (c *Console) TickNoAudio() {
-	if c.Cpu.Stall > 0 {
-		c.Cpu.Stall--
-		c.Cpu.TotalCycles++
-	} else {
-		c.Cpu.Tick()
-	}
-
-	for range 3 {
-		c.Ppu.step()
-	}
-
-	c.Apu.tick()
-	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending || c.Cpu.currentstep == 0 {
-		c.Cpu.triggerIRQ()
-	}
-
-}

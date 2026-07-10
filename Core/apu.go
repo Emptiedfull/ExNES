@@ -246,15 +246,11 @@ func (a *APU) tick() {
 	a.Dmc.stepTimer()
 	a.Triangle.StepTimer()
 
-	// if a.Dmc.stall > 0 {
-	// 	val := a.Console.Cpu.Mem.Read(a.Dmc.currentAddr)
-	// 	a.Dmc.LoadSample(val)
-
-	// 	a.Console.Cpu.Stall += 4
-	// }
-
 	if a.Dmc.dmaRequested {
-		a.DmcHijackRequested = true
+
+		a.Console.Cpu.dmaHijackRequested = true
+		a.Dmc.dmaRequested = false
+
 	}
 
 	a.CycleAcc++

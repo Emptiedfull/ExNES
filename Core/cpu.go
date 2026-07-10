@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 type flags = uint8
 
 const (
@@ -15,6 +17,7 @@ const (
 
 type Cpu struct {
 	console *Console
+	dma     DMAUnit
 
 	PC uint16 //program counter
 	S  uint8  //stack pointer
@@ -33,13 +36,13 @@ type Cpu struct {
 
 	currentOp   uint8
 	currentstep int
-	fetchNew    bool
+
 	TotalCycles int
 	Stall       int
 
 	isJamming bool
 
-	dmcHijackRequested bool
+	dmaHijackRequested bool
 	hijackedThisTick   bool
 	hijacked           bool
 }
@@ -69,6 +72,8 @@ func (c *Cpu) triggerIRQ() {
 	c.Stall += 7
 
 }
+
+var opcodesTouched = map[uint8]struct{}{}
 
 func (c *Cpu) executeNmiCycle() int {
 
@@ -127,43 +132,66 @@ func (c *Cpu) Tick() {
 		return
 	}
 
-	c.TotalCycles++
-
 	if c.currentstep == 0 && c.nmiPending {
 		c.executingNmi = true
 		c.nmiPending = false
 		c.nmiS++
 	}
 
-	if c.executingNmi {
+	hijacked := c.runProtected(func() {
+		if c.executingNmi {
+			c.nmiStep = c.executeNmiCycle()
+			return
+		}
 
-		c.nmiStep = c.executeNmiCycle()
+		if c.currentstep == 0 {
+			c.temp = temp{}
+			c.currentOp = c.fetchone()
+			c.currentstep = 1
+			return
+		}
+
+		opCode := FetchTable[c.currentOp]
+		finished := opCode.Execute(c, c.currentstep-1)
+
+		if finished {
+			c.currentstep = 0
+
+		} else {
+			c.currentstep++
+		}
+	})
+
+	if hijacked {
+
+		if _, ok := opcodesTouched[c.currentOp]; !ok {
+			opcodesTouched[c.currentOp] = struct{}{}
+			fmt.Printf("code: %x, cycles: %v \n", c.currentOp, c.TotalCycles)
+
+		}
+
+		c.console.busHijacked = true
 		return
 	}
 
-	if c.currentstep == 0 {
-		c.temp = temp{}
-		c.currentOp = c.fetchone()
-		c.currentstep = 1
-		return
-	}
+}
 
-	opcode := FetchTable[c.currentOp]
-	finished := opcode.Execute(c, c.currentstep-1)
+type hijackSignal struct{}
 
-	if c.hijackedThisTick {
-		//im gonna be smth here soon i promise
-		return
-	}
+func (c *Cpu) runProtected(f func()) (hijacked bool) {
+	defer func() {
 
-	if finished {
-		c.currentstep = 0
-		c.fetchNew = true
+		if r := recover(); r != nil {
+			if _, ok := r.(hijackSignal); ok {
+				hijacked = true
+				return
+			}
+			panic(r)
+		}
 
-	} else {
-		c.currentstep++
-	}
-
+	}()
+	f()
+	return false
 }
 
 type temp struct {
@@ -204,11 +232,14 @@ func (b *bus) Read(addr uint16) uint8 {
 		return val
 	}
 
-	if b.Cpu.dmcHijackRequested {
-		b.Cpu.dmcHijackRequested = false
-		b.Cpu.hijacked = true
+	if b.Cpu.dmaHijackRequested && !b.Cpu.console.busHijacked {
+
+		b.Cpu.dmaHijackRequested = false
+
 		b.Cpu.hijackedThisTick = true
-		return 0
+
+		panic(hijackSignal{})
+
 	}
 
 	var val uint8 = 0
@@ -291,30 +322,65 @@ func (c *Cpu) Reset() {
 
 }
 
+type DMA_TYPE int
+
+const (
+	dmc DMA_TYPE = iota
+)
+
 type DMAUnit struct {
 	cpu  *Cpu
 	step int
+	kind DMA_TYPE
 }
 
 func (d *DMAUnit) tick() bool {
-	switch d.step {
-	case 0:
+
+	if d.step == 0 {
 		d.step++
 		return false
-	case 1:
+	}
+
+	if d.step == 1 {
 		d.step++
-		return false
-	case 2:
-		if d.cpu.TotalCycles%2 == 0 {
-			d.step++
+		if d.kind == dmc {
+
 			return false
 		}
-		return true
-	case 3:
-		val := d.cpu.Mem.Read(d.cpu.console.Apu.Dmc.currentAddr)
-		d.cpu.console.Apu.Dmc.sampleBuffer = val
-		d.cpu.console.Apu.Dmc.BufferFull = true
-		return true
 	}
+
+	if d.step == 2 {
+		d.step++
+		if d.cpu.TotalCycles%2 == 0 {
+			// fmt.Println("passing", d.cpu.TotalCycles)
+			return false
+		}
+	}
+
+	if d.step == 3 {
+		d.step = 0
+		if d.kind == dmc {
+			val := d.cpu.Mem.Read(d.cpu.console.Apu.Dmc.currentAddr)
+			d.cpu.console.Apu.Dmc.LoadSample(val)
+
+			return true
+		}
+
+	}
+
 	return true
+}
+
+func (c *Cpu) runStep(op opCode) (finished bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			if _, ok := r.(hijackSignal); ok {
+				finished = false
+				return
+			}
+			panic(r)
+		}
+
+	}()
+	return op.Execute(c, c.currentstep-1)
 }
