@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 type flags = uint8
 
 const (
@@ -140,6 +142,7 @@ func (c *Cpu) Tick() {
 		return
 	}
 
+	fmt.Println("thank god")
 	if c.currentstep == 0 {
 		c.temp = temp{}
 		c.currentOp = c.fetchone()
