@@ -9,6 +9,7 @@ import (
 	"github.com/veandco/go-sdl2/gfx"
 	"github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 )
 
 func drawArrowIcon(r *sdl.Renderer, rect sdl.Rect, col sdl.Color) {
@@ -289,19 +290,19 @@ func (mb *menuBar) setFlag(flag Menuflag, state bool) {
 
 }
 
-func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color) {
+func drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color, cache map[string]textCache, font *ttf.Font) {
 	itemEntry := text + convertColToString(col)
-	entry, ok := m.cache.textCache[itemEntry]
+	entry, ok := cache[itemEntry]
 	if !ok {
 		entry = textCache{}
-		surface, err := m.Font.RenderUTF8Blended(text, col)
+		surface, err := font.RenderUTF8Blended(text, col)
 		if err != nil {
 			log.Fatal("bad", err)
 		}
 		defer surface.Free()
 
-		entry.W = int32(surface.W / m.scale)
-		entry.H = int32(surface.H / m.scale)
+		entry.W = int32(surface.W / 2)
+		entry.H = int32(surface.H / 2)
 
 		texture, err := r.CreateTextureFromSurface(surface)
 		if err != nil {
@@ -309,7 +310,7 @@ func (m *menuBar) drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet in
 		}
 
 		entry.texture = texture
-		m.cache.textCache[itemEntry] = entry
+		cache[itemEntry] = entry
 
 	}
 
@@ -397,6 +398,6 @@ func (mb *menuBar) renderFps(r *sdl.Renderer) {
 			H: 30,
 		}
 
-		mb.drawText(label, rect, r, 0, colText)
+		drawText(label, rect, r, 0, colText, mb.cache.textCache, mb.Font)
 	}
 }

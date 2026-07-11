@@ -17,8 +17,9 @@ const (
 	ButtonStart  = 3
 	ButtonUp     = 4
 	ButtonDown   = 5
-	ButtonLeft   = 6
-	ButtonRight  = 7
+
+	ButtonLeft  = 6
+	ButtonRight = 7
 )
 
 func (J *joyPad) writeStrobe(val uint8) {

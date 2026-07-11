@@ -80,17 +80,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// controlWin, err := openControlWindow()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	controlWin, err := openControlWindow()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	windows[gameWin.getID()] = gameWin
-	// windows[controlWin.getID()] = controlWin
+	windows[controlWin.getID()] = controlWin
 
 	startLoop(state)
-
-	// startWindow(g, displayChannel, state)
 
 }
 

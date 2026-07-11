@@ -1,6 +1,8 @@
 package Core
 
-import "fmt"
+import (
+	_ "embed"
+)
 
 type flags = uint8
 
@@ -14,6 +16,9 @@ const (
 	oVerflow        = 1 << 6
 	Negative        = 1 << 7
 )
+
+//go:embed ntsc.pal
+var Pallete []byte
 
 type Cpu struct {
 	console *Console
@@ -142,7 +147,6 @@ func (c *Cpu) Tick() {
 		return
 	}
 
-	fmt.Println("thank god")
 	if c.currentstep == 0 {
 		c.temp = temp{}
 		c.currentOp = c.fetchone()

@@ -22,11 +22,17 @@ type controlWindow struct {
 	id       uint32
 	open     bool
 
-	boxes []sdl.Rect
+	controlMain controlMain
 }
 
 func openControlWindow() (Window, error) {
-	win, err := sdl.CreateWindow("controls", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 650, 400, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE)
+	font, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(20*2))
+	if err != nil {
+		log.Fatal("something bad here:", err)
+	}
+
+	font.SetHinting(ttf.HINTING_LIGHT)
+	win, err := sdl.CreateWindow("controls", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 750, 450, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE)
 	if err != nil {
 		log.Fatal("WINDOW BAD", err)
 	}
@@ -37,6 +43,7 @@ func openControlWindow() (Window, error) {
 	}
 
 	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
+	renderer.SetLogicalSize(750, 450)
 
 	id, err := win.GetID()
 	if err != nil {
@@ -50,7 +57,9 @@ func openControlWindow() (Window, error) {
 		open:     true,
 	}
 
-	controlWin.setUp()
+	w, h := renderer.GetLogicalSize()
+
+	controlWin.setUp(font, h, w)
 
 	return controlWin, nil
 

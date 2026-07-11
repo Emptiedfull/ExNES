@@ -142,7 +142,7 @@ func InitializeConsole() *Console {
 		Cpu: &Cpu{},
 
 		OpenBusVal: 0,
-		palette:    loadFPal("/Users/test/Projects/ExNES/Core/ntsc.pal"),
+		palette:    loadFPal(Pallete),
 	}
 
 	c.Ppu.BackBuffer = make([]uint8, 245760)

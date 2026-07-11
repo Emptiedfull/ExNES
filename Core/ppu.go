@@ -2,7 +2,6 @@ package Core
 
 import (
 	"fmt"
-	"os"
 )
 
 //for any readers, please stop here I barely understand what ive done
@@ -30,12 +29,7 @@ type ppu struct {
 
 type FullPalette [8][64][3]byte
 
-func loadFPal(path string) FullPalette {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Println("FUCKKK", err)
-		return FullPalette{}
-	}
+func loadFPal(data []byte) FullPalette {
 
 	expectedLen := 8 * 64 * 3
 	if len(data) < expectedLen {
