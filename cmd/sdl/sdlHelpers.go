@@ -91,6 +91,14 @@ func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOp
 	return res
 }
 
+func drawRoundedRect(r *sdl.Renderer, rect sdl.Rect, col sdl.Color, filled bool) {
+	if filled {
+		gfx.RoundedBoxColor(r, rect.X, rect.Y, rect.X+rect.W, rect.Y+rect.H, 8, col)
+	} else {
+		gfx.RoundedRectangleColor(r, rect.X, rect.Y, rect.X+rect.W, rect.Y+rect.H, 8, col)
+	}
+}
+
 func (mb *menuBar) getSaveStateItems() []expandableOption {
 	res := make([]expandableOption, len(mb.state.saves))
 

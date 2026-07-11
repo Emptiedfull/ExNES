@@ -26,7 +26,12 @@ type controlWindow struct {
 }
 
 func openControlWindow() (Window, error) {
-	font, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(20*2))
+	font, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(18*2))
+	if err != nil {
+		log.Fatal("something bad here:", err)
+	}
+
+	smallfont, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(14*2))
 	if err != nil {
 		log.Fatal("something bad here:", err)
 	}
@@ -59,7 +64,7 @@ func openControlWindow() (Window, error) {
 
 	w, h := renderer.GetLogicalSize()
 
-	controlWin.setUp(font, h, w)
+	controlWin.setUp(font, smallfont, h, w)
 
 	return controlWin, nil
 
