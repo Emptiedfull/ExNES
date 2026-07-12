@@ -299,7 +299,7 @@ func (mb *menuBar) setFlag(flag Menuflag, state bool) {
 
 }
 
-func drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color, cache map[string]textCache, font *ttf.Font) {
+func drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color, cache map[string]textCache, font *ttf.Font, centered bool) {
 	itemEntry := text + convertColToString(col)
 	entry, ok := cache[itemEntry]
 	if !ok {
@@ -323,8 +323,13 @@ func drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.
 
 	}
 
+	x := rect.X + offet
+	if centered {
+		x = rect.X + (rect.W-entry.W)/2
+	}
+
 	dst := sdl.Rect{
-		X: rect.X + offet,
+		X: x,
 		Y: rect.Y + (rect.H-entry.H)/2,
 		W: entry.W,
 		H: entry.H,

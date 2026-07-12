@@ -100,6 +100,7 @@ type textCache struct {
 	texture *sdl.Texture
 	W       int32
 	H       int32
+	fontW   int32
 }
 
 func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menuW, dpiscale int32) *menuBar {
@@ -497,7 +498,7 @@ func (mb *menuBar) renderBar(r *sdl.Renderer) {
 
 		}
 
-		drawText(item.label, item.Rect, r, 12, colText, mb.cache.textCache, mb.Font)
+		drawText(item.label, item.Rect, r, 12, colText, mb.cache.textCache, mb.Font, false)
 
 	}
 
@@ -555,7 +556,7 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 			}
 		}
 
-		drawText(subOption.label, textRect, r, iconGutter, color, mb.cache.textCache, mb.Font)
+		drawText(subOption.label, textRect, r, iconGutter, color, mb.cache.textCache, mb.Font, false)
 	}
 
 }
@@ -601,7 +602,7 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 			}
 		}
 
-		drawText(option.label, option.Rect, r, iconGutter, color, mb.cache.textCache, mb.Font)
+		drawText(option.label, option.Rect, r, iconGutter, color, mb.cache.textCache, mb.Font, false)
 
 		if option.Expandable {
 
@@ -630,6 +631,6 @@ func (mb *menuBar) renderFps(r *sdl.Renderer) {
 			H: 30,
 		}
 
-		drawText(label, rect, r, 0, colText, mb.cache.textCache, mb.Font)
+		drawText(label, rect, r, 0, colText, mb.cache.textCache, mb.Font, false)
 	}
 }
