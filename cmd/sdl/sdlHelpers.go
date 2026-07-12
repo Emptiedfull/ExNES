@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/veandco/go-sdl2/gfx"
@@ -91,13 +92,13 @@ func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOp
 	return res
 }
 
-func drawRoundedRect(r *sdl.Renderer, rect sdl.Rect, col sdl.Color, filled bool) {
-	if filled {
-		gfx.RoundedBoxColor(r, rect.X, rect.Y, rect.X+rect.W, rect.Y+rect.H, 8, col)
-	} else {
-		gfx.RoundedRectangleColor(r, rect.X, rect.Y, rect.X+rect.W, rect.Y+rect.H, 8, col)
-	}
-}
+// func drawRoundedRect(r *sdl.Renderer, rect sdl.Rect, col sdl.Color, filled bool) {
+// 	if filled {
+// 		gfx.RoundedBoxColor(r, rect.X, rect.Y, rect.X+rect.W, rect.Y+rect.H, 8, col)
+// 	} else {
+// 		gfx.RoundedRectangleColor(r, rect.X, rect.Y, rect.X+rect.W, rect.Y+rect.H, 8, col)
+// 	}
+// }
 
 func (mb *menuBar) getSaveStateItems() []expandableOption {
 	res := make([]expandableOption, len(mb.state.saves))
@@ -376,6 +377,76 @@ func createHover(r *sdl.Renderer, col sdl.Color, w, h int32) (*sdl.Texture, erro
 	return tex, nil
 }
 
+func convertRectName(col sdl.Color, w, h int32, filled bool) string {
+
+	var buf strings.Builder
+
+	buf.WriteString(convertColToString(col))
+	buf.WriteString(fmt.Sprintf("W:%v,h:%v", w, h))
+	if filled {
+		buf.WriteString("T")
+	} else {
+		buf.WriteString("F")
+	}
+	return buf.String()
+
+}
+
+func (p panelCache) drawRoundedRect(r *sdl.Renderer, rect *sdl.Rect, col sdl.Color, filled bool) {
+	texture := p.getRoundedRect(r, col, rect.W, rect.H, filled)
+	r.Copy(texture, nil, rect)
+}
+
+func (p panelCache) getRoundedRect(r *sdl.Renderer, col sdl.Color, w, h int32, filled bool) *sdl.Texture {
+	key := convertRectName(col, w, h, filled)
+
+	entry, ok := p[key]
+	if ok {
+		return entry
+
+	}
+	entry, err := createRoundedRect(r, col, w, h, filled)
+	if err != nil {
+		fmt.Println("no tex:", err)
+		return nil
+	}
+
+	p[key] = entry
+
+	return entry
+}
+
+func createRoundedRect(r *sdl.Renderer, col sdl.Color, w, h int32, filled bool) (*sdl.Texture, error) {
+	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
+	defer sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
+
+	bigW := w * upfactor
+	bigH := h * upfactor
+
+	tex, err := r.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_TARGET, bigW, bigH)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create texture fuck: %v", err)
+	}
+
+	tex.SetBlendMode(sdl.BLENDMODE_BLEND)
+
+	r.SetRenderTarget(tex)
+	r.SetDrawColor(0, 0, 0, 0)
+	r.Clear()
+
+	bigR := int32(8 * upfactor)
+
+	if filled {
+		gfx.RoundedBoxRGBA(r, 0, 0, bigW-2, bigH-2, bigR, col.R, col.G, col.B, 255)
+	} else {
+		gfx.RoundedRectangleColor(r, 0, 0, bigW-2, bigH-2, bigR, col)
+	}
+
+	r.SetRenderTarget(nil)
+
+	return tex, nil
+}
+
 func (mb *menuBar) getIcon(r *sdl.Renderer, path string, col sdl.Color) *sdl.Texture {
 	texture, ok := mb.cache.iconCache[path+convertColToString(col)]
 	if ok {
@@ -395,17 +466,6 @@ func (mb *menuBar) getIcon(r *sdl.Renderer, path string, col sdl.Color) *sdl.Tex
 
 }
 
-func (mb *menuBar) renderFps(r *sdl.Renderer) {
-	if mb.state.Settings.Show_fps {
-		label := fmt.Sprintf("%d Fps (%v)", mb.console.fps, mb.state.Settings.Current_speed)
-
-		rect := sdl.Rect{
-			X: mb.W - 100,
-			Y: mb.H + menu_height,
-			W: 100,
-			H: 30,
-		}
-
-		drawText(label, rect, r, 0, colText, mb.cache.textCache, mb.Font)
-	}
+func pointInRect(rect sdl.Rect, x, y int32) bool {
+	return x >= rect.X && x <= rect.X+rect.W && y >= rect.Y && y <= rect.Y+rect.H
 }

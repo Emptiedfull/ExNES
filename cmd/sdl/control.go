@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/veandco/go-sdl2/gfx"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -10,9 +9,10 @@ type controlMain struct {
 	font      *ttf.Font
 	smallFont *ttf.Font
 
-	groups           map[string]*ControlGroup
-	groupHoverItem   string
-	buttonHoverIndex int
+	groups          map[string]*ControlGroup
+	groupHoverItem  string
+	buttonHoverItem string
+	actionHoverItem string
 
 	windowH int32
 	windowW int32
@@ -21,8 +21,11 @@ type controlMain struct {
 }
 
 type ControlCache struct {
-	textCache map[string]textCache
+	textCache  map[string]textCache
+	panelCache panelCache
 }
+
+type panelCache map[string]*sdl.Texture
 
 type ControlGroup struct {
 	rect sdl.Rect
@@ -54,18 +57,19 @@ func (win *controlWindow) setUp(font, smallfont *ttf.Font, windowH, windowW int3
 		font:      font,
 		smallFont: smallfont,
 
-		groupHoverItem:   "",
-		buttonHoverIndex: -1,
+		groupHoverItem:  "",
+		buttonHoverItem: "",
 
 		windowH: windowH,
 		windowW: windowW,
 	}
 
 	win.controlMain.cache = ControlCache{
-		textCache: make(map[string]textCache),
+		textCache:  make(map[string]textCache),
+		panelCache: make(panelCache),
 	}
 
-	win.controlMain.groups = map[string]*ControlGroup{"d-pad": {
+	win.controlMain.groups = map[string]*ControlGroup{"D-pad": {
 		Title: "D-pad",
 		buttons: map[string]ButtonGroup{
 			"up": {
@@ -85,7 +89,7 @@ func (win *controlWindow) setUp(font, smallfont *ttf.Font, windowH, windowW int3
 }
 
 func (main *controlMain) layout(windowH, windowW int32) {
-	dpad := main.groups["d-pad"]
+	dpad := main.groups["D-pad"]
 	dpad.rect = sdl.Rect{
 		X: 20,
 		Y: (windowH - int32(float32(windowH)/1.1)) / 2,
@@ -129,27 +133,35 @@ func (main *controlMain) layout(windowH, windowW int32) {
 			H: int32(h),
 		}
 
-		w, h, _ = main.smallFont.SizeUTF8("BIND:")
+		w, h, _ = main.smallFont.SizeUTF8("TURBO")
+		wx, hx := int32(w)/scale+25, int32(h)/scale+7
 
 		group.mapTextRect = sdl.Rect{
-			W: int32(w),
-			H: int32(h),
+			W: int32(wx),
+			H: int32(hx),
 			X: group.rect.X + 5,
-			Y: group.rect.Y + 8,
+			Y: group.rect.Y + 16,
 		}
 
 		group.mapButton = sdl.Rect{
-			H: int32(h),
-			Y: group.rect.Y + 8,
-			X: group.rect.X + int32(w) + 5,
-			W: group.rect.W - int32(w) - 10,
+			H: int32(hx),
+			Y: group.rect.Y + 16,
+			X: group.rect.X + int32(wx),
+			W: group.rect.W - int32(wx) - 8,
+		}
+
+		group.TurboTextRect = sdl.Rect{
+			W: int32(wx),
+			H: int32(hx),
+			X: group.rect.X + 5,
+			Y: group.mapButton.Y + 10 + group.mapButton.H,
 		}
 
 		group.TurboButton = sdl.Rect{
-			H: int32(h),
-			Y: group.rect.Y + 14 + group.mapButton.H,
-			X: group.rect.X + 5,
-			W: group.rect.W - 10,
+			H: int32(hx),
+			Y: group.mapButton.Y + 10 + group.mapButton.H,
+			X: group.rect.X + int32(wx),
+			W: group.rect.W - int32(wx) - 8,
 		}
 
 		dpad.buttons[key] = group
@@ -161,27 +173,93 @@ func (main *controlMain) layout(windowH, windowW int32) {
 
 }
 
-func (win *controlWindow) renderBoxes() {
+func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 
-	for _, group := range win.controlMain.groups {
+	for _, group := range main.groups {
+		active := false
+		bordercol := colPanelBorder
+		if group.Title == main.groupHoverItem {
+			active = true
+			bordercol = colAccent
+		}
 
+		_ = active
 		panel := group.rect
-		gfx.RoundedBoxColor(win.renderer, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, sdl.Color{R: 30, G: 30, B: 34, A: 200})
-		gfx.RoundedRectangleColor(win.renderer, panel.X, panel.Y, panel.X+panel.W, panel.Y+panel.H, 8, colPanelBorder)
-		drawText(group.Title, group.TitleRect, win.renderer, 0, colText, win.controlMain.cache.textCache, win.controlMain.font)
+
+		main.cache.panelCache.drawRoundedRect(r, &panel, sdl.Color{R: 30, G: 30, B: 34, A: 200}, true)
+		main.cache.panelCache.drawRoundedRect(r, &panel, bordercol, false)
+		drawText(group.Title, group.TitleRect, r, 0, colText, main.cache.textCache, main.font)
 
 		for _, button := range group.buttons {
 
-			// gfx.RoundedRectangleColor(win.renderer, button.rect.X, button.rect.Y, button.rect.X+button.rect.W, button.rect.Y+button.rect.H, 8)
-			drawRoundedRect(win.renderer, button.rect, sdl.Color{68, 64, 63, 255}, false)
-			drawText(button.Title, button.TitleRect, win.renderer, 0, colText, win.controlMain.cache.textCache, win.controlMain.smallFont)
+			buttonsActive := false
+			bordercol := sdl.Color{68, 64, 63, 255}
+			if active && button.Title == main.buttonHoverItem {
+				buttonsActive = true
+				bordercol = colAccent
+			}
 
-			drawText("BIND:", button.mapTextRect, win.renderer, 12, colTextDim, win.controlMain.cache.textCache, win.controlMain.smallFont)
+			_ = buttonsActive
 
-			drawRoundedRect(win.renderer, button.mapButton, colAccent, false)
-			drawRoundedRect(win.renderer, button.TurboButton, colAccent, false)
+			main.cache.panelCache.drawRoundedRect(r, &button.rect, bordercol, false)
+
+			drawText(button.Title, button.TitleRect, r, 0, colText, main.cache.textCache, main.smallFont)
+
+			mapCol := colPanelBorder
+			mapText := colTextDim
+			if buttonsActive && main.actionHoverItem == "BIND" {
+				mapCol = colAccent
+				mapText = colText
+			}
+
+			main.cache.panelCache.drawRoundedRect(r, &button.mapButton, mapCol, false)
+			drawText("BIND", button.mapTextRect, r, 12, mapText, main.cache.textCache, main.smallFont)
+
+			turboCol := colPanelBorder
+			turboText := colTextDim
+
+			if buttonsActive && main.actionHoverItem == "TURBO" {
+
+				turboCol = colAccent
+				turboText = colText
+			}
+
+			drawText("TURBO", button.TurboTextRect, r, 12, turboText, main.cache.textCache, main.smallFont)
+			main.cache.panelCache.drawRoundedRect(r, &button.TurboButton, turboCol, false)
 
 		}
 	}
 
 }
+
+func (main *controlMain) handleMouse(x, y int32) {
+	main.groupHoverItem = ""
+	main.buttonHoverItem = ""
+	main.actionHoverItem = ""
+	for _, group := range main.groups {
+
+		if pointInRect(group.rect, x, y) {
+
+			main.groupHoverItem = group.Title
+
+			for _, button := range group.buttons {
+				if pointInRect(button.rect, x, y) {
+					main.buttonHoverItem = button.Title
+
+					if pointInRect(button.TurboButton, x, y) {
+						main.actionHoverItem = "TURBO"
+					}
+
+					if pointInRect(button.mapButton, x, y) {
+						main.actionHoverItem = "BIND"
+					}
+				}
+			}
+
+		}
+
+	}
+
+}
+
+func (main *controlMain) handleClick()

@@ -22,8 +22,9 @@ const (
 	game_width  = 256
 	game_heigth = 240
 	menu_height = 12
-	scale       = 2
 )
+
+var scale = int32(2)
 
 var (
 	colBarBG       = sdl.Color{R: 24, G: 24, B: 28, A: 255}

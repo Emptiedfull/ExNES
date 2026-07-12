@@ -74,7 +74,7 @@ func (*controlWindow) handleInput(e *sdl.KeyboardEvent) {}
 
 func (win *controlWindow) render() {
 
-	win.renderBoxes()
+	win.controlMain.renderBoxes(win.renderer)
 	win.renderer.Present()
 }
 
@@ -83,6 +83,7 @@ func (win *controlWindow) getID() uint32 {
 }
 
 func (win *controlWindow) handleMouse(e *sdl.MouseMotionEvent) {
+	win.controlMain.handleMouse(e.X, e.Y)
 
 }
 

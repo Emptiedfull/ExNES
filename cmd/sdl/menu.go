@@ -346,10 +346,6 @@ func (mb *menuBar) handleMouse(x, y int32) {
 
 }
 
-func pointInRect(rect sdl.Rect, x, y int32) bool {
-	return x >= rect.X && x <= rect.X+rect.W && y >= rect.Y && y <= rect.Y+rect.H
-}
-
 func (mb *menuBar) handleClick(x, y int32) {
 	if mb.hoverIndex != -1 {
 		item := mb.Items[mb.hoverIndex]
@@ -621,4 +617,19 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 
 	}
 
+}
+
+func (mb *menuBar) renderFps(r *sdl.Renderer) {
+	if mb.state.Settings.Show_fps {
+		label := fmt.Sprintf("%d Fps (%v)", mb.console.fps, mb.state.Settings.Current_speed)
+
+		rect := sdl.Rect{
+			X: mb.W - 100,
+			Y: mb.H + menu_height,
+			W: 100,
+			H: 30,
+		}
+
+		drawText(label, rect, r, 0, colText, mb.cache.textCache, mb.Font)
+	}
 }
