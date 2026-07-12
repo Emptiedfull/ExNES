@@ -437,7 +437,7 @@ func createRoundedRect(r *sdl.Renderer, col sdl.Color, w, h int32, filled bool) 
 	bigR := int32(8 * upfactor)
 
 	if filled {
-		gfx.RoundedBoxRGBA(r, 0, 0, bigW-2, bigH-2, bigR, col.R, col.G, col.B, 255)
+		gfx.RoundedBoxRGBA(r, 0, 0, bigW-2, bigH-2, bigR, col.R, col.G, col.B, col.A)
 	} else {
 		gfx.RoundedRectangleColor(r, 0, 0, bigW-2, bigH-2, bigR, col)
 	}

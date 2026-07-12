@@ -88,6 +88,9 @@ func (win *controlWindow) handleMouse(e *sdl.MouseMotionEvent) {
 }
 
 func (win *controlWindow) handleClick(e *sdl.MouseButtonEvent) {
+	if e.State == sdl.PRESSED {
+		win.controlMain.handleClick()
+	}
 
 }
 

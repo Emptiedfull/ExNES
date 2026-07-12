@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -13,6 +15,9 @@ type controlMain struct {
 	groupHoverItem  string
 	buttonHoverItem string
 	actionHoverItem string
+
+	ListeningFor    *ButtonGroup
+	ListeningAction string
 
 	windowH int32
 	windowW int32
@@ -72,14 +77,14 @@ func (win *controlWindow) setUp(font, smallfont *ttf.Font, windowH, windowW int3
 	win.controlMain.groups = map[string]*ControlGroup{"D-pad": {
 		Title: "D-pad",
 		buttons: map[string]ButtonGroup{
-			"up": {
+			"Up": {
 				Title: "Up",
 			},
-			"down": {
+			"Down": {
 				Title: "Down",
-			}, "right": {
+			}, "Right": {
 				Title: "Right",
-			}, "left": {
+			}, "Left": {
 				Title: "Left",
 			},
 		},
@@ -104,7 +109,7 @@ func (main *controlMain) layout(windowH, windowW int32) {
 		W: int32(w) / 2,
 		H: int32(h) / 2,
 	}
-	order := []string{"up", "down", "left", "right"}
+	order := []string{"Up", "Down", "Left", "Right"}
 
 	padding := int32(15)
 	n := int32(len(order))
@@ -173,59 +178,89 @@ func (main *controlMain) layout(windowH, windowW int32) {
 
 }
 
+var (
+	colControlPanelBG        = sdl.Color{R: 30, G: 30, B: 34, A: 200}
+	colControlPanelBorder    = sdl.Color{R: 68, G: 60, B: 86, A: 255}
+	colControlPanelBorderHov = sdl.Color{R: 130, G: 110, B: 220, A: 255}
+
+	colButtonBG        = sdl.Color{R: 40, G: 38, B: 46, A: 150}
+	colButtonBorder    = sdl.Color{R: 68, G: 64, B: 63, A: 255}
+	colButtonBorderHov = sdl.Color{R: 130, G: 110, B: 220, A: 255}
+
+	colFieldBG          = sdl.Color{R: 24, G: 24, B: 28, A: 255}
+	colFieldBorder      = sdl.Color{R: 130, G: 128, B: 140, A: 255}
+	colFieldBorderHov   = sdl.Color{R: 130, G: 110, B: 220, A: 255}
+	colFieldBorderBound = sdl.Color{R: 130, G: 110, B: 220, A: 255}
+	colFieldTextBound   = sdl.Color{R: 206, G: 203, B: 246, A: 255}
+
+	colListeningBorder = sdl.Color{R: 226, G: 168, B: 63, A: 255}
+	colListeningBG     = sdl.Color{R: 226, G: 168, B: 63, A: 40}
+)
+
 func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 
 	for _, group := range main.groups {
 		active := false
-		bordercol := colPanelBorder
+		bordercol := colControlPanelBorder
 		if group.Title == main.groupHoverItem {
 			active = true
-			bordercol = colAccent
+			bordercol = colControlPanelBorderHov
 		}
 
 		_ = active
 		panel := group.rect
 
-		main.cache.panelCache.drawRoundedRect(r, &panel, sdl.Color{R: 30, G: 30, B: 34, A: 200}, true)
+		main.cache.panelCache.drawRoundedRect(r, &panel, colControlPanelBG, true)
 		main.cache.panelCache.drawRoundedRect(r, &panel, bordercol, false)
 		drawText(group.Title, group.TitleRect, r, 0, colText, main.cache.textCache, main.font)
 
 		for _, button := range group.buttons {
 
 			buttonsActive := false
-			bordercol := sdl.Color{68, 64, 63, 255}
+			bordercol := colButtonBorder
 			if active && button.Title == main.buttonHoverItem {
 				buttonsActive = true
-				bordercol = colAccent
+				bordercol = colButtonBorderHov
 			}
 
-			_ = buttonsActive
-
+			main.cache.panelCache.drawRoundedRect(r, &button.rect, colButtonBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &button.rect, bordercol, false)
 
 			drawText(button.Title, button.TitleRect, r, 0, colText, main.cache.textCache, main.smallFont)
 
-			mapCol := colPanelBorder
+			mapCol := colFieldBorder
 			mapText := colTextDim
 			if buttonsActive && main.actionHoverItem == "BIND" {
-				mapCol = colAccent
+				mapCol = colFieldBorderHov
 				mapText = colText
 			}
 
+			main.cache.panelCache.drawRoundedRect(r, &button.mapButton, colFieldBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &button.mapButton, mapCol, false)
 			drawText("BIND", button.mapTextRect, r, 12, mapText, main.cache.textCache, main.smallFont)
 
-			turboCol := colPanelBorder
+			turboCol := colFieldBorder
 			turboText := colTextDim
 
 			if buttonsActive && main.actionHoverItem == "TURBO" {
 
-				turboCol = colAccent
+				turboCol = colFieldBorderHov
 				turboText = colText
 			}
 
-			drawText("TURBO", button.TurboTextRect, r, 12, turboText, main.cache.textCache, main.smallFont)
+			main.cache.panelCache.drawRoundedRect(r, &button.TurboButton, colFieldBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &button.TurboButton, turboCol, false)
+			drawText("TURBO", button.TurboTextRect, r, 12, turboText, main.cache.textCache, main.smallFont)
+
+		}
+	}
+
+	if main.ListeningFor != nil {
+
+		if main.ListeningAction == "BIND" {
+
+			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.mapButton, colListeningBG, true)
+			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.mapButton, colListeningBorder, false)
 
 		}
 	}
@@ -262,4 +297,13 @@ func (main *controlMain) handleMouse(x, y int32) {
 
 }
 
-func (main *controlMain) handleClick()
+func (main *controlMain) handleClick() {
+	if (main.actionHoverItem != "") && (main.groupHoverItem != "") && (main.buttonHoverItem != "") {
+		group := main.groups[main.groupHoverItem].buttons[main.buttonHoverItem]
+
+		fmt.Println(group.Title)
+
+		main.ListeningFor = &group
+		main.ListeningAction = main.actionHoverItem
+	}
+}
