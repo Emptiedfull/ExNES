@@ -2,6 +2,7 @@ package Core
 
 import (
 	"log"
+	"reflect"
 )
 
 type Mapper interface {
@@ -268,13 +269,16 @@ func (m *Mapper1) CreateEmptySnapshot() MapperScreenShot {
 		isRam: m.isRam,
 	}
 
-	return res
+	return &res
 }
 
 func (m *Mapper1) TakeSnapshot(s MapperScreenShot) {
+
+	kind := reflect.TypeOf(s)
+
 	snap, ok := s.(*Mapper1SS)
 	if !ok {
-		log.Fatal("wowowoow")
+		log.Fatal("wowowoow", kind)
 	}
 
 	copy(snap.CHRROM, m.CHRROM)

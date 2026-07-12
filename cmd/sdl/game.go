@@ -151,22 +151,22 @@ func float32ToBytes(samples []float32) []byte {
 	return unsafe.Slice((*byte)(unsafe.Pointer(&samples[0])), len(samples)*4)
 }
 
-var controlMap = map[sdl.Keycode]int{
-	sdl.K_z:      Core.ButtonA,
-	sdl.K_x:      Core.ButtonB,
-	sdl.K_UP:     Core.ButtonUp,
-	sdl.K_DOWN:   Core.ButtonDown,
-	sdl.K_LEFT:   Core.ButtonLeft,
-	sdl.K_RIGHT:  Core.ButtonRight,
-	sdl.K_LSHIFT: Core.ButtonSelect,
-	sdl.K_RETURN: Core.ButtonStart,
-}
+// var controlMap = map[sdl.Keycode]Core.BUTTON{
+// 	sdl.K_z:      Core.ButtonA,
+// 	sdl.K_x:      Core.ButtonB,
+// 	sdl.K_UP:     Core.ButtonUp,
+// 	sdl.K_DOWN:   Core.ButtonDown,
+// 	sdl.K_LEFT:   Core.ButtonLeft,
+// 	sdl.K_RIGHT:  Core.ButtonRight,
+// 	sdl.K_LSHIFT: Core.ButtonSelect,
+// 	sdl.K_RETURN: Core.ButtonStart,
+// }
 
-func handleInputs(console *Core.Console, e *sdl.KeyboardEvent) {
+func handleInputs(console *Core.Console, e *sdl.KeyboardEvent, inp Inputs) {
 
 	pressed := e.State == sdl.PRESSED
 
-	console.Player1.UpdateBtnBool(controlMap[e.Keysym.Sym], pressed)
+	console.Player1.UpdateBtnBool(inp.KeyToAction[e.Keysym.Scancode], pressed)
 }
 
 func (console *game) changeSpeed(multipler float64) {
@@ -205,4 +205,43 @@ func renderFrame(texture *sdl.Texture, renderer *sdl.Renderer, buffer []byte, ga
 	texture.Update(nil, unsafe.Pointer(&buffer[0]), 256*4)
 	renderer.Copy(texture, nil, gameRect)
 
+}
+
+type Inputs struct {
+	KeyToAction map[sdl.Scancode]Core.BUTTON
+	ActionToKey map[Core.BUTTON]sdl.Scancode
+}
+
+func (base *Inputs) AssignKey(key sdl.Scancode, action Core.BUTTON) {
+	base.ActionToKey[action] = key
+
+	for key, a := range base.KeyToAction {
+		if a == action {
+			delete(base.KeyToAction, key)
+		}
+	}
+
+	base.KeyToAction[key] = action
+
+}
+
+func initializeControls() Inputs {
+	base := Inputs{}
+	base.KeyToAction = map[sdl.Scancode]Core.BUTTON{
+		sdl.SCANCODE_LSHIFT: Core.ButtonSelect,
+		sdl.SCANCODE_RETURN: Core.ButtonStart,
+		sdl.SCANCODE_UP:     Core.ButtonUp,
+		sdl.SCANCODE_DOWN:   Core.ButtonDown,
+		sdl.SCANCODE_RIGHT:  Core.ButtonRight,
+		sdl.SCANCODE_LEFT:   Core.ButtonLeft,
+		sdl.SCANCODE_Z:      Core.ButtonA,
+		sdl.SCANCODE_X:      Core.ButtonB,
+	}
+
+	base.ActionToKey = make(map[Core.BUTTON]sdl.Scancode)
+	for key, action := range base.KeyToAction {
+		base.ActionToKey[action] = key
+	}
+
+	return base
 }

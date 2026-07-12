@@ -21,11 +21,12 @@ type controlWindow struct {
 	renderer *sdl.Renderer
 	id       uint32
 	open     bool
+	state    *localState
 
 	controlMain controlMain
 }
 
-func openControlWindow() (Window, error) {
+func openControlWindow(state *localState) (Window, error) {
 	font, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(18*2))
 	if err != nil {
 		log.Fatal("something bad here:", err)
@@ -60,6 +61,7 @@ func openControlWindow() (Window, error) {
 		window:   win,
 		renderer: renderer,
 		open:     true,
+		state:    state,
 	}
 
 	w, h := renderer.GetLogicalSize()
@@ -70,7 +72,14 @@ func openControlWindow() (Window, error) {
 
 }
 
-func (*controlWindow) handleInput(e *sdl.KeyboardEvent) {}
+func (win *controlWindow) handleInput(e *sdl.KeyboardEvent) {
+	if win.controlMain.ListeningFor != nil {
+		if e.State == sdl.PRESSED {
+			win.controlMain.handleListen(e.Keysym.Scancode)
+		}
+
+	}
+}
 
 func (win *controlWindow) render() {
 
@@ -239,5 +248,6 @@ func (win *gameWindow) handleClick(e *sdl.MouseButtonEvent) {
 }
 
 func (win *gameWindow) handleInput(e *sdl.KeyboardEvent) {
-	handleInputs(win.menuBar.console.core, e)
+
+	handleInputs(win.menuBar.console.core, e, win.menuBar.state.Settings.Inputs)
 }

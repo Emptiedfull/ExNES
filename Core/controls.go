@@ -10,16 +10,18 @@ type joyPad struct {
 	debugflag bool
 }
 
-const (
-	ButtonA      = 0
-	ButtonB      = 1
-	ButtonSelect = 2
-	ButtonStart  = 3
-	ButtonUp     = 4
-	ButtonDown   = 5
+type BUTTON int
 
-	ButtonLeft  = 6
-	ButtonRight = 7
+const (
+	ButtonA BUTTON = iota
+	ButtonB
+	ButtonSelect
+	ButtonStart
+	ButtonUp
+	ButtonDown
+
+	ButtonLeft
+	ButtonRight
 )
 
 func (J *joyPad) writeStrobe(val uint8) {
@@ -77,6 +79,6 @@ func (J *joyPad) UpdateBtnState(btn int, state uint8) {
 	J.current[btn] = state
 }
 
-func (J *joyPad) UpdateBtnBool(btn int, state bool) {
+func (J *joyPad) UpdateBtnBool(btn BUTTON, state bool) {
 	J.current[btn] = uint8(convertBoolToInt(state))
 }

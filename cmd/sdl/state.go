@@ -5,6 +5,8 @@ import (
 	"exnes/Core"
 	"fmt"
 	"os"
+
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 type localState struct {
@@ -20,6 +22,9 @@ type state_setting struct {
 
 	Muted          bool   `json:"muted"`
 	Current_volume string `json:"current_volume"`
+
+	Inputs   Inputs
+	Controls map[Core.BUTTON]sdl.Scancode `json:"controls"`
 }
 
 type romSave struct {
@@ -55,6 +60,7 @@ func loadState() *localState {
 	}
 
 	s.saves = make([]romSave, 10)
+	s.Settings.Inputs = initializeControls()
 
 	return s
 }

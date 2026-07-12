@@ -1,6 +1,7 @@
 package main
 
 import (
+	"exnes/Core"
 	"fmt"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -44,16 +45,20 @@ type ControlGroup struct {
 type ButtonGroup struct {
 	rect sdl.Rect
 
+	actionButton Core.BUTTON
+
 	Title     string
 	TitleRect sdl.Rect
 
-	mapButton   sdl.Rect
-	mapText     string
-	mapTextRect sdl.Rect
+	mapButton    sdl.Rect
+	mapBoundText string
+	mapText      string
+	mapTextRect  sdl.Rect
 
-	TurboButton   sdl.Rect
-	TurboText     string
-	TurboTextRect sdl.Rect
+	TurboButton    sdl.Rect
+	TurboBoundText string
+	TurboText      string
+	TurboTextRect  sdl.Rect
 }
 
 func (win *controlWindow) setUp(font, smallfont *ttf.Font, windowH, windowW int32) {
@@ -78,14 +83,18 @@ func (win *controlWindow) setUp(font, smallfont *ttf.Font, windowH, windowW int3
 		Title: "D-pad",
 		buttons: map[string]ButtonGroup{
 			"Up": {
-				Title: "Up",
+				Title:        "Up",
+				actionButton: Core.ButtonUp,
 			},
 			"Down": {
-				Title: "Down",
+				Title:        "Down",
+				actionButton: Core.ButtonDown,
 			}, "Right": {
-				Title: "Right",
+				Title:        "Right",
+				actionButton: Core.ButtonRight,
 			}, "Left": {
-				Title: "Left",
+				Title:        "Left",
+				actionButton: Core.ButtonLeft,
 			},
 		},
 	}}
@@ -104,6 +113,7 @@ func (main *controlMain) layout(windowH, windowW int32) {
 
 	w, h, _ := main.font.SizeUTF8(dpad.Title)
 	dpad.TitleRect = sdl.Rect{
+
 		X: dpad.rect.X + 25,
 		Y: dpad.rect.Y - int32(h)/4,
 		W: int32(w) / 2,
@@ -194,7 +204,7 @@ var (
 	colFieldTextBound   = sdl.Color{R: 206, G: 203, B: 246, A: 255}
 
 	colListeningBorder = sdl.Color{R: 226, G: 168, B: 63, A: 255}
-	colListeningBG     = sdl.Color{R: 226, G: 168, B: 63, A: 40}
+	colListeningBG     = sdl.Color{R: 226, G: 168, B: 63, A: 80}
 )
 
 func (main *controlMain) renderBoxes(r *sdl.Renderer) {
@@ -237,6 +247,7 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 
 			main.cache.panelCache.drawRoundedRect(r, &button.mapButton, colFieldBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &button.mapButton, mapCol, false)
+			// drawText(button.mapBoundText, button.mapButton, r, button.mapButton.W/4, mapText, main.cache.textCache, main.smallFont)
 			drawText("BIND", button.mapTextRect, r, 12, mapText, main.cache.textCache, main.smallFont)
 
 			turboCol := colFieldBorder
@@ -262,6 +273,13 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.mapButton, colListeningBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.mapButton, colListeningBorder, false)
 
+			drawText("Listening...", main.ListeningFor.mapButton, r, main.ListeningFor.mapButton.W/4, colText, main.cache.textCache, main.smallFont)
+
+		} else if main.ListeningAction == "TURBO" {
+			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.TurboButton, colListeningBG, true)
+			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.TurboButton, colListeningBorder, false)
+
+			drawText("Listening...", main.ListeningFor.TurboButton, r, main.ListeningFor.TurboButton.W/4, colText, main.cache.textCache, main.smallFont)
 		}
 	}
 
@@ -306,4 +324,8 @@ func (main *controlMain) handleClick() {
 		main.ListeningFor = &group
 		main.ListeningAction = main.actionHoverItem
 	}
+}
+
+func (main *controlMain) handleListen(code sdl.Scancode) {
+	fmt.Println(code, sdl.GetScancodeName(code))
 }

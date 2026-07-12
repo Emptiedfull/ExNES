@@ -81,7 +81,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	controlWin, err := openControlWindow()
+	controlWin, err := openControlWindow(state)
 	if err != nil {
 		log.Fatal(err)
 	}
