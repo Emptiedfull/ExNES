@@ -51,15 +51,17 @@ type ButtonGroup struct {
 	Title     string
 	TitleRect sdl.Rect
 
-	mapButton    sdl.Rect
-	mapBoundText string
-	mapText      string
-	mapTextRect  sdl.Rect
+	mapButton      sdl.Rect
+	mapBoundText   string
+	mapText        string
+	mapTextRect    sdl.Rect
+	mapTextUnbound bool
 
-	TurboButton    sdl.Rect
-	TurboBoundText string
-	TurboText      string
-	TurboTextRect  sdl.Rect
+	TurboButton      sdl.Rect
+	TurboBoundText   string
+	TurboText        string
+	TurboTextRect    sdl.Rect
+	TurboTextUnbound bool
 }
 
 func (win *controlWindow) setUp(font, smallfont *ttf.Font, windowH, windowW int32) {
@@ -380,6 +382,8 @@ var (
 
 	colListeningBorder = sdl.Color{R: 226, G: 168, B: 63, A: 255}
 	colListeningBG     = sdl.Color{R: 226, G: 168, B: 63, A: 80}
+
+	colUnBound = sdl.Color{R: 255, G: 51, B: 51, A: 230}
 )
 
 type menuColors struct {
@@ -440,6 +444,11 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 				mapText = colText
 			}
 
+			if button.mapTextUnbound {
+				mapText = colUnBound
+				mapCol = colUnBound
+			}
+
 			main.cache.panelCache.drawRoundedRect(r, &button.mapButton, colFieldBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &button.mapButton, mapCol, false)
 
@@ -487,8 +496,10 @@ func (main *controlMain) syncText() {
 			if code, ok := main.State.Settings.Inputs.ActionToKey[button.actionButton]; ok {
 				button.mapBoundText = sdl.GetScancodeName(code)
 				main.groups[groupKey].buttons[buttonKey] = button
+				button.mapTextUnbound = false
 			} else {
 				button.mapBoundText = "UNBOUND"
+				button.mapTextUnbound = true
 			}
 		}
 	}

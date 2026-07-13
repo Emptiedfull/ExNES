@@ -251,5 +251,5 @@ func (win *gameWindow) handleClick(e *sdl.MouseButtonEvent) {
 
 func (win *gameWindow) handleInput(e *sdl.KeyboardEvent) {
 
-	handleInputs(win.menuBar.console.core, e, win.menuBar.state.Settings.Inputs)
+	handleInputs(win.menuBar.console, e, win.menuBar.state.Settings.Inputs, win.menuBar.state.Settings.TurboInputs)
 }

@@ -19,15 +19,15 @@
 ],
 "settings": {
 "show_fps": true,
-"current_speed": "200%",
+"current_speed": "100%",
 "muted": false,
-"current_volume": "100%",
+"current_volume": "25%",
 "Inputs": {
 "KeyToAction": {
-"225": 3,
+"225": 2,
 "27": 1,
 "29": 0,
-"40": 2,
+"40": 3,
 "79": 7,
 "80": 6,
 "81": 5,
@@ -36,12 +36,22 @@
 "ActionToKey": {
 "0": 29,
 "1": 27,
-"2": 40,
-"3": 225,
+"2": 225,
+"3": 40,
 "4": 82,
 "5": 81,
 "6": 80,
 "7": 79
+}
+},
+"TurboInputs": {
+"KeyToAction": {
+"20": 0,
+"26": 1
+},
+"ActionToKey": {
+"0": 20,
+"1": 26
 }
 },
 "controls": {}

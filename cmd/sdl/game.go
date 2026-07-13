@@ -22,6 +22,8 @@ type game struct {
 
 	fps    int
 	volume float32
+
+	TurboState map[Core.BUTTON]chan bool
 }
 
 func (console *game) LoadRom(filepath string, mb *menuBar) error {
@@ -130,7 +132,7 @@ func (game *game) beginSampleLoop() {
 			sdl.Delay(1)
 		}
 		game.core.RunDisplayUpdates()
-		adjustVolume(sampleBuf, 1)
+		adjustVolume(sampleBuf, game.volume)
 		sdl.QueueAudio(game.audioDevice, float32ToBytes(sampleBuf))
 	}
 
@@ -162,11 +164,26 @@ func float32ToBytes(samples []float32) []byte {
 // 	sdl.K_RETURN: Core.ButtonStart,
 // }
 
-func handleInputs(console *Core.Console, e *sdl.KeyboardEvent, inp Inputs) {
+func handleInputs(console *game, e *sdl.KeyboardEvent, inp Inputs, turboInp Inputs) {
 
-	pressed := e.State == sdl.PRESSED
+	if action, ok := inp.KeyToAction[e.Keysym.Scancode]; ok {
+		pressed := e.State == sdl.PRESSED
 
-	console.Player1.UpdateBtnBool(inp.KeyToAction[e.Keysym.Scancode], pressed)
+		console.core.Player1.UpdateBtnBool(action, pressed)
+		return
+	}
+
+	if action, ok := turboInp.KeyToAction[e.Keysym.Scancode]; ok {
+
+		pressed := e.State == sdl.PRESSED
+
+		if pressed {
+			go console.beginTurbo(action)
+		} else {
+			go console.stopTurbo(action)
+		}
+	}
+
 }
 
 func (console *game) changeSpeed(multipler float64) {
@@ -262,4 +279,57 @@ func initializeControls() Inputs {
 	}
 
 	return base
+}
+
+func intializeTurboControls() Inputs {
+	base := Inputs{}
+	base.KeyToAction = map[sdl.Scancode]Core.BUTTON{
+
+		sdl.SCANCODE_Q: Core.ButtonA,
+		sdl.SCANCODE_W: Core.ButtonB,
+	}
+
+	base.ActionToKey = make(map[Core.BUTTON]sdl.Scancode)
+	for key, action := range base.KeyToAction {
+		base.ActionToKey[action] = key
+	}
+
+	return base
+}
+
+func (console *game) beginTurbo(button Core.BUTTON) {
+
+	if console.TurboState[button] != nil {
+		return
+	}
+
+	tk := time.NewTicker(40 * time.Millisecond)
+	defer tk.Stop()
+
+	done := make(chan bool)
+	console.TurboState[button] = done
+
+	isPressed := false
+
+	for {
+		select {
+		case <-done:
+			return
+		case <-tk.C:
+			isPressed = !isPressed
+			console.core.Player1.UpdateBtnBool(button, isPressed)
+		}
+	}
+}
+
+func (console *game) stopTurbo(button Core.BUTTON) {
+
+	if console.TurboState[button] == nil {
+		return
+	}
+
+	done := console.TurboState[button]
+	done <- true
+
+	console.TurboState[button] = nil
 }

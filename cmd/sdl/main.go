@@ -49,6 +49,7 @@ func main() {
 	g := &game{
 		fps:          60,
 		pauseChannel: pauseChannel,
+		TurboState:   make(map[Core.BUTTON]chan bool),
 	}
 
 	g.initConsole(displayChannel)
