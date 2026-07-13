@@ -298,6 +298,21 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 						},
 					},
 				},
+				{
+					isLine: true,
+				},
+				{
+					label:   "Inputs",
+					enabled: true,
+					Icon:    "./icons/gamepad.svg",
+					onClick: func() {
+						win, err := openControlWindow(state)
+						if err != nil {
+							panic(err)
+						}
+						windows[win.getID()] = win
+					},
+				},
 			},
 		},
 	}

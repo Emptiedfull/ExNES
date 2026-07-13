@@ -228,6 +228,8 @@ func (win *gameWindow) close() {
 	win.renderer.Destroy()
 	win.window.Destroy()
 	sdl.CloseAudioDevice(win.audioDevice)
+
+	win.menuBar.state.running = false
 	win.open = false
 }
 

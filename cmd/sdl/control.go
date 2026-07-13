@@ -306,12 +306,14 @@ func (main *controlMain) layout(windowH, windowW int32) {
 
 	order = []string{"Start", "Select"}
 
+	Y = special.rect.Y + 25
+
 	for _, key := range order {
-		group := Joypad.buttons[key]
+		group := special.buttons[key]
 
 		group.rect = sdl.Rect{
-			W: Joypad.rect.W - 20,
-			X: Joypad.rect.X + 10,
+			W: special.rect.W - 20,
+			X: special.rect.X + 10,
 			H: itemH,
 			Y: Y,
 		}
@@ -380,6 +382,26 @@ var (
 	colListeningBG     = sdl.Color{R: 226, G: 168, B: 63, A: 80}
 )
 
+type menuColors struct {
+	Coltitle  sdl.Color
+	ColBorder sdl.Color
+}
+
+var menuColMap = map[string]menuColors{
+	"Joypad": {
+		Coltitle:  sdl.Color{R: 130, G: 110, B: 220, A: 255},
+		ColBorder: sdl.Color{R: 130, G: 110, B: 220, A: 255},
+	},
+	"D-pad": {
+		Coltitle:  sdl.Color{R: 226, G: 168, B: 63, A: 255},
+		ColBorder: sdl.Color{R: 226, G: 168, B: 63, A: 255},
+	},
+	"Special": {
+		Coltitle:  sdl.Color{R: 99, G: 200, B: 170, A: 255},
+		ColBorder: sdl.Color{R: 99, G: 200, B: 170, A: 255},
+	},
+}
+
 func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 
 	for _, group := range main.groups {
@@ -387,7 +409,7 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 		bordercol := colControlPanelBorder
 		if group.Title == main.groupHoverItem {
 			active = true
-			bordercol = colControlPanelBorderHov
+			bordercol = menuColMap[group.Title].ColBorder
 		}
 
 		_ = active
@@ -395,7 +417,7 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 
 		main.cache.panelCache.drawRoundedRect(r, &panel, colControlPanelBG, true)
 		main.cache.panelCache.drawRoundedRect(r, &panel, bordercol, false)
-		drawText(group.Title, group.TitleRect, r, 0, colText, main.cache.textCache, main.font, false)
+		drawText(group.Title, group.TitleRect, r, 0, menuColMap[group.Title].Coltitle, main.cache.textCache, main.font, false)
 
 		for _, button := range group.buttons {
 
@@ -403,7 +425,7 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 			bordercol := colButtonBorder
 			if active && button.Title == main.buttonHoverItem {
 				buttonsActive = true
-				bordercol = colButtonBorderHov
+				bordercol = menuColMap[group.Title].ColBorder
 			}
 
 			main.cache.panelCache.drawRoundedRect(r, &button.rect, colButtonBG, true)
@@ -465,6 +487,8 @@ func (main *controlMain) syncText() {
 			if code, ok := main.State.Settings.Inputs.ActionToKey[button.actionButton]; ok {
 				button.mapBoundText = sdl.GetScancodeName(code)
 				main.groups[groupKey].buttons[buttonKey] = button
+			} else {
+				button.mapBoundText = "UNBOUND"
 			}
 		}
 	}
@@ -515,6 +539,7 @@ func (main *controlMain) handleListen(code sdl.Scancode) {
 	if action := main.ListeningFor; action != nil {
 		if main.ListeningAction == "BIND" {
 			main.State.Settings.Inputs.AssignKey(code, main.ListeningFor.actionButton)
+
 			main.syncText()
 			main.ListeningFor = nil
 		}

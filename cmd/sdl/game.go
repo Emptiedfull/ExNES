@@ -213,16 +213,34 @@ type Inputs struct {
 }
 
 func (base *Inputs) AssignKey(key sdl.Scancode, action Core.BUTTON) {
-	base.ActionToKey[action] = key
 
-	for key, a := range base.KeyToAction {
+	for k, a := range base.KeyToAction {
 		if a == action {
-			delete(base.KeyToAction, key)
+			delete(base.KeyToAction, k)
+		}
+	}
+
+	for a, k := range base.ActionToKey {
+		if k == key {
+			delete(base.ActionToKey, a)
 		}
 	}
 
 	base.KeyToAction[key] = action
+	base.ActionToKey[action] = key
 
+}
+
+func (base *Inputs) DumbReadable() {
+	fmt.Println("Action-ket")
+	for x, y := range base.ActionToKey {
+		fmt.Printf(" Action : %v , Key : %v \n", x, sdl.GetScancodeName(y))
+	}
+
+	fmt.Println("Key-Action")
+	for x, y := range base.KeyToAction {
+		fmt.Printf(" Action : %v , Key : %v \n", y, sdl.GetScancodeName(x))
+	}
 }
 
 func initializeControls() Inputs {

@@ -24,6 +24,29 @@ const (
 	ButtonRight
 )
 
+func (b BUTTON) String() string {
+	switch b {
+	case ButtonA:
+		return "Joypad-A"
+	case ButtonB:
+		return "Joypad-B"
+	case ButtonSelect:
+		return "Select"
+	case ButtonStart:
+		return "Start"
+	case ButtonUp:
+		return "Dpad-Up"
+	case ButtonDown:
+		return "Dpad-Down"
+	case ButtonLeft:
+		return "Dpad-Left"
+	case ButtonRight:
+		return "Dpad-Right"
+	default:
+		return "yeh bro pack it up"
+	}
+}
+
 func (J *joyPad) writeStrobe(val uint8) {
 	J.strobe = val
 	if val == 1 {

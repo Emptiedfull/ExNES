@@ -43,7 +43,6 @@ var windows = make(Windows)
 
 func main() {
 
-	getSaveTimeStamp()
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	pauseChannel := make(chan bool)
 
@@ -81,13 +80,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	controlWin, err := openControlWindow(state)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	windows[gameWin.getID()] = gameWin
-	windows[controlWin.getID()] = controlWin
 
 	startLoop(state)
 
@@ -109,9 +102,8 @@ func startLoop(state *localState) {
 					if e.Event == sdl.WINDOWEVENT_CLOSE {
 						windows[id].close()
 
-						state.running = false
-
 					}
+
 				}
 
 			case *sdl.MouseMotionEvent:
