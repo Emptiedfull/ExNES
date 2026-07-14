@@ -60,7 +60,7 @@ var charBin = map[rune]uint16{
 // |   S   |   X   |   I   |   O   |   P   |   O   |
 // |1|1|0|1|1|0|1|0|0|1|0|1|1|0|0|1|0|0|0|1|1|0|0|1|
 
-var charBitMap = [][]rune{
+var char6BitMap = [][]rune{
 	{
 		'8', '7', '6', '1', //char 1
 	}, {
@@ -76,8 +76,29 @@ var charBitMap = [][]rune{
 	},
 } // charBitMap[char][bit] = mapped
 
-var AddrString6 string = "ABCDEFGHIJKLMNO"
-var ValStrin6 string = "12345678"
+var char8BitMap = [][]rune{
+	{
+		'8', '7', '6', '1', //char 1
+	}, {
+		'4', '3', '2', 'H', //char 2
+	}, {
+		'K', 'J', 'I', '_', //char 3
+	}, {
+		'C', 'B', 'A', 'L', //char 4
+	}, {
+		'O', 'N', 'M', 'D', //chat 5
+	}, {
+		'G', 'F', 'E', '%', //char 6
+	}, {
+		'*', '&', '^', '!', //char 7
+	}, {
+		'$', '#', '@', '5', // char 8
+	},
+} // charBitMap[char][bit] = mapped
+
+var AddrString string = "ABCDEFGHIJKLMNO"
+var ValString string = "12345678"
+var CompareVal string = "!@#$%^&*"
 
 type cheat struct {
 	enabled    bool
@@ -95,6 +116,8 @@ func (g *GameGenieEngine) AddCheat(cheatCode string) {
 
 	cheat := DecodeCheat(cheatCode)
 	g.cheatTable[cheat.addr] = cheat
+
+	fmt.Println(g.cheatTable)
 }
 
 func DecodeCheat(code string) cheat {
@@ -108,27 +131,59 @@ func DecodeCheat(code string) cheat {
 		for i, char := range code {
 			bits := charBin[char]
 			for j := range 4 {
-				fmt.Println(charBitMap[i][j], ":", getBit16LSB(bits, j))
-				decoded[charBitMap[i][j]] = getBit16LSB(bits, j)
+
+				decoded[char6BitMap[i][j]] = getBit16LSB(bits, j)
 			}
 		}
 
 		var addr uint16
-		n := len(AddrString6)
-		for i, r := range AddrString6 {
+		n := len(AddrString)
+		for i, r := range AddrString {
 			addr |= uint16(decoded[r]) << (n - 1 - i)
 		}
 		c.addr = 0x8000 + addr
 
 		var val uint8
-		m := len(ValStrin6)
-		for i, r := range ValStrin6 {
+		m := len(ValString)
+		for i, r := range ValString {
 			val |= uint8(decoded[r]) << (m - 1 - i)
 		}
 		c.val = val
 
-		c.val = val
+		fmt.Println("code created:", c.addr, val)
+	case 8:
+		c.compare = true
+		c.enabled = true
 
+		decoded := make(map[rune]int)
+		for i, char := range code {
+			bits := charBin[char]
+			for j := range 4 {
+				decoded[char8BitMap[i][j]] = getBit16LSB(bits, j)
+			}
+		}
+
+		var addr uint16
+		n := len(AddrString)
+		for i, r := range AddrString {
+			addr |= uint16(decoded[r]) << (n - 1 - i)
+		}
+
+		var val uint8
+		m := len(ValString)
+		for i, r := range ValString {
+			val |= uint8(decoded[r]) << (m - 1 - i)
+		}
+
+		var compare uint8
+		o := len(CompareVal)
+		for i, r := range CompareVal {
+			compare |= uint8(decoded[r]) << (o - 1 - i)
+		}
+
+		c.addr = 0x8000 + addr
+		c.val = val
+		c.compareVal = compare
 	}
 	return c
 }

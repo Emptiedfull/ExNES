@@ -15,6 +15,10 @@
 {
 "name": "AccuracyCoin.nes",
 "location": "/Users/test/Projects/ExNES/games/NROM/AccuracyCoin.nes"
+},
+{
+"name": "ballon.nes",
+"location": "/Users/test/Projects/ExNES/games/NROM/ballon.nes"
 }
 ],
 "settings": {

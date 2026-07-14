@@ -44,6 +44,7 @@ type Windows map[uint32]Window
 var windows = make(Windows)
 
 func main() {
+	Core.Parse()
 
 	// Core.DecodeCheat("SXIOPO")
 	// panic("hi")
@@ -60,8 +61,8 @@ func main() {
 	g.initConsole(displayChannel)
 
 	go func() {
-		time.Sleep(2 * time.Second)
-		g.core.CheatEngine.AddCheat("SXIOPO")
+		time.Sleep(1 * time.Second)
+		g.core.CheatEngine.AddCheat("SUNNIZVI")
 		g.core.CheatEngine.Enabled = true
 		fmt.Println("cheat applied")
 	}()

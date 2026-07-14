@@ -206,15 +206,22 @@ func (b *bus) Read(addr uint16) uint8 {
 		return val
 	}
 
+	var val uint8 = 0
 	if b.Cpu.console.CheatEngine.Enabled {
-		// fmt.Println(b.Cpu.console.CheatEngine.cheatTable)
 		if cheat, ok := b.Cpu.console.CheatEngine.cheatTable[addr]; ok {
-			fmt.Println("returning cheated address")
-			return cheat.val
+			fmt.Println("cheat found")
+			if cheat.compare {
+				if cheat.compareVal == val {
+					return cheat.val
+				}
+			} else {
+				fmt.Println("returning cheat")
+				return cheat.val
+			}
+
 		}
 	}
 
-	var val uint8 = 0
 	switch {
 	case addr <= 0x1FFF:
 		val = b.internal[addr&0x07FF]
