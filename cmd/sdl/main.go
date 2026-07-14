@@ -43,6 +43,9 @@ var windows = make(Windows)
 
 func main() {
 
+	Core.DecodeCheat("SXIOPO")
+	panic("hi")
+
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	pauseChannel := make(chan bool)
 
