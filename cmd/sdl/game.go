@@ -153,17 +153,6 @@ func float32ToBytes(samples []float32) []byte {
 	return unsafe.Slice((*byte)(unsafe.Pointer(&samples[0])), len(samples)*4)
 }
 
-// var controlMap = map[sdl.Keycode]Core.BUTTON{
-// 	sdl.K_z:      Core.ButtonA,
-// 	sdl.K_x:      Core.ButtonB,
-// 	sdl.K_UP:     Core.ButtonUp,
-// 	sdl.K_DOWN:   Core.ButtonDown,
-// 	sdl.K_LEFT:   Core.ButtonLeft,
-// 	sdl.K_RIGHT:  Core.ButtonRight,
-// 	sdl.K_LSHIFT: Core.ButtonSelect,
-// 	sdl.K_RETURN: Core.ButtonStart,
-// }
-
 func handleInputs(console *game, e *sdl.KeyboardEvent, inp Inputs, turboInp Inputs) {
 
 	if action, ok := inp.KeyToAction[e.Keysym.Scancode]; ok {

@@ -47,6 +47,30 @@ func (b BUTTON) String() string {
 	}
 }
 
+func GetActionByName(name string) BUTTON {
+
+	switch name {
+	case "Dpad-Right":
+		return ButtonRight
+	case "Dpad-Left":
+		return ButtonLeft
+	case "Dpad-Down":
+		return ButtonDown
+	case "Dpad-Up":
+		return ButtonUp
+	case "Start":
+		return ButtonStart
+	case "Select":
+		return ButtonSelect
+	case "Joypad-A":
+		return ButtonA
+	case "Joypad-B":
+		return ButtonB
+	}
+
+	return 0
+}
+
 func (J *joyPad) writeStrobe(val uint8) {
 	J.strobe = val
 	if val == 1 {

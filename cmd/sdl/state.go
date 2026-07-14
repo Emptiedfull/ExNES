@@ -23,9 +23,8 @@ type state_setting struct {
 	Muted          bool   `json:"muted"`
 	Current_volume string `json:"current_volume"`
 
-	Inputs      Inputs
-	TurboInputs Inputs
-	Controls    map[Core.BUTTON]sdl.Scancode `json:"controls"`
+	Inputs      Inputs `json:"controlBinds"`
+	TurboInputs Inputs `json:"turboBinds"`
 }
 
 type romSave struct {
@@ -61,13 +60,12 @@ func loadState() *localState {
 	}
 
 	s.saves = make([]romSave, 10)
-	s.Settings.Inputs = initializeControls()
-	s.Settings.TurboInputs = intializeTurboControls()
 
 	return s
 }
 
 func (state *localState) saveState() {
+	state.Settings.Inputs.DumbReadable()
 	data, err := json.MarshalIndent(state, "", "")
 	if err != nil {
 		fmt.Println("error marshaling save state", err)
@@ -85,4 +83,41 @@ func (state *localState) addRecentRom(new recentRom) {
 	}
 
 	state.RecentFiles = append(state.RecentFiles, new)
+}
+
+func (inp Inputs) MarshalJSON() ([]byte, error) {
+	res := make(map[string]string)
+
+	for key, action := range inp.ActionToKey {
+		res[key.String()] = sdl.GetScancodeName(action)
+	}
+
+	x, err := json.Marshal(res)
+	if err != nil {
+		fmt.Println("unable to marshal json:", err)
+		return make([]byte, 0), err
+	}
+
+	return x, nil
+}
+
+func (inp *Inputs) UnmarshalJSON(data []byte) error {
+	raw := make(map[string]string)
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	fmt.Println(raw)
+
+	inp.KeyToAction = make(map[sdl.Scancode]Core.BUTTON)
+	inp.ActionToKey = make(map[Core.BUTTON]sdl.Scancode)
+	for buttonName, scancodeName := range raw {
+		scancode := sdl.GetScancodeFromName(scancodeName)
+		button := Core.GetActionByName(buttonName)
+
+		inp.KeyToAction[scancode] = button
+		inp.ActionToKey[button] = scancode
+	}
+
+	return nil
 }

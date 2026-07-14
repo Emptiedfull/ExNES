@@ -466,6 +466,8 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 
 			main.cache.panelCache.drawRoundedRect(r, &button.TurboButton, colFieldBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &button.TurboButton, turboCol, false)
+
+			drawText(button.TurboBoundText, button.TurboButton, r, 0, turboText, main.cache.textCache, main.smallFont, true)
 			drawText("TURBO", button.TurboTextRect, r, 12, turboText, main.cache.textCache, main.smallFont, false)
 
 		}
@@ -500,6 +502,13 @@ func (main *controlMain) syncText() {
 			} else {
 				button.mapBoundText = "UNBOUND"
 				button.mapTextUnbound = true
+			}
+
+			if code, ok := main.State.Settings.TurboInputs.ActionToKey[button.actionButton]; ok {
+				button.TurboBoundText = sdl.GetScancodeName(code)
+				main.groups[groupKey].buttons[buttonKey] = button
+			} else {
+				button.TurboBoundText = "UNBOUND"
 			}
 		}
 	}
