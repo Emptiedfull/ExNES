@@ -34,7 +34,8 @@
 },
 "turboBinds": {
 "Joypad-A": "Q",
-"Joypad-B": "W"
+"Joypad-B": "W",
+"Start": "Escape"
 }
 }
 }

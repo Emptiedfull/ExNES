@@ -198,8 +198,6 @@ func (console *game) changeVolume(volumeStr string) {
 
 	volume := float32(volumeInt) / 100.0
 
-	fmt.Println(volume, volumeInt)
-
 	if volume > 1 {
 		volume = 1
 	}

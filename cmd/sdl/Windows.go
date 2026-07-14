@@ -104,8 +104,15 @@ func (win *controlWindow) handleClick(e *sdl.MouseButtonEvent) {
 }
 
 func (win *controlWindow) close() {
+	windows[win.id] = nil
 	win.renderer.Destroy()
 	win.window.Destroy()
+	win.controlMain.smallFont.Close()
+	win.controlMain.font.Close()
+
+	win.controlMain.cache.panelCache = make(panelCache)
+	win.controlMain.cache.textCache = make(map[string]textCache)
+
 	win.open = false
 }
 
@@ -225,6 +232,7 @@ func (win *gameWindow) render() {
 }
 
 func (win *gameWindow) close() {
+	windows[win.id] = nil
 	win.renderer.Destroy()
 	win.window.Destroy()
 	sdl.CloseAudioDevice(win.audioDevice)

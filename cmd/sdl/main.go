@@ -104,7 +104,6 @@ func startLoop(state *localState) {
 						windows[id].close()
 
 					}
-
 				}
 
 			case *sdl.MouseMotionEvent:
@@ -129,7 +128,10 @@ func startLoop(state *localState) {
 		}
 
 		for _, window := range windows {
-			window.render()
+			if window != nil {
+				window.render()
+			}
+
 		}
 
 		sdl.Delay(1)

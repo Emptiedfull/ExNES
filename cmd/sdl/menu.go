@@ -11,10 +11,6 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
-func setUpMenu() {
-	fmt.Println("redit")
-}
-
 type Menuflag int
 
 const (
@@ -306,6 +302,12 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					enabled: true,
 					Icon:    "./icons/gamepad.svg",
 					onClick: func() {
+						for _, window := range windows {
+							if _, ok := window.(*controlWindow); ok {
+
+								return
+							}
+						}
 						win, err := openControlWindow(state)
 						if err != nil {
 							panic(err)
@@ -378,8 +380,10 @@ func (mb *menuBar) handleClick(x, y int32) {
 					}
 				}
 			} else if pointInRect(option.Rect, x, y) {
+				if option.onClick != nil && option.enabled {
+					option.onClick()
+				}
 
-				option.onClick()
 				return
 			}
 
@@ -393,7 +397,6 @@ func (mb *menuBar) handleClick(x, y int32) {
 
 		mb.resetMenu()
 
-		fmt.Println(mb.optionHoverIndex)
 	}
 
 }

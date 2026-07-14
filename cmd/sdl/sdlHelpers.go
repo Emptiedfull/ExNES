@@ -306,7 +306,7 @@ func drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.
 		entry = textCache{}
 		surface, err := font.RenderUTF8Blended(text, col)
 		if err != nil {
-			log.Fatal("bad", err)
+			panic(err)
 		}
 		defer surface.Free()
 

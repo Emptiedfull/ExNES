@@ -65,7 +65,7 @@ func loadState() *localState {
 }
 
 func (state *localState) saveState() {
-	state.Settings.Inputs.DumbReadable()
+
 	data, err := json.MarshalIndent(state, "", "")
 	if err != nil {
 		fmt.Println("error marshaling save state", err)
@@ -106,8 +106,6 @@ func (inp *Inputs) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
-
-	fmt.Println(raw)
 
 	inp.KeyToAction = make(map[sdl.Scancode]Core.BUTTON)
 	inp.ActionToKey = make(map[Core.BUTTON]sdl.Scancode)

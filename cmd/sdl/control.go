@@ -11,6 +11,12 @@ type controlMain struct {
 	font      *ttf.Font
 	smallFont *ttf.Font
 
+	metaLabel     string
+	metaLabelRect sdl.Rect
+	metaPanel     sdl.Rect
+	metaHovering  bool
+	metaButtons   map[string]*metaButton
+
 	groups          map[string]*ControlGroup
 	groupHoverItem  string
 	buttonHoverItem string
@@ -25,6 +31,13 @@ type controlMain struct {
 	windowW int32
 
 	cache ControlCache
+}
+
+type metaButton struct {
+	Hovering bool
+	label    string
+	rect     sdl.Rect
+	onclick  func()
 }
 
 type ControlCache struct {
@@ -126,6 +139,24 @@ func (win *controlWindow) setUp(font, smallfont *ttf.Font, windowH, windowW int3
 		},
 	}}
 
+	win.controlMain.metaLabel = "Actions"
+	win.controlMain.metaButtons = map[string]*metaButton{
+		"Save": {
+			label: "Save",
+			onclick: func() {
+				win.close()
+			},
+		},
+		"Reset": {
+			label: "Reset",
+			onclick: func() {
+				win.state.Settings.Inputs = initializeControls()
+				win.state.Settings.TurboInputs = intializeTurboControls()
+				win.controlMain.syncText()
+			},
+		},
+	}
+
 	win.controlMain.layout(windowH, windowW)
 	win.controlMain.syncText()
 }
@@ -220,7 +251,7 @@ func (main *controlMain) layout(windowH, windowW int32) {
 		X: windowW - int32(float32(windowW)/3.5) - 20,
 		W: int32(float32(windowW) / 3.5),
 		H: (itemH+padding)*2 + 20,
-		Y: (windowH - ((itemH+padding)*2 + 15)) / 2,
+		Y: (windowH - ((itemH+padding)*2 + 60)) / 2,
 	}
 
 	w, h, _ = main.font.SizeUTF8(Joypad.Title)
@@ -363,6 +394,35 @@ func (main *controlMain) layout(windowH, windowW int32) {
 		Y += itemH + padding
 	}
 
+	main.metaPanel = sdl.Rect{
+		W: Joypad.rect.W,
+		H: windowH - Joypad.rect.Y - Joypad.rect.H - 40,
+		X: Joypad.rect.X,
+		Y: Joypad.rect.Y + Joypad.rect.H + 20,
+	}
+
+	w, h, _ = main.font.SizeUTF8(main.metaLabel)
+	main.metaLabelRect = sdl.Rect{
+		X: main.metaPanel.X + 20,
+		Y: main.metaPanel.Y - int32(h)/4,
+		W: int32(w) / 2,
+		H: int32(h) / 2,
+	}
+
+	itemH = (main.metaPanel.H - 40) / 2
+
+	Y = main.metaPanel.Y + int32(20)
+	for _, button := range main.metaButtons {
+		button.rect = sdl.Rect{
+			X: main.metaPanel.X + 10,
+			Y: Y,
+			W: main.metaPanel.W - 20,
+			H: itemH,
+		}
+
+		Y += itemH + 10
+	}
+
 }
 
 var (
@@ -421,6 +481,7 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 
 		main.cache.panelCache.drawRoundedRect(r, &panel, colControlPanelBG, true)
 		main.cache.panelCache.drawRoundedRect(r, &panel, bordercol, false)
+
 		drawText(group.Title, group.TitleRect, r, 0, menuColMap[group.Title].Coltitle, main.cache.textCache, main.font, false)
 
 		for _, button := range group.buttons {
@@ -473,20 +534,44 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 		}
 	}
 
+	colHover := colControlPanelBorder
+	if main.metaHovering {
+		colHover = colControlPanelBorderHov
+
+	}
+
+	main.cache.panelCache.drawRoundedRect(r, &main.metaPanel, colControlPanelBG, true)
+	main.cache.panelCache.drawRoundedRect(r, &main.metaPanel, colHover, false)
+
+	drawText(main.metaLabel, main.metaLabelRect, r, 0, colFieldTextBound, main.cache.textCache, main.font, false)
+
+	for _, button := range main.metaButtons {
+		colHover := colButtonBorder
+		if button.Hovering {
+			colHover = colButtonBorderHov
+		}
+
+		main.cache.panelCache.drawRoundedRect(r, &button.rect, colButtonBG, true)
+		main.cache.panelCache.drawRoundedRect(r, &button.rect, colHover, false)
+
+		drawText(button.label, button.rect, r, 0, colText, main.cache.textCache, main.smallFont, true)
+	}
+
 	if main.ListeningFor != nil {
 
-		if main.ListeningAction == "BIND" {
+		switch main.ListeningAction {
+		case "BIND":
 
 			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.mapButton, colListeningBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.mapButton, colListeningBorder, false)
 
 			main.ListeningFor.mapBoundText = "Listening..."
 
-		} else if main.ListeningAction == "TURBO" {
+		case "TURBO":
 			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.TurboButton, colListeningBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &main.ListeningFor.TurboButton, colListeningBorder, false)
 
-			drawText("Listening...", main.ListeningFor.TurboButton, r, main.ListeningFor.TurboButton.W/4, colText, main.cache.textCache, main.smallFont, false)
+			main.ListeningFor.TurboBoundText = "Listening..."
 		}
 	}
 
@@ -543,6 +628,24 @@ func (main *controlMain) handleMouse(x, y int32) {
 
 	}
 
+	main.metaHovering = false
+	if pointInRect(main.metaPanel, x, y) {
+		main.metaHovering = true
+	} else {
+		for _, button := range main.metaButtons {
+			button.Hovering = false
+		}
+	}
+
+	if main.metaHovering {
+		for _, button := range main.metaButtons {
+			button.Hovering = false
+			if pointInRect(button.rect, x, y) {
+				button.Hovering = true
+			}
+		}
+	}
+
 }
 
 func (main *controlMain) handleClick() {
@@ -552,6 +655,12 @@ func (main *controlMain) handleClick() {
 		main.ListeningFor = group
 		main.ListeningAction = main.actionHoverItem
 	}
+
+	for _, button := range main.metaButtons {
+		if button.Hovering {
+			button.onclick()
+		}
+	}
 }
 
 func (main *controlMain) handleListen(code sdl.Scancode) {
@@ -559,6 +668,11 @@ func (main *controlMain) handleListen(code sdl.Scancode) {
 	if action := main.ListeningFor; action != nil {
 		if main.ListeningAction == "BIND" {
 			main.State.Settings.Inputs.AssignKey(code, main.ListeningFor.actionButton)
+
+			main.syncText()
+			main.ListeningFor = nil
+		} else if main.ListeningAction == "TURBO" {
+			main.State.Settings.TurboInputs.AssignKey(code, main.ListeningFor.actionButton)
 
 			main.syncText()
 			main.ListeningFor = nil
