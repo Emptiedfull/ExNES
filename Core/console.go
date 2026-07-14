@@ -15,6 +15,8 @@ type Console struct {
 	Ppu *ppu
 	Apu *APU
 
+	CheatEngine GameGenieEngine
+
 	Player1 *joyPad
 	Player2 *joyPad
 

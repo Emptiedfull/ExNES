@@ -312,11 +312,9 @@ func (p *ppu) renderPixel() {
 		}
 	}
 
-	// c := NesPaletteLUT[p.readPallete(uint16(color)%64)]
 	in := p.readPallete(uint16(color) % 64)
 
 	p.pushRGB(p.console.palette[p.Mem.register.emphasisIndex][in], x, y)
-	// p.pushRGB([3]byte{c.R, c.G, c.B}, x, y)
 
 }
 

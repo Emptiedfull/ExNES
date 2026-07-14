@@ -10,7 +10,9 @@ package main
 import "C"
 import (
 	"exnes/Core"
+	"fmt"
 	"log"
+	"time"
 
 	_ "net/http/pprof"
 
@@ -43,8 +45,8 @@ var windows = make(Windows)
 
 func main() {
 
-	Core.DecodeCheat("SXIOPO")
-	panic("hi")
+	// Core.DecodeCheat("SXIOPO")
+	// panic("hi")
 
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	pauseChannel := make(chan bool)
@@ -56,6 +58,13 @@ func main() {
 	}
 
 	g.initConsole(displayChannel)
+
+	go func() {
+		time.Sleep(2 * time.Second)
+		g.core.CheatEngine.AddCheat("SXIOPO")
+		g.core.CheatEngine.Enabled = true
+		fmt.Println("cheat applied")
+	}()
 
 	state := loadState()
 

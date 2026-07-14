@@ -2,6 +2,7 @@ package Core
 
 import (
 	_ "embed"
+	"fmt"
 )
 
 type flags = uint8
@@ -203,6 +204,14 @@ func (b *bus) Read(addr uint16) uint8 {
 		val := b.FlatMem[addr]
 		b.Log = append(b.Log, CycleStep{Mode: "read", Addr: int(addr), Val: int(val)})
 		return val
+	}
+
+	if b.Cpu.console.CheatEngine.Enabled {
+		// fmt.Println(b.Cpu.console.CheatEngine.cheatTable)
+		if cheat, ok := b.Cpu.console.CheatEngine.cheatTable[addr]; ok {
+			fmt.Println("returning cheated address")
+			return cheat.val
+		}
 	}
 
 	var val uint8 = 0
