@@ -3,6 +3,7 @@ package Core
 import (
 	"bytes"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"log"
 	"os"
@@ -56,22 +57,6 @@ func (c *Console) UnPause() {
 	c.Paused = false
 }
 
-func (c *Console) LoadRom(filepath string) error {
-	file, err := os.Open(filepath)
-	if err != nil {
-		return fmt.Errorf("unable to read rom file: %v", err)
-	}
-
-	err = c.InitRom(file)
-	if err != nil {
-		return fmt.Errorf("Invalid rom data: %v", err)
-	}
-
-	c.Cpu.Reset()
-
-	return nil
-}
-
 func (c *Console) OpenRomFile(filepath string) (io.Reader, error) {
 	file, err := os.Open(filepath)
 	return file, err
@@ -83,6 +68,8 @@ func LoadRomData(data []uint8) (io.Reader, error) {
 }
 
 func (c *Console) InitRom(data io.Reader) error {
+	h := crc32.NewIEEE()
+	data = io.TeeReader(data, h)
 
 	header := make([]byte, 16)
 	if _, err := io.ReadFull(data, header); err != nil {
@@ -128,6 +115,9 @@ func (c *Console) InitRom(data io.Reader) error {
 			return fmt.Errorf("failed to read Mem: %w", err)
 		}
 	}
+
+	io.Copy(io.Discard, data)
+	fmt.Printf("%08x \n", h.Sum32())
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
 
