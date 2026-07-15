@@ -125,9 +125,6 @@ func (c *Cpu) ResetTemp() {
 }
 
 func (c *Cpu) Tick() {
-	// if c.TotalCycles%100000 == 0 {
-	// 	fmt.Printf("PC=%04X cycle=%d\n", c.PC, c.TotalCycles)
-	// }
 
 	if c.isJamming {
 		c.Mem.Read(c.PC)

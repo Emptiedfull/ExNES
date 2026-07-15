@@ -1,12 +1,19 @@
 package Core
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+)
 
 //no comments in this file are ai, the documentation is just assanine to i had to make my own notes
 
 type GameGenieEngine struct {
 	cheatTable map[uint16]cheat
 	Enabled    bool
+
+	cheatPath string
 }
 
 // A = 0000
@@ -190,4 +197,31 @@ func DecodeCheat(code string) cheat {
 
 func getBit16LSB(val uint16, pos int) int {
 	return int((val >> pos) & 1)
+}
+
+type cheatInfo struct {
+	Game        string
+	cheatCode   string
+	Description string
+}
+
+func findCheat(name string) (cheatInfo, bool) {
+
+	base := strings.TrimPrefix(name, filepath.Ext(name))
+
+	f := filepath.Join("/Users/test/Projects/ExNES/Core/cheats/", base[0:len(base)-4]+".cht")
+	// f := filepath.Join("/Users/test/Projects/ExNES/Core/cheats/", "Super Mario Bros. (World).cht")
+
+	// fmt.Println("file:", f+"cht")
+
+	fmt.Println("file:", f)
+
+	if _, err := os.Stat(f); err != nil {
+		fmt.Println("candiate not found")
+		return cheatInfo{}, false
+	}
+
+	fmt.Println("canidate found")
+
+	return cheatInfo{}, true
 }
