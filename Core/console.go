@@ -16,7 +16,10 @@ type Console struct {
 	Ppu *ppu
 	Apu *APU
 
-	CheatEngine GameGenieEngine
+	CheatEngine    GameGenieEngine
+	DatabaseEngine *RomDB
+
+	romHash uint32
 
 	Player1 *joyPad
 	Player2 *joyPad
@@ -26,8 +29,6 @@ type Console struct {
 	ScreenChannel chan ScreenInfo
 
 	Snapshots SnapshotBuffer
-
-	ready bool
 
 	Paused   bool
 	pausedMu sync.Mutex
@@ -68,8 +69,6 @@ func LoadRomData(data []uint8) (io.Reader, error) {
 }
 
 func (c *Console) InitRom(data io.Reader) error {
-	h := crc32.NewIEEE()
-	data = io.TeeReader(data, h)
 
 	header := make([]byte, 16)
 	if _, err := io.ReadFull(data, header); err != nil {
@@ -95,6 +94,9 @@ func (c *Console) InitRom(data io.Reader) error {
 		return fmt.Errorf("invalid nes header")
 	}
 
+	h := crc32.NewIEEE()
+	data = io.TeeReader(data, h)
+
 	prgBanks := int(header[4])
 	prgSize := prgBanks * 16384
 	prgData := make([]byte, prgSize)
@@ -117,7 +119,7 @@ func (c *Console) InitRom(data io.Reader) error {
 	}
 
 	io.Copy(io.Discard, data)
-	fmt.Printf("%08x \n", h.Sum32())
+	c.romHash = h.Sum32()
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
 
@@ -136,6 +138,13 @@ func InitializeConsole() *Console {
 		OpenBusVal: 0,
 		palette:    loadFPal(Pallete),
 	}
+
+	db, err := LoadDB()
+	if err != nil {
+		fmt.Println("error intializing the db:", err)
+	}
+
+	c.DatabaseEngine = db
 
 	c.Ppu.BackBuffer = make([]uint8, 245760)
 

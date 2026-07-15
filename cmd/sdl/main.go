@@ -12,7 +12,6 @@ import (
 	"exnes/Core"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	_ "net/http/pprof"
@@ -45,15 +44,14 @@ type Windows map[uint32]Window
 var windows = make(Windows)
 
 func main() {
-	dataB := Core.ParseDb()
-	// Core.CreateGameDir(data)
 
-	// Core.DecodeCheat("SXIOPO")
-	// panic("hi")
+	// db := Core.ParseDb()
+	// Core.WriteBin(db)
 
-	data, _ := os.ReadFile("/Users/test/Projects/ExNES/games/Kung Fu (Japan, USA).nes")
-
-	Core.CreateGameDir(dataB, Core.HashCrc(data))
+	// db, err := Core.LoadDB()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	pauseChannel := make(chan bool)
