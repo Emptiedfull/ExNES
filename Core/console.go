@@ -121,8 +121,8 @@ func (c *Console) InitRom(data io.Reader) error {
 	io.Copy(io.Discard, data)
 	c.romHash = h.Sum32()
 
-	x, _ := c.DatabaseEngine.Get(c.romHash)
-	findCheat(x)
+	name, _ := c.DatabaseEngine.Get(c.romHash)
+	c.CheatEngine.findCheat(name)
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
 
@@ -148,6 +148,7 @@ func InitializeConsole() *Console {
 	}
 
 	c.DatabaseEngine = db
+	c.CheatEngine = InitCheat()
 
 	c.Ppu.BackBuffer = make([]uint8, 245760)
 

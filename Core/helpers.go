@@ -202,3 +202,7 @@ func convertBoolToInt(b bool) int {
 	}
 	return val
 }
+
+func getBit16LSB(val uint16, pos int) int {
+	return int((val >> pos) & 1)
+}

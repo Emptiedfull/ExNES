@@ -1,19 +1,38 @@
 package Core
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 //no comments in this file are ai, the documentation is just assanine to i had to make my own notes
 
 type GameGenieEngine struct {
-	cheatTable map[uint16]cheat
+	cheatTable map[uint16]cheatPart
 	Enabled    bool
 
-	cheatPath string
+	cheatDir       string
+	cheatDirExists bool
+}
+
+func InitCheat() GameGenieEngine {
+	gg := GameGenieEngine{
+		cheatTable: make(map[uint16]cheatPart),
+	}
+
+	gg.cheatDir = "./cheats"
+	_, err := os.Stat(gg.cheatDir)
+	if err != nil {
+		gg.cheatDirExists = false
+	} else {
+		gg.cheatDirExists = true
+	}
+
+	return gg
 }
 
 // A = 0000
@@ -108,120 +127,253 @@ var ValString string = "12345678"
 var CompareVal string = "!@#$%^&*"
 
 type cheat struct {
-	enabled    bool
+	enabled     bool
+	Description string
+
+	part cheatPart
+
+	multipart bool
+	multi     []cheatPart
+}
+
+func (g *GameGenieEngine) decodeCheat(cheatCode string, description string) (cheat, error) {
+
+	if g.cheatTable == nil {
+		g.cheatTable = make(map[uint16]cheatPart)
+	}
+
+	part, err := parseCode(cheatCode)
+	if err != nil {
+		return cheat{}, fmt.Errorf("unable to add cheat: %v", err)
+	}
+
+	fmt.Println(g.cheatTable)
+	return cheat{
+		Description: description,
+		part:        part,
+	}, nil
+}
+
+func (gg *GameGenieEngine) addCheat(c cheat) {
+	if c.multipart {
+		for _, part := range c.multi {
+			gg.cheatTable[part.addr] = part
+		}
+	} else {
+		gg.cheatTable[c.part.addr] = c.part
+	}
+}
+
+func (gg *GameGenieEngine) findCheat(name string) (*[]cheat, bool) {
+
+	if !gg.cheatDirExists {
+		return nil, false
+	}
+
+	base := strings.TrimPrefix(name, filepath.Ext(name))
+
+	f := filepath.Join(gg.cheatDir, base[0:len(base)-4]+".cht")
+
+	fmt.Println("file:", f)
+
+	if _, err := os.Stat(f); err != nil {
+		fmt.Println("candiate not found")
+		return nil, false
+	}
+
+	fmt.Println("canidate found")
+
+	parseCheatFile(f)
+
+	return nil, true
+}
+
+func parseCheatFile(filepath string) (*[]cheat, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	defer file.Close()
+
+	raw := make(map[string]string)
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "//") {
+			continue
+		}
+
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			fmt.Println("bad line", line)
+			continue
+		}
+
+		key := strings.TrimSpace(parts[0])
+		val := strings.Trim(strings.TrimSpace(parts[1]), `"`)
+
+		raw[key] = val
+
+	}
+	fmt.Println(raw)
+
+	count, err := strconv.Atoi(raw["cheats"])
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	res := make([]cheat, count)
+	for i := range count {
+		c := cheat{
+			enabled: false,
+		}
+		pre := fmt.Sprintf("cheat%d_", i)
+
+		c.Description = raw[pre+"desc"]
+
+		code := raw[pre+"code"]
+
+		if strings.Contains(code, "+") {
+			c.multipart = true
+			codeParts := strings.SplitN(code, "+", -1)
+
+			multiArr := make([]cheatPart, len(codeParts))
+			for i, part := range codeParts {
+				fmt.Println(part)
+
+				cheatpart, err := parseCode(part)
+				if err != nil {
+					return nil, fmt.Errorf("bad cheat part:%v for fucking up %w", part, err)
+				}
+
+				multiArr[i] = cheatpart
+
+			}
+
+			c.multi = multiArr
+		} else {
+			c.multipart = false
+
+			part, err := parseCode(code)
+
+			if err != nil {
+				return nil, fmt.Errorf("bad code: %v for %w", code, err)
+			}
+
+			c.part = part
+
+		}
+
+		res = append(res, c)
+
+	}
+
+	return &res, nil
+
+}
+
+type cheatPart struct {
 	addr       uint16
 	val        uint8
 	compare    bool
 	compareVal uint8
 }
 
-func (g *GameGenieEngine) AddCheat(cheatCode string) {
+func parseCode(code string) (cheatPart, error) {
+	if strings.Contains(code, ":") {
+		parts := strings.Split(code, ":")
 
-	if g.cheatTable == nil {
-		g.cheatTable = make(map[uint16]cheat)
-	}
+		if len(parts[0]) != 4 || len(parts[1]) != 2 {
+			return cheatPart{}, fmt.Errorf("bad code:", code)
+		}
 
-	cheat := DecodeCheat(cheatCode)
-	g.cheatTable[cheat.addr] = cheat
+		addrInt, err := strconv.Atoi(parts[0])
+		if err != nil {
+			return cheatPart{}, fmt.Errorf("invalid code addr:", parts[0])
+		}
 
-	fmt.Println(g.cheatTable)
-}
+		valInt, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return cheatPart{}, fmt.Errorf("invalid val addr:", parts[1])
+		}
 
-func DecodeCheat(code string) cheat {
-	c := cheat{}
-	switch len(code) {
-	case 6:
-		c.compare = false
-		c.enabled = true
+		return cheatPart{
+			addr:    uint16(addrInt),
+			val:     uint8(valInt),
+			compare: false,
+		}, nil
+	} else {
 
-		decoded := make(map[rune]int)
-		for i, char := range code {
-			bits := charBin[char]
-			for j := range 4 {
+		switch len(code) {
+		case 6:
 
-				decoded[char6BitMap[i][j]] = getBit16LSB(bits, j)
+			decoded := make(map[rune]int)
+			for i, char := range code {
+				bits := charBin[char]
+				for j := range 4 {
+
+					decoded[char6BitMap[i][j]] = getBit16LSB(bits, j)
+				}
 			}
-		}
 
-		var addr uint16
-		n := len(AddrString)
-		for i, r := range AddrString {
-			addr |= uint16(decoded[r]) << (n - 1 - i)
-		}
-		c.addr = 0x8000 + addr
-
-		var val uint8
-		m := len(ValString)
-		for i, r := range ValString {
-			val |= uint8(decoded[r]) << (m - 1 - i)
-		}
-		c.val = val
-
-		fmt.Println("code created:", c.addr, val)
-	case 8:
-		c.compare = true
-		c.enabled = true
-
-		decoded := make(map[rune]int)
-		for i, char := range code {
-			bits := charBin[char]
-			for j := range 4 {
-				decoded[char8BitMap[i][j]] = getBit16LSB(bits, j)
+			var addr uint16
+			n := len(AddrString)
+			for i, r := range AddrString {
+				addr |= uint16(decoded[r]) << (n - 1 - i)
 			}
+
+			var val uint8
+			m := len(ValString)
+			for i, r := range ValString {
+				val |= uint8(decoded[r]) << (m - 1 - i)
+			}
+
+			return cheatPart{
+				addr:    0x8000 + addr,
+				val:     val,
+				compare: false,
+			}, nil
+
+		case 8:
+
+			decoded := make(map[rune]int)
+			for i, char := range code {
+				bits := charBin[char]
+				for j := range 4 {
+					decoded[char8BitMap[i][j]] = getBit16LSB(bits, j)
+				}
+			}
+
+			var addr uint16
+			n := len(AddrString)
+			for i, r := range AddrString {
+				addr |= uint16(decoded[r]) << (n - 1 - i)
+			}
+
+			var val uint8
+			m := len(ValString)
+			for i, r := range ValString {
+				val |= uint8(decoded[r]) << (m - 1 - i)
+			}
+
+			var compare uint8
+			o := len(CompareVal)
+			for i, r := range CompareVal {
+				compare |= uint8(decoded[r]) << (o - 1 - i)
+			}
+
+			return cheatPart{
+				addr:       addr,
+				val:        val,
+				compare:    true,
+				compareVal: compare,
+			}, nil
+		default:
+			return cheatPart{}, fmt.Errorf("bad code:", code)
 		}
 
-		var addr uint16
-		n := len(AddrString)
-		for i, r := range AddrString {
-			addr |= uint16(decoded[r]) << (n - 1 - i)
-		}
-
-		var val uint8
-		m := len(ValString)
-		for i, r := range ValString {
-			val |= uint8(decoded[r]) << (m - 1 - i)
-		}
-
-		var compare uint8
-		o := len(CompareVal)
-		for i, r := range CompareVal {
-			compare |= uint8(decoded[r]) << (o - 1 - i)
-		}
-
-		c.addr = 0x8000 + addr
-		c.val = val
-		c.compareVal = compare
 	}
-	return c
-}
-
-func getBit16LSB(val uint16, pos int) int {
-	return int((val >> pos) & 1)
-}
-
-type cheatInfo struct {
-	Game        string
-	cheatCode   string
-	Description string
-}
-
-func findCheat(name string) (cheatInfo, bool) {
-
-	base := strings.TrimPrefix(name, filepath.Ext(name))
-
-	f := filepath.Join("/Users/test/Projects/ExNES/Core/cheats/", base[0:len(base)-4]+".cht")
-	// f := filepath.Join("/Users/test/Projects/ExNES/Core/cheats/", "Super Mario Bros. (World).cht")
-
-	// fmt.Println("file:", f+"cht")
-
-	fmt.Println("file:", f)
-
-	if _, err := os.Stat(f); err != nil {
-		fmt.Println("candiate not found")
-		return cheatInfo{}, false
-	}
-
-	fmt.Println("canidate found")
-
-	return cheatInfo{}, true
 }

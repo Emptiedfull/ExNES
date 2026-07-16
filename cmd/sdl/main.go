@@ -53,6 +53,8 @@ func main() {
 	// 	panic(err)
 	// }
 
+	Core.InitCheat()
+
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	pauseChannel := make(chan bool)
 
