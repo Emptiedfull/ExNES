@@ -98,7 +98,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	cheatWin, err := openCheatWindow(g)
+	if err != nil {
+		panic(err)
+
+	}
+
 	windows[gameWin.getID()] = gameWin
+
+	windows[cheatWin.getID()] = cheatWin
 
 	startLoop(state)
 
@@ -139,6 +147,11 @@ func startLoop(state *localState) {
 				id := e.WindowID
 				if window, ok := windows[id]; ok {
 					window.handleInput(e)
+				}
+			case *sdl.MouseWheelEvent:
+				id := e.WindowID
+				if Window, ok := windows[id]; ok {
+					Window.handleScroll(e)
 				}
 			}
 

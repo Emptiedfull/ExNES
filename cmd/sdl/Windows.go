@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -11,9 +12,11 @@ type Window interface {
 	render()
 	close()
 	getID() uint32
+
 	handleMouse(*sdl.MouseMotionEvent)
 	handleClick(*sdl.MouseButtonEvent)
 	handleInput(*sdl.KeyboardEvent)
+	handleScroll(*sdl.MouseWheelEvent)
 }
 
 type cheatWindow struct {
@@ -23,10 +26,11 @@ type cheatWindow struct {
 	open     bool
 
 	console *game
+	main    *cheatMain
 }
 
 func openCheatWindow(console *game) (Window, error) {
-	win, err := sdl.CreateWindow("Cheats", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 200, 300, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE)
+	win, err := sdl.CreateWindow("Cheats", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 350, 450, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE)
 	if err != nil {
 		return nil, err
 	}
@@ -37,11 +41,16 @@ func openCheatWindow(console *game) (Window, error) {
 	}
 
 	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
-	renderer.SetLogicalSize(200, 300)
+	renderer.SetLogicalSize(350, 450)
 
 	id, err := win.GetID()
 	if err != nil {
 		return nil, err
+	}
+
+	font, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(14*2))
+	if err != nil {
+		log.Fatal("something bad here:", err)
 	}
 
 	CheatWindow := cheatWindow{
@@ -51,7 +60,13 @@ func openCheatWindow(console *game) (Window, error) {
 		open:     true,
 
 		console: console,
+		main: &cheatMain{
+			windowW: 350,
+			windowH: 450,
+		},
 	}
+
+	CheatWindow.main.Setup(font)
 
 	return &CheatWindow, nil
 }
@@ -72,8 +87,16 @@ func (win *cheatWindow) handleMouse(e *sdl.MouseMotionEvent) {
 
 }
 
-func (win *cheatWindow) render() {
+func (win *cheatWindow) handleScroll(e *sdl.MouseWheelEvent) {
+	fmt.Println("scrolling")
+	win.main.handleScroll(e.Y)
+}
 
+func (win *cheatWindow) render() {
+	win.renderer.SetDrawColor(0, 0, 0, 255)
+	win.renderer.Clear()
+	win.main.render(win.renderer)
+	win.renderer.Present()
 }
 
 func (win *cheatWindow) close() {
@@ -162,6 +185,10 @@ func (win *controlWindow) getID() uint32 {
 
 func (win *controlWindow) handleMouse(e *sdl.MouseMotionEvent) {
 	win.controlMain.handleMouse(e.X, e.Y)
+
+}
+
+func (win *controlWindow) handleScroll(e *sdl.MouseWheelEvent) {
 
 }
 
@@ -329,4 +356,8 @@ func (win *gameWindow) handleClick(e *sdl.MouseButtonEvent) {
 func (win *gameWindow) handleInput(e *sdl.KeyboardEvent) {
 
 	handleInputs(win.menuBar.console, e, win.menuBar.state.Settings.Inputs, win.menuBar.state.Settings.TurboInputs)
+}
+
+func (win *gameWindow) handleScroll(e *sdl.MouseWheelEvent) {
+
 }

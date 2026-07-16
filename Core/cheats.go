@@ -421,3 +421,13 @@ func parseCode(code string) (cheatPart, error) {
 
 	}
 }
+
+func CreateDemoCheats() []Cheat {
+	res, err := parseCheatFile("/Users/test/Projects/ExNES/cmd/sdl/cheats/Super Mario Bros. (World).cht")
+	if err != nil {
+		panic(err)
+
+	}
+
+	return *res
+}
