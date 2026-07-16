@@ -121,8 +121,11 @@ func (c *Console) InitRom(data io.Reader) error {
 	io.Copy(io.Discard, data)
 	c.romHash = h.Sum32()
 
-	name, _ := c.DatabaseEngine.Get(c.romHash)
-	c.CheatEngine.findCheat(name)
+	name, found := c.DatabaseEngine.Get(c.romHash)
+	if found {
+		c.CheatEngine.LoadCheats(name)
+
+	}
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
 

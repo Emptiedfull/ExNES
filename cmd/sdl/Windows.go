@@ -16,6 +16,75 @@ type Window interface {
 	handleInput(*sdl.KeyboardEvent)
 }
 
+type cheatWindow struct {
+	window   *sdl.Window
+	renderer *sdl.Renderer
+	id       uint32
+	open     bool
+
+	console *game
+}
+
+func openCheatWindow(console *game) (Window, error) {
+	win, err := sdl.CreateWindow("Cheats", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 200, 300, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE)
+	if err != nil {
+		return nil, err
+	}
+
+	renderer, err := sdl.CreateRenderer(win, -1, sdl.RENDERER_ACCELERATED)
+	if err != nil {
+		return nil, err
+	}
+
+	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
+	renderer.SetLogicalSize(200, 300)
+
+	id, err := win.GetID()
+	if err != nil {
+		return nil, err
+	}
+
+	CheatWindow := cheatWindow{
+		id:       id,
+		window:   win,
+		renderer: renderer,
+		open:     true,
+
+		console: console,
+	}
+
+	return &CheatWindow, nil
+}
+
+func (win *cheatWindow) getID() uint32 {
+	return win.id
+}
+
+func (win *cheatWindow) handleClick(e *sdl.MouseButtonEvent) {
+
+}
+
+func (win *cheatWindow) handleInput(e *sdl.KeyboardEvent) {
+
+}
+
+func (win *cheatWindow) handleMouse(e *sdl.MouseMotionEvent) {
+
+}
+
+func (win *cheatWindow) render() {
+
+}
+
+func (win *cheatWindow) close() {
+	windows[win.id] = nil
+	win.window.Destroy()
+	win.renderer.Destroy()
+
+	win.open = false
+
+}
+
 type controlWindow struct {
 	window   *sdl.Window
 	renderer *sdl.Renderer

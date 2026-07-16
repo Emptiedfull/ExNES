@@ -177,6 +177,15 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			options: []ItemOption{
 				{
 					enabled:      false,
+					Icon:         "./icons/flag.svg",
+					label:        "Cheats",
+					affectedFlag: gameRunning,
+				}, {
+					isLine: true,
+				},
+
+				{
+					enabled:      false,
 					affectedFlag: gameRunning,
 					Icon:         "./icons/reset.svg",
 					label:        "Reset",

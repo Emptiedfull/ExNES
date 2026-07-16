@@ -12,6 +12,8 @@ import (
 //no comments in this file are ai, the documentation is just assanine to i had to make my own notes
 
 type GameGenieEngine struct {
+	cheats []Cheat
+
 	cheatTable map[uint16]cheatPart
 	Enabled    bool
 
@@ -21,10 +23,12 @@ type GameGenieEngine struct {
 
 func InitCheat() GameGenieEngine {
 	gg := GameGenieEngine{
+		Enabled:    true,
 		cheatTable: make(map[uint16]cheatPart),
+
+		cheatDir: "./cheats",
 	}
 
-	gg.cheatDir = "./cheats"
 	_, err := os.Stat(gg.cheatDir)
 	if err != nil {
 		gg.cheatDirExists = false
@@ -126,17 +130,17 @@ var AddrString string = "ABCDEFGHIJKLMNO"
 var ValString string = "12345678"
 var CompareVal string = "!@#$%^&*"
 
-type cheat struct {
+type Cheat struct {
 	enabled     bool
 	Description string
 
 	part cheatPart
 
 	multipart bool
-	multi     []cheatPart
+	parts     []cheatPart
 }
 
-func (g *GameGenieEngine) decodeCheat(cheatCode string, description string) (cheat, error) {
+func (g *GameGenieEngine) AddCode(cheatCode string, description string) error {
 
 	if g.cheatTable == nil {
 		g.cheatTable = make(map[uint16]cheatPart)
@@ -144,19 +148,24 @@ func (g *GameGenieEngine) decodeCheat(cheatCode string, description string) (che
 
 	part, err := parseCode(cheatCode)
 	if err != nil {
-		return cheat{}, fmt.Errorf("unable to add cheat: %v", err)
+		return fmt.Errorf("unable to add cheat: %v", err)
 	}
 
 	fmt.Println(g.cheatTable)
-	return cheat{
+
+	g.AddCheat(Cheat{
 		Description: description,
 		part:        part,
-	}, nil
+	})
+
+	return nil
 }
 
-func (gg *GameGenieEngine) addCheat(c cheat) {
+func (gg *GameGenieEngine) AddCheat(c Cheat) {
+
+	gg.cheats = append(gg.cheats, c)
 	if c.multipart {
-		for _, part := range c.multi {
+		for _, part := range c.parts {
 			gg.cheatTable[part.addr] = part
 		}
 	} else {
@@ -164,7 +173,39 @@ func (gg *GameGenieEngine) addCheat(c cheat) {
 	}
 }
 
-func (gg *GameGenieEngine) findCheat(name string) (*[]cheat, bool) {
+func (gg *GameGenieEngine) removeCheat(cheatIndex int) {
+	if cheatIndex > len(gg.cheats) {
+		fmt.Println("cheat out of index")
+		return
+	}
+
+	gg.cheats[cheatIndex].enabled = false
+	cheat := gg.cheats[cheatIndex]
+
+	if cheat.multipart {
+		for _, part := range cheat.parts {
+			delete(gg.cheatTable, part.addr)
+		}
+	} else {
+		delete(gg.cheatTable, cheat.part.addr)
+	}
+
+}
+
+func (gg *GameGenieEngine) GetCheats() []Cheat {
+	return gg.cheats
+}
+
+func (gg *GameGenieEngine) LoadCheats(name string) {
+	cheats, found := gg.findCheat(name)
+	if !found {
+		return
+	}
+
+	gg.cheats = *cheats
+}
+
+func (gg *GameGenieEngine) findCheat(name string) (*[]Cheat, bool) {
 
 	if !gg.cheatDirExists {
 		return nil, false
@@ -174,21 +215,21 @@ func (gg *GameGenieEngine) findCheat(name string) (*[]cheat, bool) {
 
 	f := filepath.Join(gg.cheatDir, base[0:len(base)-4]+".cht")
 
-	fmt.Println("file:", f)
-
 	if _, err := os.Stat(f); err != nil {
 		fmt.Println("candiate not found")
 		return nil, false
 	}
 
-	fmt.Println("canidate found")
+	res, err := parseCheatFile(f)
+	if err != nil {
+		fmt.Println("error finding cheats:", err)
+		return nil, false
+	}
 
-	parseCheatFile(f)
-
-	return nil, true
+	return res, true
 }
 
-func parseCheatFile(filepath string) (*[]cheat, error) {
+func parseCheatFile(filepath string) (*[]Cheat, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -217,7 +258,6 @@ func parseCheatFile(filepath string) (*[]cheat, error) {
 		raw[key] = val
 
 	}
-	fmt.Println(raw)
 
 	count, err := strconv.Atoi(raw["cheats"])
 
@@ -225,9 +265,9 @@ func parseCheatFile(filepath string) (*[]cheat, error) {
 		return nil, err
 	}
 
-	res := make([]cheat, count)
+	res := make([]Cheat, 0, count)
 	for i := range count {
-		c := cheat{
+		c := Cheat{
 			enabled: false,
 		}
 		pre := fmt.Sprintf("cheat%d_", i)
@@ -236,13 +276,17 @@ func parseCheatFile(filepath string) (*[]cheat, error) {
 
 		code := raw[pre+"code"]
 
+		if strings.TrimSpace(code) == "" {
+
+			continue
+		}
+
 		if strings.Contains(code, "+") {
 			c.multipart = true
-			codeParts := strings.SplitN(code, "+", -1)
+			codeParts := strings.Split(code, "+")
 
 			multiArr := make([]cheatPart, len(codeParts))
 			for i, part := range codeParts {
-				fmt.Println(part)
 
 				cheatpart, err := parseCode(part)
 				if err != nil {
@@ -253,14 +297,14 @@ func parseCheatFile(filepath string) (*[]cheat, error) {
 
 			}
 
-			c.multi = multiArr
+			c.parts = multiArr
 		} else {
 			c.multipart = false
 
 			part, err := parseCode(code)
 
 			if err != nil {
-				return nil, fmt.Errorf("bad code: %v for %w", code, err)
+				return nil, fmt.Errorf("bad code: %v for %w and %v", code, err, pre)
 			}
 
 			c.part = part
@@ -287,17 +331,17 @@ func parseCode(code string) (cheatPart, error) {
 		parts := strings.Split(code, ":")
 
 		if len(parts[0]) != 4 || len(parts[1]) != 2 {
-			return cheatPart{}, fmt.Errorf("bad code:", code)
+			return cheatPart{}, fmt.Errorf("bad code: %v", code)
 		}
 
-		addrInt, err := strconv.Atoi(parts[0])
+		addrInt, err := strconv.ParseUint(parts[0], 16, 16)
 		if err != nil {
-			return cheatPart{}, fmt.Errorf("invalid code addr:", parts[0])
+			return cheatPart{}, fmt.Errorf("invalid code addr: %v", parts[0])
 		}
 
-		valInt, err := strconv.Atoi(parts[1])
+		valInt, err := strconv.ParseUint(parts[1], 16, 8)
 		if err != nil {
-			return cheatPart{}, fmt.Errorf("invalid val addr:", parts[1])
+			return cheatPart{}, fmt.Errorf("invalid val addr: %v", parts[1])
 		}
 
 		return cheatPart{
@@ -372,7 +416,7 @@ func parseCode(code string) (cheatPart, error) {
 				compareVal: compare,
 			}, nil
 		default:
-			return cheatPart{}, fmt.Errorf("bad code:", code)
+			return cheatPart{}, fmt.Errorf("bad code: %v", code)
 		}
 
 	}

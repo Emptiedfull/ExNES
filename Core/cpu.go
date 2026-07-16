@@ -2,7 +2,6 @@ package Core
 
 import (
 	_ "embed"
-	"fmt"
 )
 
 type flags = uint8
@@ -206,13 +205,13 @@ func (b *bus) Read(addr uint16) uint8 {
 	var val uint8 = 0
 	if b.Cpu.console.CheatEngine.Enabled {
 		if cheat, ok := b.Cpu.console.CheatEngine.cheatTable[addr]; ok {
-			fmt.Println("cheat found")
+			// fmt.Println("cheat found")
 			if cheat.compare {
 				if cheat.compareVal == val {
 					return cheat.val
 				}
 			} else {
-				fmt.Println("returning cheat")
+				// fmt.Println("returning cheat")
 				return cheat.val
 			}
 

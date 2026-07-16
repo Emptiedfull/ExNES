@@ -10,9 +10,7 @@ package main
 import "C"
 import (
 	"exnes/Core"
-	"fmt"
 	"log"
-	"time"
 
 	_ "net/http/pprof"
 
@@ -53,7 +51,7 @@ func main() {
 	// 	panic(err)
 	// }
 
-	Core.InitCheat()
+	// Core.InitCheat()
 
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	pauseChannel := make(chan bool)
@@ -66,12 +64,12 @@ func main() {
 
 	g.initConsole(displayChannel)
 
-	go func() {
-		time.Sleep(1 * time.Second)
-		g.core.CheatEngine.AddCheat("SUNNIZVI")
-		g.core.CheatEngine.Enabled = true
-		fmt.Println("cheat applied")
-	}()
+	// go func() {
+	// 	time.Sleep(3 * time.Second)
+	// 	g.core.CheatEngine.AddCode("ZZZLTT", "")
+	// 	g.core.CheatEngine.Enabled = true
+	// 	fmt.Println("cheat applied")
+	// }()
 
 	state := loadState()
 
