@@ -571,7 +571,7 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 		textRect := subOption.Rect
 
 		if subOption.Icon != "" {
-			icon := mb.getIcon(r, subOption.Icon, colText)
+			icon := getIcon(r, subOption.Icon, colText, mb.cache.iconCache)
 
 			if icon != nil {
 				rect := sdl.Rect{
@@ -620,7 +620,7 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 		}
 
 		if option.Icon != "" {
-			icon := mb.getIcon(r, option.Icon, color)
+			icon := getIcon(r, option.Icon, color, mb.cache.iconCache)
 			if icon != nil {
 				iconRect := sdl.Rect{
 					X: option.Rect.X + 6,

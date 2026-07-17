@@ -37,6 +37,7 @@ type cheatMain struct {
 type cheatCache struct {
 	textcache map[string]textCache
 	panelCache
+	iconCache map[string]*sdl.Texture
 }
 
 type cheatEntry struct {
@@ -49,6 +50,7 @@ func (main *cheatMain) Setup(font *ttf.Font) {
 
 	main.panelCache = make(panelCache)
 	main.cheatCache.textcache = make(map[string]textCache)
+	main.iconCache = make(map[string]*sdl.Texture)
 
 	main.cheats = Core.CreateDemoCheats()
 
@@ -111,6 +113,57 @@ func (main *cheatMain) render(r *sdl.Renderer) {
 
 	main.renderList(r)
 }
+
+type cheatRowColScheme struct {
+	bg     sdl.Color
+	border sdl.Color
+	text   sdl.Color
+	icon   sdl.Color
+}
+
+var (
+	CheatNormal = cheatRowColScheme{
+		bg:     colFieldBG,
+		border: colPanelBorder,
+		text:   colTextDim,
+		icon:   colTextDim,
+	}
+
+	cheatHover = cheatRowColScheme{
+		bg:     colHover,
+		border: colAccent,
+		text:   colText,
+		icon:   colText,
+	}
+
+	cheatActive = cheatRowColScheme{
+		bg:     sdl.Color{R: 46, G: 40, B: 74, A: 255},
+		border: colAccent,
+		text:   colText,
+		icon:   colAccent,
+	}
+
+	cheatActiveHover = cheatRowColScheme{
+		bg:     sdl.Color{R: 58, G: 50, B: 92, A: 255},
+		border: colAccent,
+		text:   colText,
+		icon:   colAccent,
+	}
+)
+
+func get_Scheme(active, hover bool) cheatRowColScheme {
+	switch {
+	case active && hover:
+		return cheatActiveHover
+	case active:
+		return cheatActive
+	case hover:
+		return cheatHover
+	default:
+		return CheatNormal
+	}
+}
+
 func (main *cheatMain) renderList(r *sdl.Renderer) {
 	r.SetClipRect(&main.cheatsRect)
 
@@ -123,12 +176,32 @@ func (main *cheatMain) renderList(r *sdl.Renderer) {
 	Y := main.cheatsRect.Y - (offset % rowSpan) + 20
 
 	for i := firstIndex; Y < main.cheatsRect.Y+main.cheatsRect.H && int(i) < len(main.cheats); i++ {
+		cheat := main.cheats[i]
 		rowRect := sdl.Rect{X: main.cheatsRect.X + 10, Y: Y, W: main.cheatsRect.W - 30, H: cheatItemHeight}
+		innerRect := sdl.Rect{X: rowRect.X + 1, Y: rowRect.Y + 1, W: rowRect.W - 2, H: rowRect.H - 2}
 
-		main.drawRoundedRect(r, &rowRect, colFieldBG, true)
-		main.drawRoundedRect(r, &rowRect, colAccent, false)
+		hovered := int32(main.HoverIndex) == i
 
-		drawText(main.cheats[i].Description, r, main.textcache, TextOptions{rect: rowRect, col: colText, font: main.font, clamped: true, centered: false, offset: 32})
+		scheme := get_Scheme(cheat.Enabled, hovered)
+
+		main.drawRoundedRect(r, &rowRect, scheme.border, true)
+		main.drawRoundedRect(r, &innerRect, scheme.bg, true)
+
+		checkboxRect := sdl.Rect{
+			X: rowRect.X + 6,
+			H: cheatItemHeight - 16,
+			Y: rowRect.Y + 8,
+			W: cheatItemHeight - 16,
+		}
+
+		if cheat.Enabled {
+			drawIcon(r, "./icons/check.svg", scheme.icon, main.iconCache, &checkboxRect)
+		}
+
+		r.SetDrawColor(scheme.border.R, scheme.border.G, scheme.border.B, 255)
+		r.DrawLine(rowRect.X+32, checkboxRect.Y-2, rowRect.X+32, checkboxRect.Y+checkboxRect.H+2)
+
+		drawText(cheat.Description, r, main.textcache, TextOptions{rect: rowRect, col: scheme.text, font: main.font, clamped: true, centered: false, offset: 44})
 
 		Y += rowSpan
 	}
@@ -208,6 +281,11 @@ func (main *cheatMain) handleMouseDown(x, y int32) {
 		main.clampScroll()
 	}
 
+	if idx := main.getIdx(x, y); idx != -1 {
+
+		main.cheats[idx].Enabled = !main.cheats[idx].Enabled
+	}
+
 }
 
 func (main *cheatMain) handleMouseUp() {
@@ -216,24 +294,26 @@ func (main *cheatMain) handleMouseUp() {
 }
 
 func (main *cheatMain) handleMouseMove(x, y int32) {
-	if !main.DraggingThumb {
-		return
+	if main.DraggingThumb {
+
+		rowSpan := int32(cheatItemHeight + cheatListPadding)
+		contentH := int32(len(main.cheats)) * rowSpan
+
+		H := main.TrackRect.H - main.ThumbRect.H
+
+		if H < 0 {
+			return
+		}
+
+		diffM := y - main.dragStartMouseY
+		diffS := int32(float64(diffM) * float64(contentH-main.cheatsRect.H) / float64(H))
+
+		main.scrollOffsetTarget = main.dragStartOffset + diffS
+		main.clampScroll()
 	}
 
-	rowSpan := int32(cheatItemHeight + cheatListPadding)
-	contentH := int32(len(main.cheats)) * rowSpan
+	main.HoverIndex = main.getIdx(x, y)
 
-	H := main.TrackRect.H - main.ThumbRect.H
-
-	if H < 0 {
-		return
-	}
-
-	diffM := y - main.dragStartMouseY
-	diffS := int32(float64(diffM) * float64(contentH-main.cheatsRect.H) / float64(H))
-
-	main.scrollOffsetTarget = main.dragStartOffset + diffS
-	main.clampScroll()
 }
 
 func (main *cheatMain) clampScroll() {
@@ -247,4 +327,32 @@ func (main *cheatMain) clampScroll() {
 	if main.scrollOffsetTarget > maxS {
 		main.scrollOffsetTarget = maxS
 	}
+}
+
+func (main *cheatMain) getIdx(x, y int32) int {
+	if !pointInRect(main.cheatsRect, x, y) {
+		return -1
+	}
+
+	const rowSpan = cheatItemHeight + cheatListPadding
+	offset := int32(main.scrollOffsetCurr)
+
+	r := y - main.cheatsRect.Y - 20 + offset
+	if r < 0 {
+		return -1
+	}
+
+	idx := r / rowSpan
+	inRow := r % rowSpan
+
+	if inRow >= cheatItemHeight {
+		return -1
+	}
+
+	if int(idx) >= len(main.cheats) {
+		return -1
+	}
+
+	return int(idx)
+
 }

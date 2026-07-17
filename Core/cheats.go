@@ -131,7 +131,7 @@ var ValString string = "12345678"
 var CompareVal string = "!@#$%^&*"
 
 type Cheat struct {
-	enabled     bool
+	Enabled     bool
 	Description string
 
 	part cheatPart
@@ -179,7 +179,7 @@ func (gg *GameGenieEngine) removeCheat(cheatIndex int) {
 		return
 	}
 
-	gg.cheats[cheatIndex].enabled = false
+	gg.cheats[cheatIndex].Enabled = false
 	cheat := gg.cheats[cheatIndex]
 
 	if cheat.multipart {
@@ -268,7 +268,7 @@ func parseCheatFile(filepath string) (*[]Cheat, error) {
 	res := make([]Cheat, 0, count)
 	for i := range count {
 		c := Cheat{
-			enabled: false,
+			Enabled: false,
 		}
 		pre := fmt.Sprintf("cheat%d_", i)
 

@@ -502,8 +502,16 @@ func createRoundedRect(r *sdl.Renderer, col sdl.Color, w, h int32, filled bool) 
 	return tex, nil
 }
 
-func (mb *menuBar) getIcon(r *sdl.Renderer, path string, col sdl.Color) *sdl.Texture {
-	texture, ok := mb.cache.iconCache[path+convertColToString(col)]
+func drawIcon(r *sdl.Renderer, path string, col sdl.Color, cache map[string]*sdl.Texture, rect *sdl.Rect) {
+	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
+	defer sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "0")
+	if icon := getIcon(r, path, col, cache); icon != nil {
+		r.Copy(icon, nil, rect)
+	}
+}
+
+func getIcon(r *sdl.Renderer, path string, col sdl.Color, cache map[string]*sdl.Texture) *sdl.Texture {
+	texture, ok := cache[path+convertColToString(col)]
 	if ok {
 
 		return texture
@@ -516,7 +524,7 @@ func (mb *menuBar) getIcon(r *sdl.Renderer, path string, col sdl.Color) *sdl.Tex
 		return nil
 	}
 
-	mb.cache.iconCache[path+convertColToString(col)] = texture
+	cache[path+convertColToString(col)] = texture
 	return texture
 
 }
