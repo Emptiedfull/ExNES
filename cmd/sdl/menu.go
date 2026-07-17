@@ -525,7 +525,9 @@ func (mb *menuBar) renderBar(r *sdl.Renderer) {
 
 		}
 
-		drawText(item.label, item.Rect, r, 12, colText, mb.cache.textCache, mb.Font, false)
+		// drawText(item.label, item.Rect, r, 12, colText, mb.cache.textCache, mb.Font, false)
+
+		drawText(item.label, r, mb.cache.textCache, TextOptions{rect: item.Rect, offset: 12, font: mb.Font, col: colText})
 
 	}
 
@@ -583,7 +585,9 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 			}
 		}
 
-		drawText(subOption.label, textRect, r, iconGutter, color, mb.cache.textCache, mb.Font, false)
+		// drawText(subOption.label, textRect, r, iconGutter, color, mb.cache.textCache, mb.Font, false)
+
+		drawText(subOption.label, r, mb.cache.textCache, TextOptions{col: color, font: mb.Font, offset: iconGutter, rect: textRect})
 	}
 
 }
@@ -629,7 +633,9 @@ func (mb *menuBar) renderDropdown(r *sdl.Renderer, item *menuItem) {
 			}
 		}
 
-		drawText(option.label, option.Rect, r, iconGutter, color, mb.cache.textCache, mb.Font, false)
+		// drawText(option.label, option.Rect, r, iconGutter, color, mb.cache.textCache, mb.Font, false)
+
+		drawText(option.label, r, mb.cache.textCache, TextOptions{rect: option.Rect, font: mb.Font, col: color, offset: iconGutter})
 
 		if option.Expandable {
 
@@ -658,6 +664,8 @@ func (mb *menuBar) renderFps(r *sdl.Renderer) {
 			H: 30,
 		}
 
-		drawText(label, rect, r, 0, colText, mb.cache.textCache, mb.Font, false)
+		// drawText(label, rect, r, 0, colText, mb.cache.textCache, mb.Font, false)
+
+		drawText(label, r, mb.cache.textCache, TextOptions{rect: rect, font: mb.Font, col: colText})
 	}
 }

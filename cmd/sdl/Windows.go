@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -76,7 +75,13 @@ func (win *cheatWindow) getID() uint32 {
 }
 
 func (win *cheatWindow) handleClick(e *sdl.MouseButtonEvent) {
+	pressed := e.State == sdl.PRESSED
 
+	if pressed {
+		win.main.handleMouseDown(e.X, e.Y)
+	} else {
+		win.main.handleMouseUp()
+	}
 }
 
 func (win *cheatWindow) handleInput(e *sdl.KeyboardEvent) {
@@ -84,11 +89,11 @@ func (win *cheatWindow) handleInput(e *sdl.KeyboardEvent) {
 }
 
 func (win *cheatWindow) handleMouse(e *sdl.MouseMotionEvent) {
-
+	win.main.handleMouseMove(e.X, e.Y)
 }
 
 func (win *cheatWindow) handleScroll(e *sdl.MouseWheelEvent) {
-	fmt.Println("scrolling")
+
 	win.main.handleScroll(e.Y)
 }
 

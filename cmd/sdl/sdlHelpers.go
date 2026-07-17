@@ -299,12 +299,32 @@ func (mb *menuBar) setFlag(flag Menuflag, state bool) {
 
 }
 
-func drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.Color, cache map[string]textCache, font *ttf.Font, centered bool) {
-	itemEntry := text + convertColToString(col)
+type TextOptions struct {
+	rect     sdl.Rect
+	offset   int32
+	col      sdl.Color
+	centered bool
+	font     *ttf.Font
+	clamped  bool
+}
+
+func drawText(text string, r *sdl.Renderer, cache map[string]textCache, options TextOptions) {
+	var itemEntry string
+	if options.clamped {
+		itemEntry = text + convertColToString(options.col) + strconv.Itoa(int(options.rect.W))
+	} else {
+		itemEntry = text + convertColToString(options.col)
+	}
+
 	entry, ok := cache[itemEntry]
 	if !ok {
 		entry = textCache{}
-		surface, err := font.RenderUTF8Blended(text, col)
+
+		if options.clamped {
+			text = truncateStr(options.font, text, int32(float32(options.rect.W)/1.2)-options.offset)
+		}
+
+		surface, err := options.font.RenderUTF8Blended(text, options.col)
 		if err != nil {
 			panic(err)
 		}
@@ -323,20 +343,50 @@ func drawText(text string, rect sdl.Rect, r *sdl.Renderer, offet int32, col sdl.
 
 	}
 
-	x := rect.X + offet
-	if centered {
-		x = rect.X + (rect.W-entry.W)/2
+	x := options.rect.X + options.offset
+	if options.centered {
+		x = options.rect.X + (options.rect.W-entry.W)/2
 	}
 
 	dst := sdl.Rect{
 		X: x,
-		Y: rect.Y + (rect.H-entry.H)/2,
+		Y: options.rect.Y + (options.rect.H-entry.H)/2,
 		W: entry.W,
 		H: entry.H,
 	}
 
 	r.Copy(entry.texture, nil, &dst)
 
+}
+
+const filler = "..."
+
+func truncateStr(font *ttf.Font, text string, MaxWidth int32) string {
+	if textWdith(text, font) < MaxWidth {
+		return text
+	}
+
+	fillerWidth := textWdith(filler, font)
+
+	runes := []rune(text)
+	for i := len(text) - 1; i > 0; i-- {
+		check := string(runes[:i])
+		if textWdith(check, font)+fillerWidth < MaxWidth {
+			return check + filler
+		}
+	}
+
+	return filler
+
+}
+
+func textWdith(text string, font *ttf.Font) int32 {
+	w, _, err := font.SizeUTF8(text)
+	if err != nil {
+		fmt.Println("bad fucking text: ", err)
+	}
+
+	return int32(w) / upfactor
 }
 
 const upfactor = 2

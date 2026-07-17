@@ -482,7 +482,9 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 		main.cache.panelCache.drawRoundedRect(r, &panel, colControlPanelBG, true)
 		main.cache.panelCache.drawRoundedRect(r, &panel, bordercol, false)
 
-		drawText(group.Title, group.TitleRect, r, 0, menuColMap[group.Title].Coltitle, main.cache.textCache, main.font, false)
+		// drawText(group.Title, group.TitleRect, r, 0, menuColMap[group.Title].Coltitle, main.cache.textCache, main.font, false)
+
+		drawText(group.Title, r, main.cache.textCache, TextOptions{rect: group.TitleRect, font: main.font, col: menuColMap[group.Title].Coltitle})
 
 		for _, button := range group.buttons {
 
@@ -496,7 +498,9 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 			main.cache.panelCache.drawRoundedRect(r, &button.rect, colButtonBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &button.rect, bordercol, false)
 
-			drawText(button.Title, button.TitleRect, r, 0, colText, main.cache.textCache, main.smallFont, false)
+			// drawText(button.Title, button.TitleRect, r, 0, colText, main.cache.textCache, main.smallFont, false)
+
+			drawText(button.Title, r, main.cache.textCache, TextOptions{rect: button.TitleRect, font: main.smallFont, col: colText})
 
 			mapCol := colFieldBorder
 			mapText := colTextDim
@@ -513,8 +517,11 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 			main.cache.panelCache.drawRoundedRect(r, &button.mapButton, colFieldBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &button.mapButton, mapCol, false)
 
-			drawText(button.mapBoundText, button.mapButton, r, button.mapButton.W/4, mapText, main.cache.textCache, main.smallFont, true)
-			drawText("BIND", button.mapTextRect, r, 12, mapText, main.cache.textCache, main.smallFont, false)
+			// drawText(button.mapBoundText, button.mapButton, r, button.mapButton.W/4, mapText, main.cache.textCache, main.smallFont, true)
+			// drawText("BIND", button.mapTextRect, r, 12, mapText, main.cache.textCache, main.smallFont, false)
+
+			drawText("BIND", r, main.cache.textCache, TextOptions{offset: 12, font: main.smallFont, rect: button.mapTextRect, col: mapText})
+			drawText(button.mapBoundText, r, main.cache.textCache, TextOptions{rect: button.mapButton, offset: button.mapButton.W / 4, font: main.smallFont, col: mapText})
 
 			turboCol := colFieldBorder
 			turboText := colTextDim
@@ -528,8 +535,11 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 			main.cache.panelCache.drawRoundedRect(r, &button.TurboButton, colFieldBG, true)
 			main.cache.panelCache.drawRoundedRect(r, &button.TurboButton, turboCol, false)
 
-			drawText(button.TurboBoundText, button.TurboButton, r, 0, turboText, main.cache.textCache, main.smallFont, true)
-			drawText("TURBO", button.TurboTextRect, r, 12, turboText, main.cache.textCache, main.smallFont, false)
+			// drawText(button.TurboBoundText, button.TurboButton, r, 0, turboText, main.cache.textCache, main.smallFont, true)
+			// drawText("TURBO", button.TurboTextRect, r, 12, turboText, main.cache.textCache, main.smallFont, false)
+
+			drawText("TURBO", r, main.cache.textCache, TextOptions{offset: 12, font: main.smallFont, rect: button.TurboTextRect, col: turboText})
+			drawText(button.TurboBoundText, r, main.cache.textCache, TextOptions{rect: button.TurboButton, offset: button.TurboButton.W / 4, font: main.smallFont, col: turboText})
 
 		}
 	}
@@ -543,7 +553,9 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 	main.cache.panelCache.drawRoundedRect(r, &main.metaPanel, colControlPanelBG, true)
 	main.cache.panelCache.drawRoundedRect(r, &main.metaPanel, colHover, false)
 
-	drawText(main.metaLabel, main.metaLabelRect, r, 0, colFieldTextBound, main.cache.textCache, main.font, false)
+	// drawText(main.metaLabel, main.metaLabelRect, r, 0, colFieldTextBound, main.cache.textCache, main.font, false)
+
+	drawText(main.metaLabel, r, main.cache.textCache, TextOptions{rect: main.metaLabelRect, font: main.font, col: colFieldTextBound})
 
 	for _, button := range main.metaButtons {
 		colHover := colButtonBorder
@@ -554,7 +566,9 @@ func (main *controlMain) renderBoxes(r *sdl.Renderer) {
 		main.cache.panelCache.drawRoundedRect(r, &button.rect, colButtonBG, true)
 		main.cache.panelCache.drawRoundedRect(r, &button.rect, colHover, false)
 
-		drawText(button.label, button.rect, r, 0, colText, main.cache.textCache, main.smallFont, true)
+		// drawText(button.label, button.rect, r, 0, colText, main.cache.textCache, main.smallFont, true)
+
+		drawText(button.label, r, main.cache.textCache, TextOptions{rect: button.rect, font: main.smallFont, col: colText, centered: true})
 	}
 
 	if main.ListeningFor != nil {
