@@ -65,7 +65,7 @@ func openCheatWindow(console *game) (Window, error) {
 		},
 	}
 
-	CheatWindow.main.Setup(font)
+	CheatWindow.main.Setup(font, &console.core.CheatEngine)
 
 	return &CheatWindow, nil
 }

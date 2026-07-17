@@ -204,7 +204,10 @@ func (b *bus) Read(addr uint16) uint8 {
 
 	var val uint8 = 0
 	if b.Cpu.console.CheatEngine.Enabled {
+		b.Cpu.console.CheatEngine.TableMutex.Lock()
+		defer b.Cpu.console.CheatEngine.TableMutex.Unlock()
 		if cheat, ok := b.Cpu.console.CheatEngine.cheatTable[addr]; ok {
+
 			// fmt.Println("cheat found")
 			if cheat.compare {
 				if cheat.compareVal == val {

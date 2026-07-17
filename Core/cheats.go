@@ -7,14 +7,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 //no comments in this file are ai, the documentation is just assanine to i had to make my own notes
 
 type GameGenieEngine struct {
-	cheats []Cheat
+	Cheats []Cheat
 
 	cheatTable map[uint16]cheatPart
+	TableMutex sync.Mutex
 	Enabled    bool
 
 	cheatDir       string
@@ -151,19 +153,26 @@ func (g *GameGenieEngine) AddCode(cheatCode string, description string) error {
 		return fmt.Errorf("unable to add cheat: %v", err)
 	}
 
-	fmt.Println(g.cheatTable)
-
-	g.AddCheat(Cheat{
+	cheat := Cheat{
 		Description: description,
 		part:        part,
-	})
+	}
+
+	g.Cheats = append(g.Cheats, cheat)
 
 	return nil
 }
 
-func (gg *GameGenieEngine) AddCheat(c Cheat) {
+func (gg *GameGenieEngine) ApplyCheat(cheatIndex int) {
+	gg.TableMutex.Lock()
+	defer gg.TableMutex.Unlock()
+	if cheatIndex > len(gg.Cheats) {
+		fmt.Println("cheat out of index")
+		return
+	}
+	gg.Cheats[cheatIndex].Enabled = true
 
-	gg.cheats = append(gg.cheats, c)
+	c := gg.Cheats[cheatIndex]
 	if c.multipart {
 		for _, part := range c.parts {
 			gg.cheatTable[part.addr] = part
@@ -173,14 +182,16 @@ func (gg *GameGenieEngine) AddCheat(c Cheat) {
 	}
 }
 
-func (gg *GameGenieEngine) removeCheat(cheatIndex int) {
-	if cheatIndex > len(gg.cheats) {
+func (gg *GameGenieEngine) RemoveCheat(cheatIndex int) {
+	gg.TableMutex.Lock()
+	defer gg.TableMutex.Unlock()
+	if cheatIndex > len(gg.Cheats) {
 		fmt.Println("cheat out of index")
 		return
 	}
 
-	gg.cheats[cheatIndex].Enabled = false
-	cheat := gg.cheats[cheatIndex]
+	gg.Cheats[cheatIndex].Enabled = false
+	cheat := gg.Cheats[cheatIndex]
 
 	if cheat.multipart {
 		for _, part := range cheat.parts {
@@ -193,7 +204,7 @@ func (gg *GameGenieEngine) removeCheat(cheatIndex int) {
 }
 
 func (gg *GameGenieEngine) GetCheats() []Cheat {
-	return gg.cheats
+	return gg.Cheats
 }
 
 func (gg *GameGenieEngine) LoadCheats(name string) {
@@ -202,7 +213,9 @@ func (gg *GameGenieEngine) LoadCheats(name string) {
 		return
 	}
 
-	gg.cheats = *cheats
+	fmt.Println("loading cheats")
+
+	gg.Cheats = append(gg.Cheats, *cheats...)
 }
 
 func (gg *GameGenieEngine) findCheat(name string) (*[]Cheat, bool) {

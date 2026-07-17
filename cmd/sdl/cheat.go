@@ -19,7 +19,7 @@ type cheatMain struct {
 	Title     string
 
 	cheatsRect sdl.Rect
-	cheats     []Core.Cheat
+	engine     *Core.GameGenieEngine
 	HoverIndex int
 
 	scrollOffsetTarget int32
@@ -34,17 +34,20 @@ type cheatMain struct {
 	cheatCache
 }
 
+type CheatInput struct {
+	inputRect sdl.Rect
+	inputText string
+
+	inputConfirm sdl.Rect
+}
+
 type cheatCache struct {
 	textcache map[string]textCache
 	panelCache
 	iconCache map[string]*sdl.Texture
 }
 
-type cheatEntry struct {
-	cheat *Core.Cheat
-}
-
-func (main *cheatMain) Setup(font *ttf.Font) {
+func (main *cheatMain) Setup(font *ttf.Font, engine *Core.GameGenieEngine) {
 
 	main.font = font
 
@@ -52,7 +55,7 @@ func (main *cheatMain) Setup(font *ttf.Font) {
 	main.cheatCache.textcache = make(map[string]textCache)
 	main.iconCache = make(map[string]*sdl.Texture)
 
-	main.cheats = Core.CreateDemoCheats()
+	main.engine = engine
 
 	main.Layout()
 }
@@ -165,6 +168,7 @@ func get_Scheme(active, hover bool) cheatRowColScheme {
 }
 
 func (main *cheatMain) renderList(r *sdl.Renderer) {
+	cheats := main.engine.Cheats
 	r.SetClipRect(&main.cheatsRect)
 
 	const rowSpan = cheatItemHeight + cheatListPadding
@@ -175,8 +179,8 @@ func (main *cheatMain) renderList(r *sdl.Renderer) {
 
 	Y := main.cheatsRect.Y - (offset % rowSpan) + 20
 
-	for i := firstIndex; Y < main.cheatsRect.Y+main.cheatsRect.H && int(i) < len(main.cheats); i++ {
-		cheat := main.cheats[i]
+	for i := firstIndex; Y < main.cheatsRect.Y+main.cheatsRect.H && int(i) < len(cheats); i++ {
+		cheat := cheats[i]
 		rowRect := sdl.Rect{X: main.cheatsRect.X + 10, Y: Y, W: main.cheatsRect.W - 30, H: cheatItemHeight}
 		innerRect := sdl.Rect{X: rowRect.X + 1, Y: rowRect.Y + 1, W: rowRect.W - 2, H: rowRect.H - 2}
 
@@ -215,7 +219,7 @@ func (main *cheatMain) renderList(r *sdl.Renderer) {
 
 func (main *cheatMain) updateScrollBar() {
 	rowSpan := int32(cheatItemHeight + cheatListPadding)
-	contentH := int32(len(main.cheats)) * rowSpan
+	contentH := int32(len(main.engine.Cheats)) * rowSpan
 	viewpoint := main.cheatsRect.H
 
 	if contentH < viewpoint {
@@ -283,7 +287,15 @@ func (main *cheatMain) handleMouseDown(x, y int32) {
 
 	if idx := main.getIdx(x, y); idx != -1 {
 
-		main.cheats[idx].Enabled = !main.cheats[idx].Enabled
+		main.engine.Cheats[idx].Enabled = !main.engine.Cheats[idx].Enabled
+
+		if main.engine.Cheats[idx].Enabled {
+
+			main.engine.ApplyCheat(idx)
+		} else {
+
+			main.engine.RemoveCheat(idx)
+		}
 	}
 
 }
@@ -297,7 +309,7 @@ func (main *cheatMain) handleMouseMove(x, y int32) {
 	if main.DraggingThumb {
 
 		rowSpan := int32(cheatItemHeight + cheatListPadding)
-		contentH := int32(len(main.cheats)) * rowSpan
+		contentH := int32(len(main.engine.Cheats)) * rowSpan
 
 		H := main.TrackRect.H - main.ThumbRect.H
 
@@ -317,7 +329,7 @@ func (main *cheatMain) handleMouseMove(x, y int32) {
 }
 
 func (main *cheatMain) clampScroll() {
-	contentHeight := int32(len(main.cheats)) * (cheatItemHeight + cheatListPadding)
+	contentHeight := int32(len(main.engine.Cheats)) * (cheatItemHeight + cheatListPadding)
 	maxS := max(contentHeight-main.cheatsRect.H, 0)
 
 	if main.scrollOffsetTarget < 0 {
@@ -349,7 +361,7 @@ func (main *cheatMain) getIdx(x, y int32) int {
 		return -1
 	}
 
-	if int(idx) >= len(main.cheats) {
+	if int(idx) >= len(main.engine.Cheats) {
 		return -1
 	}
 
