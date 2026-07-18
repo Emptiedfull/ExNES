@@ -16,6 +16,7 @@ type Window interface {
 	handleClick(*sdl.MouseButtonEvent)
 	handleInput(*sdl.KeyboardEvent)
 	handleScroll(*sdl.MouseWheelEvent)
+	handleTextInput(*sdl.TextInputEvent)
 }
 
 type cheatWindow struct {
@@ -65,9 +66,14 @@ func openCheatWindow(console *game) (Window, error) {
 		},
 	}
 
-	CheatWindow.main.Setup(font, &console.core.CheatEngine)
+	CheatWindow.main.Setup(font, console.core.CheatEngine, console.core.GetName())
 
 	return &CheatWindow, nil
+}
+
+func (win *cheatWindow) handleTextInput(e *sdl.TextInputEvent) {
+	win.main.input.handleTextInput(e)
+
 }
 
 func (win *cheatWindow) getID() uint32 {
@@ -85,7 +91,7 @@ func (win *cheatWindow) handleClick(e *sdl.MouseButtonEvent) {
 }
 
 func (win *cheatWindow) handleInput(e *sdl.KeyboardEvent) {
-
+	win.main.input.handleKeyInput(e)
 }
 
 func (win *cheatWindow) handleMouse(e *sdl.MouseMotionEvent) {
@@ -176,6 +182,10 @@ func (win *controlWindow) handleInput(e *sdl.KeyboardEvent) {
 		}
 
 	}
+}
+
+func (win *controlWindow) handleTextInput(e *sdl.TextInputEvent) {
+
 }
 
 func (win *controlWindow) render() {
@@ -298,6 +308,8 @@ func openGameWindow(font *ttf.Font, console *game, state *localState) (Window, e
 	state.running = true
 	console.audioDevice = audioDevice
 
+	sdl.StartTextInput()
+
 	sdl.PauseAudioDevice(audioDevice, false)
 
 	return &gameWindow{
@@ -332,11 +344,16 @@ func (win *gameWindow) render() {
 	win.renderer.Present()
 }
 
+func (win *gameWindow) handleTextInput(e *sdl.TextInputEvent) {
+
+}
+
 func (win *gameWindow) close() {
 	windows[win.id] = nil
 	win.renderer.Destroy()
 	win.window.Destroy()
 	sdl.CloseAudioDevice(win.audioDevice)
+	sdl.StopTextInput()
 
 	win.menuBar.state.running = false
 	win.open = false

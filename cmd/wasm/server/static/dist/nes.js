@@ -228,14 +228,9 @@ var state = {
 };
 var audioCtx = null;
 var gain = null;
-var startTime = null;
 window.addEventListener("keydown", async (e) => {
-  if (e.code == "KeyL") {
-    startTime = performance.now();
+  if (e.code == "KeyR") {
     await getSnapList();
-  } else if (e.code == "KeyP") {
-    console.log("hello");
-    await loadSnap(0);
   }
 });
 var setUpAudio = async (audioBufS2, SIZE) => {

@@ -19,11 +19,15 @@
 {
 "name": "ballon.nes",
 "location": "/Users/test/Projects/ExNES/games/NROM/ballon.nes"
+},
+{
+"name": ".",
+"location": ""
 }
 ],
 "settings": {
 "show_fps": true,
-"current_speed": "100%",
+"current_speed": "200%",
 "muted": false,
 "current_volume": "25%",
 "controlBinds": {
@@ -37,7 +41,7 @@
 "Start": "Return"
 },
 "turboBinds": {
-"Joypad-A": "Q",
+"Joypad-A": "Y",
 "Joypad-B": "W",
 "Start": "Escape"
 }

@@ -454,3 +454,21 @@ func (m *Mapper1) getMirroring() uint8 {
 
 	return mode
 }
+
+type Mapper163 struct {
+	PRGROM []uint8
+	PRGRAM []uint8
+	CHRRAM []uint8
+
+	Mirroring int
+
+	reg5000 uint8
+	reg5200 uint8
+	reg5300 uint8
+
+	feedbackLatch bool
+}
+
+func (m *Mapper163) ReadPRG(addr uint16) uint8 {
+
+}

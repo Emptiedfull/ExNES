@@ -180,6 +180,11 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					Icon:         "./icons/flag.svg",
 					label:        "Cheats",
 					affectedFlag: gameRunning,
+					onClick: func() {
+						win, _ := openCheatWindow(console)
+
+						windows[win.getID()] = win
+					},
 				}, {
 					isLine: true,
 				},
@@ -587,7 +592,7 @@ func (mb *menuBar) renderSupDropdown(r *sdl.Renderer, option *ItemOption) {
 
 		// drawText(subOption.label, textRect, r, iconGutter, color, mb.cache.textCache, mb.Font, false)
 
-		drawText(subOption.label, r, mb.cache.textCache, TextOptions{col: color, font: mb.Font, offset: iconGutter, rect: textRect})
+		drawText(subOption.label, r, mb.cache.textCache, TextOptions{col: color, font: mb.Font, offset: iconGutter, rect: textRect, clamped: true})
 	}
 
 }

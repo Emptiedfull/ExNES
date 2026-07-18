@@ -16,7 +16,7 @@ type Console struct {
 	Ppu *ppu
 	Apu *APU
 
-	CheatEngine    GameGenieEngine
+	CheatEngine    *GameGenieEngine
 	DatabaseEngine *RomDB
 
 	romHash uint32
@@ -69,7 +69,7 @@ func LoadRomData(data []uint8) (io.Reader, error) {
 }
 
 func (c *Console) InitRom(data io.Reader) error {
-
+	c.CheatEngine.Reset()
 	header := make([]byte, 16)
 	if _, err := io.ReadFull(data, header); err != nil {
 		return fmt.Errorf("failed to read header: %w", err)
@@ -132,6 +132,14 @@ func (c *Console) InitRom(data io.Reader) error {
 	c.SetUpSnapshots()
 
 	return nil
+}
+
+func (c *Console) GetName() string {
+	name, found := c.DatabaseEngine.Get(c.romHash)
+	if !found {
+		return ""
+	}
+	return name[0 : len(name)-4]
 }
 
 func InitializeConsole() *Console {

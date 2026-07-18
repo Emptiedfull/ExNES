@@ -4,6 +4,7 @@ import (
 	"exnes/Core"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -32,13 +33,26 @@ type cheatMain struct {
 	dragStartOffset int32
 
 	cheatCache
+
+	input CheatInput
 }
 
-type CheatInput struct {
-	inputRect sdl.Rect
-	inputText string
+const placeHolder = "e.g. SXIOPO or AAAA:FF"
 
-	inputConfirm sdl.Rect
+type CheatInput struct {
+	inputRect  sdl.Rect
+	confirmBtn sdl.Rect
+	checkRect  sdl.Rect
+
+	TextTemp    string
+	TextUpdated string
+	Focused     bool
+	cursorIdx   int
+	valid       bool
+
+	blinkStart time.Time
+
+	errorMsg string
 }
 
 type cheatCache struct {
@@ -47,9 +61,10 @@ type cheatCache struct {
 	iconCache map[string]*sdl.Texture
 }
 
-func (main *cheatMain) Setup(font *ttf.Font, engine *Core.GameGenieEngine) {
+func (main *cheatMain) Setup(font *ttf.Font, engine *Core.GameGenieEngine, romName string) {
 
 	main.font = font
+	main.Title = romName
 
 	main.panelCache = make(panelCache)
 	main.cheatCache.textcache = make(map[string]textCache)
@@ -68,6 +83,9 @@ const (
 	ScrollSpeed    = 20
 	ScrollEase     = 0.25
 	ScrollBarWidth = 4
+
+	InputHeight     = 34
+	confirmBtnWidth = 34
 )
 
 func (main *cheatMain) Layout() {
@@ -80,7 +98,30 @@ func (main *cheatMain) Layout() {
 		Y: Y,
 	}
 
-	Y += main.TitleRect.Y + main.TitleRect.H + cheatPanelPadding
+	Y += main.TitleRect.H + cheatPanelPadding
+
+	main.input.inputRect = sdl.Rect{
+		X: 10,
+		Y: Y,
+		W: main.windowW - 20 - confirmBtnWidth - 8,
+		H: InputHeight,
+	}
+
+	main.input.confirmBtn = sdl.Rect{
+		X: main.input.inputRect.X + main.input.inputRect.W + 8,
+		Y: Y,
+		H: InputHeight,
+		W: confirmBtnWidth,
+	}
+
+	main.input.checkRect = sdl.Rect{
+		X: main.input.confirmBtn.X + 4,
+		W: confirmBtnWidth - 8,
+		Y: Y + 4,
+		H: InputHeight - 8,
+	}
+
+	Y += InputHeight + cheatPanelPadding
 
 	main.cheatsRect = sdl.Rect{
 		W: main.windowW - 20,
@@ -111,10 +152,79 @@ func (main *cheatMain) render(r *sdl.Renderer) {
 	main.panelCache.drawRoundedRect(r, &main.TitleRect, colControlPanelBG, true)
 	main.panelCache.drawRoundedRect(r, &main.TitleRect, colControlPanelBorder, false)
 
+	if main.Title != "" {
+		drawText(main.Title, r, main.textcache, TextOptions{
+			centered: true,
+			clamped:  true,
+			font:     main.font,
+			rect:     main.TitleRect,
+			col:      colFieldTextBound,
+		})
+	}
+
 	main.panelCache.drawRoundedRect(r, &main.cheatsRect, colControlPanelBG, true)
 	main.panelCache.drawRoundedRect(r, &main.cheatsRect, colControlPanelBorder, false)
 
+	main.renderInput(r)
 	main.renderList(r)
+}
+
+var (
+	colConfirmActiveBG = sdl.Color{R: 64, G: 53, B: 112, A: 255} // #4A3F7A
+
+	colConfirmActiveIcon = sdl.Color{R: 180, G: 166, B: 255, A: 255} // #B4A6FF
+
+	colConfirmActiveBorder = sdl.Color{R: 138, G: 122, B: 220, A: 255} // #8A7ADC
+)
+
+func (main *cheatMain) renderInput(r *sdl.Renderer) {
+	borderCol := colPanelBorder
+	if main.input.Focused {
+		borderCol = colAccent
+	}
+
+	main.drawRoundedRect(r, &main.input.inputRect, colFieldBG, true)
+	main.drawRoundedRect(r, &main.input.inputRect, borderCol, false)
+	// X := main.input.inputRect.X + 10
+
+	if main.input.TextUpdated == "" && !main.input.Focused {
+		drawText(placeHolder, r, main.textcache, TextOptions{
+			rect: main.input.inputRect, offset: 12, col: colTextDim, font: main.font, clamped: true,
+		})
+	} else {
+		if main.input.TextUpdated != "" {
+			drawText(main.input.TextUpdated, r, main.textcache, TextOptions{
+				rect: main.input.inputRect, offset: 12, col: colText, font: main.font, clamped: true,
+			})
+		}
+
+		if main.input.Focused && (time.Since(main.input.blinkStart)/(500*time.Millisecond))%2 == 0 {
+
+			w := textWdith(main.input.TextUpdated[:main.input.cursorIdx], main.font)
+			cursorX := main.input.inputRect.X + 12 + w
+
+			r.SetDrawColor(colText.R, colText.G, colText.B, 255)
+			r.DrawLine(cursorX, main.input.inputRect.Y+10, cursorX, main.input.inputRect.Y+main.input.inputRect.H-10)
+		}
+
+	}
+
+	btnCol := colFieldBG
+	iconCol := colTextDim
+	borderCol = colPanelBorder
+
+	if main.input.valid {
+		btnCol = colConfirmActiveBG
+		iconCol = colConfirmActiveIcon
+		borderCol = colConfirmActiveBorder
+
+	}
+
+	main.drawRoundedRect(r, &main.input.confirmBtn, btnCol, true)
+	main.drawRoundedRect(r, &main.input.confirmBtn, borderCol, false)
+
+	drawIcon(r, "./icons/plus.svg", iconCol, main.iconCache, &main.input.checkRect)
+
 }
 
 type cheatRowColScheme struct {
@@ -263,6 +373,11 @@ func (main *cheatMain) handleScroll(Y int32) {
 	main.clampScroll()
 }
 
+func (main *cheatMain) addCheat() {
+	main.engine.AddCode(main.input.TextUpdated, "CUSTOM")
+
+}
+
 func (main *cheatMain) handleMouseDown(x, y int32) {
 	fmt.Println("down")
 	if pointInRect(main.ThumbRect, x, y) {
@@ -283,6 +398,22 @@ func (main *cheatMain) handleMouseDown(x, y int32) {
 			main.scrollOffsetTarget += pageSize
 		}
 		main.clampScroll()
+	}
+
+	if pointInRect(main.input.inputRect, x, y) {
+		main.input.Focused = true
+		main.input.blinkStart = time.Now()
+		return
+	} else {
+		main.input.Focused = false
+	}
+
+	if pointInRect(main.input.checkRect, x, y) {
+		main.addCheat()
+
+		main.input.TextTemp = ""
+		main.input.cursorIdx = 0
+		main.input.updateText()
 	}
 
 	if idx := main.getIdx(x, y); idx != -1 {
@@ -366,5 +497,59 @@ func (main *cheatMain) getIdx(x, y int32) int {
 	}
 
 	return int(idx)
+
+}
+
+func (inp *CheatInput) handleTextInput(e *sdl.TextInputEvent) {
+	if !inp.Focused {
+		return
+	}
+
+	n := 0
+	for n < len(e.Text) && e.Text[n] != 0 {
+		n++
+	}
+
+	typed := string(e.Text[:n])
+
+	inp.TextTemp = inp.TextTemp[:inp.cursorIdx] + typed + inp.TextTemp[inp.cursorIdx:]
+	inp.cursorIdx += len(typed)
+	inp.errorMsg = ""
+	inp.updateText()
+}
+
+func (inp *CheatInput) updateText() {
+	_, err := Core.ParseCode(inp.TextTemp)
+	if err != nil {
+		inp.valid = false
+
+	} else {
+		inp.valid = true
+	}
+	inp.TextUpdated = inp.TextTemp
+
+}
+
+func (inp *CheatInput) handleKeyInput(e *sdl.KeyboardEvent) {
+	if !inp.Focused || e.State != sdl.PRESSED {
+		return
+	}
+
+	switch e.Keysym.Scancode {
+	case sdl.SCANCODE_BACKSPACE:
+		if inp.cursorIdx > 0 {
+			inp.TextTemp = inp.TextTemp[:inp.cursorIdx-1] + inp.TextTemp[inp.cursorIdx:]
+			inp.cursorIdx--
+			inp.updateText()
+		}
+	case sdl.SCANCODE_RIGHT:
+		if inp.cursorIdx < len(inp.TextUpdated) {
+			inp.cursorIdx++
+		}
+	case sdl.SCANCODE_LEFT:
+		if inp.cursorIdx > 0 {
+			inp.cursorIdx--
+		}
+	}
 
 }

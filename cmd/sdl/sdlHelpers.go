@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -532,3 +533,8 @@ func getIcon(r *sdl.Renderer, path string, col sdl.Color, cache map[string]*sdl.
 func pointInRect(rect sdl.Rect, x, y int32) bool {
 	return x >= rect.X && x <= rect.X+rect.W && y >= rect.Y && y <= rect.Y+rect.H
 }
+
+var (
+	svgWidthRe  = regexp.MustCompile(`width="[^"]*"`)
+	svgHeightRe = regexp.MustCompile(`height="[^"]*"`)
+)
