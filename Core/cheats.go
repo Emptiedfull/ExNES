@@ -217,8 +217,6 @@ func (gg *GameGenieEngine) LoadCheats(name string) {
 		return
 	}
 
-	fmt.Println("loading cheats")
-
 	gg.Cheats = append(gg.Cheats, *cheats...)
 }
 

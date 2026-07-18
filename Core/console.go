@@ -36,9 +36,14 @@ type Console struct {
 	DebugMode int
 	Debugger  Debugger
 
-	mapper Mapper
+	mapper  Mapper
+	loadRam func(Name string, rom []uint8)
 
 	palette FullPalette
+}
+
+func (c *Console) GetRam() []uint8 {
+	return c.mapper.GetPRGRAM()
 }
 
 func Init() {
@@ -76,6 +81,7 @@ func (c *Console) InitRom(data io.Reader) error {
 	}
 
 	mapper := getMapper(header)
+	hasBattery := header[6]&0x02 != 0
 
 	mirroring := 2
 	if (header[6] & 0x01) == 0 {
@@ -127,11 +133,19 @@ func (c *Console) InitRom(data io.Reader) error {
 
 	}
 
-	c.assignMapper(mapper, prgData, chrData, uint8(mirroring))
+	c.assignMapper(mapper, prgData, chrData, uint8(mirroring), hasBattery)
+
+	if c.loadRam != nil {
+		c.loadRam(name, c.mapper.GetPRGRAM())
+	}
 
 	c.SetUpSnapshots()
 
 	return nil
+}
+
+func (c *Console) GetHash() string {
+	return fmt.Sprintf("%08x", c.romHash)
 }
 
 func (c *Console) GetName() string {

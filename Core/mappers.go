@@ -16,6 +16,9 @@ type Mapper interface {
 	getMirroring() uint8
 	TakeSnapshot(MapperScreenShot)
 	CreateEmptySnapshot() MapperScreenShot
+
+	HasBattery() bool
+	GetPRGRAM() []uint8
 }
 
 type MapperScreenShot interface {
@@ -29,7 +32,7 @@ func getMapper(header []byte) int {
 	return int(high | low)
 }
 
-func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring uint8) {
+func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring uint8, hasBattery bool) {
 	var m Mapper
 	switch id {
 	case 0:
@@ -98,6 +101,14 @@ func (m *Mapper0) CreateEmptySnapshot() MapperScreenShot {
 		PRGROM: make([]uint8, len(m.PRGROM)),
 	}
 	return &res
+}
+
+func (m *Mapper0) HasBattery() bool {
+	return false
+}
+
+func (m *Mapper0) GetPRGRAM() []uint8 {
+	return nil
 }
 
 func (m *Mapper0) TakeSnapshot(s MapperScreenShot) {
@@ -194,6 +205,14 @@ func (m Mapper2) TakeSnapshot(s MapperScreenShot) {
 
 }
 
+func (m *Mapper2) HasBattery() bool {
+	return false
+}
+
+func (m *Mapper2) GetPRGRAM() []uint8 {
+	return nil
+}
+
 func (s Mapper2SS) LoadSS(m Mapper) {
 
 	safe, ok := m.(*Mapper2)
@@ -251,7 +270,8 @@ type Mapper1 struct {
 	ChrBank0 uint8
 	ChrBank1 uint8
 
-	isRam bool
+	isRam   bool
+	battery bool
 }
 
 type Mapper1SS struct {
@@ -266,7 +286,8 @@ type Mapper1SS struct {
 	ChrBank0 uint8
 	ChrBank1 uint8
 
-	isRam bool
+	isRam   bool
+	battery bool
 }
 
 func (m *Mapper1) CreateEmptySnapshot() MapperScreenShot {
@@ -279,6 +300,14 @@ func (m *Mapper1) CreateEmptySnapshot() MapperScreenShot {
 	}
 
 	return &res
+}
+
+func (m *Mapper1) HasBattery() bool {
+	return m.battery
+}
+
+func (m *Mapper1) GetPRGRAM() []uint8 {
+	return m.PRGRAM
 }
 
 func (m *Mapper1) TakeSnapshot(s MapperScreenShot) {
@@ -476,6 +505,8 @@ type Mapper163 struct {
 	reg5300 uint8
 
 	feedbackLatch bool
+
+	hasBattery bool
 }
 
 func (m *Mapper163) ReadPRG(addr uint16) uint8 {
@@ -572,4 +603,12 @@ func (m *Mapper163) TakeSnapshot(MapperScreenShot) {
 }
 func (m *Mapper163) getMirroring() uint8 {
 	return uint8(m.Mirroring)
+}
+
+func (m *Mapper163) HasBattery() bool {
+	return m.hasBattery
+}
+
+func (m *Mapper163) GetPRGRAM() []uint8 {
+	return m.PRGRAM
 }

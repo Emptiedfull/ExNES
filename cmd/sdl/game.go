@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 	"unsafe"
@@ -27,6 +28,8 @@ type game struct {
 }
 
 func (console *game) LoadRom(filepath string, mb *menuBar) error {
+	fmt.Println("loading rom")
+
 	file, err := os.Open(filepath)
 
 	if err != nil {
@@ -58,7 +61,25 @@ func (g *game) initConsole(screenChannel chan Core.ScreenInfo) {
 
 }
 
+func (g *game) SaveRam() {
+	fmt.Println("trying to save")
+	data := g.core.GetRam()
+	if data != nil {
+
+		path := filepath.Join("./saves", string(g.core.GetHash())+".sav")
+		err := os.WriteFile(path, data, 0644)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		fmt.Println("ignoring", g.core.GetName())
+	}
+}
+
 func (g *game) reloadROM() {
+
+	fmt.Println("saving this ")
+	g.SaveRam()
 
 	g.core.PowerCycle()
 

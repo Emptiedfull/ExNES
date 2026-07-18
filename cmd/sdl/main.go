@@ -12,9 +12,6 @@ import (
 	"exnes/Core"
 	"log"
 
-	"net/http"
-	_ "net/http/pprof"
-
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -43,19 +40,6 @@ type Windows map[uint32]Window
 var windows = make(Windows)
 
 func main() {
-
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
-	// db := Core.ParseDb()
-	// Core.WriteBin(db)
-
-	// db, err := Core.LoadDB()
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// Core.InitCheat()
 
 	displayChannel := make(chan Core.ScreenInfo, 100)
 	pauseChannel := make(chan bool)
