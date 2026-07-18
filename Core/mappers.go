@@ -1,6 +1,7 @@
 package Core
 
 import (
+	"fmt"
 	"log"
 	"reflect"
 )
@@ -53,7 +54,15 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			Mirroring:  mirroring,
 			BankSelect: 0,
 		}
-
+	case 163:
+		m = &Mapper163{
+			PRGROM:    prgData,
+			PRGRAM:    make([]uint8, 0x2000),
+			CHRRAM:    make([]uint8, 0x2000),
+			Mirroring: int(mirroring),
+		}
+	default:
+		fmt.Println("unknown:", id)
 	}
 
 	// case 4:
@@ -470,5 +479,97 @@ type Mapper163 struct {
 }
 
 func (m *Mapper163) ReadPRG(addr uint16) uint8 {
+	switch {
+	case addr >= 0x6000 && addr < 0x8000:
+		return m.PRGRAM[addr-0x6000]
+	case addr == 0x5500, addr == 0x5501:
+		if m.feedbackLatch {
+			return 0x00
+		} else {
+			return 0x04
+		}
+	case addr >= 0x8000:
+		banks := uint32(len(m.PRGROM) / 0x8000)
+		if banks == 0 {
+			banks = 1
+		}
 
+		bankActive := m.getBank() % banks
+		return m.PRGROM[bankActive*0x8000+uint32(addr-0x8000)]
+	default:
+		return 0
+	}
+}
+
+func (m *Mapper163) WritePRG(addr uint16, val uint8) {
+	switch {
+	case addr >= 0x6000 && addr < 0x8000:
+		m.PRGRAM[addr-0x6000] = val
+		return
+	case addr >= 0x5000 && addr <= 0x50FF: //its a fucking mask ik but idrc enough so u get a range fucksy
+		m.reg5000 = val
+		return
+	case addr >= 0x5200 && addr <= 0x52FF:
+		m.reg5200 = val
+		return
+	case addr >= 0x5300 && addr <= 0x53FF:
+		m.reg5300 = val
+		return
+	case addr == 0x5100:
+		m.feedbackLatch = (val & 0x04) != 0
+		return
+	case addr == 0x5101:
+		if (val & 0x01) != 0 {
+			m.feedbackLatch = !m.feedbackLatch
+		}
+
+		return
+
+	}
+}
+
+func (m *Mapper163) ReadCHR(addr uint16) uint8 {
+	return m.CHRRAM[addr&0x1FFF]
+}
+
+func (m *Mapper163) WriteCHR(addr uint16, val uint8) {
+	m.CHRRAM[addr&0x1FFF] = val
+}
+
+func (m *Mapper163) getBank() uint32 {
+	p := m.SwapBits(m.reg5000)
+	hi := m.SwapBits(m.reg5200)
+
+	var l2 uint8
+	if m.reg5300&0x04 != 0 {
+		l2 = p & 0x03
+	} else {
+		l2 = 0x03
+	}
+
+	m2 := (p >> 2) & 0x03
+	h2 := hi & 0x03
+
+	return (uint32(h2) << 4) | (uint32(m2) << 2) | uint32(l2)
+}
+
+func (m *Mapper163) SwapBits(val uint8) uint8 {
+	if m.reg5300&0x01 == 0 {
+		return val
+	}
+
+	b0 := val & 0x01
+	b1 := (val >> 1) & 0x01
+	return (val &^ 0x03) | b1 | b0<<1
+}
+
+func (m *Mapper163) CreateEmptySnapshot() MapperScreenShot {
+	return Mapper2SS{}
+}
+
+func (m *Mapper163) TakeSnapshot(MapperScreenShot) {
+
+}
+func (m *Mapper163) getMirroring() uint8 {
+	return uint8(m.Mirroring)
 }

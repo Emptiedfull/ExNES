@@ -13,21 +13,13 @@
 "location": "/Users/test/Projects/ExNES/games/Mapper2/contra.nes"
 },
 {
-"name": "AccuracyCoin.nes",
-"location": "/Users/test/Projects/ExNES/games/NROM/AccuracyCoin.nes"
-},
-{
-"name": "ballon.nes",
-"location": "/Users/test/Projects/ExNES/games/NROM/ballon.nes"
-},
-{
-"name": ".",
-"location": ""
+"name": "Pokemon - Yellow Version (English).nes",
+"location": "/Users/test/Projects/ExNES/games/Pokemon - Yellow Version (English).nes"
 }
 ],
 "settings": {
 "show_fps": true,
-"current_speed": "200%",
+"current_speed": "100%",
 "muted": false,
 "current_volume": "25%",
 "controlBinds": {

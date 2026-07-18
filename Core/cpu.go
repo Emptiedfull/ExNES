@@ -238,7 +238,7 @@ func (b *bus) Read(addr uint16) uint8 {
 	case 0x2000 <= addr && addr <= 0x3FFF:
 		RegIndex := (addr - 0x2000) % 8
 		val = b.Cpu.console.Ppu.ReadReg(RegIndex, b.Cpu.console.OpenBusVal)
-	case addr >= 0x6000:
+	case addr >= 0x5000:
 		val = b.Cpu.console.mapper.ReadPRG(addr)
 	default:
 
@@ -274,7 +274,7 @@ func (b *bus) Write(addr uint16, val uint8) {
 		RegIndex := (addr - 0x2000) % 8
 		b.Cpu.console.Ppu.WriteReg(RegIndex, val)
 
-	case addr >= 0x6000:
+	case addr >= 0x5000:
 		b.Cpu.console.mapper.WritePRG(addr, val)
 	case addr <= 0x7FFF:
 	default:
