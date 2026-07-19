@@ -55,6 +55,8 @@ func (console *game) LoadRom(filepath string, mb *menuBar) error {
 func (g *game) initConsole(screenChannel chan Core.ScreenInfo) {
 	g.core = Core.InitializeConsole()
 
+	g.core.LoadRam = LoadRam
+
 	g.core.Apu = Core.NewApu(44100, g.core)
 	g.core.ScreenChannel = screenChannel
 	g.screenChannel = screenChannel
@@ -74,6 +76,20 @@ func (g *game) SaveRam() {
 	} else {
 		fmt.Println("ignoring", g.core.GetName())
 	}
+}
+
+func LoadRam(hash string, ram []uint8) {
+
+	path := filepath.Join("./saves", hash+".sav")
+	fmt.Println("trying to load a save", path)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	copy(ram, data)
+
 }
 
 func (g *game) reloadROM() {

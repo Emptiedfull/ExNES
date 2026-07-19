@@ -37,7 +37,7 @@ type Console struct {
 	Debugger  Debugger
 
 	mapper  Mapper
-	loadRam func(Name string, rom []uint8)
+	LoadRam func(Name string, rom []uint8)
 
 	palette FullPalette
 }
@@ -135,8 +135,8 @@ func (c *Console) InitRom(data io.Reader) error {
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring), hasBattery)
 
-	if c.loadRam != nil {
-		c.loadRam(name, c.mapper.GetPRGRAM())
+	if c.LoadRam != nil {
+		c.LoadRam(c.GetHash(), c.mapper.GetPRGRAM())
 	}
 
 	c.SetUpSnapshots()
