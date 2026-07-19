@@ -1,5 +1,7 @@
 package Core
 
+import "fmt"
+
 type TempPPU struct {
 	nameTableByte uint8
 	attrTableByte uint8
@@ -88,6 +90,8 @@ func (p *ppu) step() {
 				addr := 0x1000*uint16(table) + uint16(tile)*16 + fineY
 
 				p.Mem.temp.lowTileByte = p.read(addr)
+				p.clockIRQ(addr)
+
 			case 7:
 
 				fineY := (p.Mem.internal.v >> 12) & 7
@@ -95,6 +99,7 @@ func (p *ppu) step() {
 				tile := p.Mem.temp.nameTableByte
 				addr := 0x1000*uint16(table) + uint16(tile)*16 + fineY
 				p.Mem.temp.highTileByte = p.read(addr + 8)
+				p.clockIRQ(addr + 8)
 
 			}
 		}
@@ -244,6 +249,8 @@ func (p *ppu) fetchSpritePattern(i, row int) uint32 {
 	low := p.read(addr)
 	high := p.read(addr + 8)
 
+	p.clockIRQ(addr)
+
 	var data uint32
 
 	for range 8 {
@@ -370,4 +377,11 @@ func (p *ppu) getSpritePixel() (uint8, uint8) {
 
 func (p *ppu) fetchTileData() uint32 {
 	return uint32(p.Mem.temp.tileData >> 32)
+}
+
+func (p *ppu) clockIRQ(addr uint16) {
+	if c, ok := p.console.mapper.(IrqClocker); ok {
+		fmt.Println("clocking irq")
+		c.clockIrqCounter(addr)
+	}
 }

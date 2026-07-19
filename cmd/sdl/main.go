@@ -86,15 +86,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// cheatWin, err := openCheatWindow(g)
-	// if err != nil {
-	// 	panic(err)
-
-	// }
-
 	windows[gameWin.getID()] = gameWin
-
-	// windows[cheatWin.getID()] = cheatWin
 
 	startLoop(state)
 

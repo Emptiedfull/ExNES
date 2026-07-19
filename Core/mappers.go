@@ -21,6 +21,11 @@ type Mapper interface {
 	GetPRGRAM() []uint8
 }
 
+type IrqClocker interface {
+	clockIrqCounter(uint16)
+	IRQPending() bool
+}
+
 type MapperScreenShot interface {
 	LoadSS(m Mapper)
 }
@@ -611,4 +616,177 @@ func (m *Mapper163) HasBattery() bool {
 
 func (m *Mapper163) GetPRGRAM() []uint8 {
 	return m.PRGRAM
+}
+
+type MMC3 struct {
+	PRGROM []uint8
+	PRGRAM []uint8
+	CHRROM []uint8
+
+	Mirroring uint8
+
+	BankSelect uint8
+	BankReg    [8]uint8
+
+	irqLatch   uint8
+	irqCounter uint8
+	irqEnable  bool
+	irqReload  bool
+	irqPending bool
+
+	protect uint8
+
+	prevA12   uint8
+	a12LowCnt int
+}
+
+func (m *MMC3) WritePRG(addr uint16, val uint8) {
+	even := addr%2 == 0
+
+	switch {
+	case addr >= 0x6000 && addr < 0x8000:
+		m.PRGRAM[addr-0x6000] = val
+		return
+
+	case addr >= 0x8000 && addr < 0xA000:
+		if even {
+			m.BankSelect = val
+		} else {
+			m.BankReg[m.BankSelect&0x07] = val
+		}
+		return
+	case addr >= 0xA000 && addr < 0xC000:
+		if even {
+			if val&0x01 == 0 {
+				m.Mirroring = 3
+			} else {
+				m.Mirroring = 2
+			}
+		} else {
+			m.protect = val
+		}
+		return
+	case addr >= 0xC000 && addr < 0xE000:
+		if even {
+			m.irqLatch = val
+		} else {
+			m.irqCounter = val
+		}
+		return
+	case addr >= 0xE000:
+		if even {
+			m.irqEnable = false
+			m.irqPending = false
+		} else {
+			m.irqEnable = true
+		}
+
+		return
+	}
+
+}
+
+func (m *MMC3) ReadPRG(addr uint16) uint8 {
+	if addr >= 0x6000 && addr < 0x8000 {
+		return m.PRGRAM[addr-0x6000]
+	}
+
+	if addr < 0x8000 {
+		return 0
+	}
+
+	numBanks := uint32(len(m.PRGROM) / 0x8000)
+	last := numBanks - 1
+	secondLast := numBanks - 2
+
+	slot := (addr - 0x8000) / 0x2000
+	offset := uint32(addr % 0x2000)
+
+	prgMode := (m.BankSelect >> 6) & 0x01
+
+	var bank uint32
+	switch {
+	case slot == 0:
+		if prgMode == 0 {
+			bank = uint32(m.BankReg[6]) % numBanks
+
+		} else {
+			bank = secondLast
+		}
+	case slot == 1:
+		bank = uint32(m.BankReg[7]) % numBanks
+	case slot == 2:
+		if prgMode == 0 {
+			bank = secondLast
+		} else {
+			bank = uint32(m.BankReg[6]) % numBanks
+		}
+	default:
+		bank = last
+	}
+
+	return m.PRGROM[bank*0x2000+offset]
+}
+
+func (m *MMC3) ReadCHR(addr uint16) uint8 {
+	numBanks := uint32(len(m.CHRROM) / 0x400)
+	chrMode := (m.BankSelect >> 7) & 0x01
+
+	var bank uint32
+	var offset uint32
+
+	region := uint32(addr / 0x400)
+	offset = uint32(addr % 0x400)
+
+	if chrMode == 0 {
+		switch {
+		case region < 2:
+			bank = (uint32(m.BankReg[0]) &^ 1) + region
+		case region < 4:
+			bank = (uint32(m.BankReg[1]) &^ 1) + (region - 2)
+		default:
+			bank = uint32(m.BankReg[region-2])
+		}
+	} else {
+		switch {
+		case region < 4:
+			bank = (uint32(m.BankReg[region+2]))
+		case region < 6:
+			bank = (uint32(m.BankReg[0] &^ 1)) + (region - 4)
+		default:
+			bank = (uint32(m.BankReg[1] &^ 1)) + (region - 6)
+		}
+	}
+
+	bank %= numBanks
+	return m.CHRROM[bank*0x400+offset]
+
+}
+
+func (m *MMC3) clockIrqCounter(addr uint16) {
+	a12 := uint8((addr >> 12) & 0x01)
+
+	if m.prevA12 == 0 && a12 == 1 {
+
+	}
+
+	m.prevA12 = a12
+
+}
+
+func (m *MMC3) clockScanlineCounter() {
+	if m.irqCounter == 0 || m.irqReload {
+		m.irqCounter = m.irqLatch
+		m.irqReload = false
+	} else {
+		m.irqCounter--
+	}
+
+	if m.irqCounter == 0 && m.irqEnable {
+		m.irqPending = true
+	}
+}
+
+func (m *MMC3) IRQPending() bool {
+	return m.irqPending
 }
