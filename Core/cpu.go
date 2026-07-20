@@ -38,6 +38,8 @@ type Cpu struct {
 	nmiStep      int
 	nmiS         int
 
+	irqLine bool
+
 	currentOp   uint8
 	currentstep int
 	fetchNew    bool
@@ -136,6 +138,11 @@ func (c *Cpu) Tick() {
 		c.executingNmi = true
 		c.nmiPending = false
 		c.nmiS++
+	}
+
+	if c.currentstep == 0 && c.irqLine && !c.getFlag(Interrupt) {
+		c.triggerIRQ()
+		return
 	}
 
 	if c.executingNmi {

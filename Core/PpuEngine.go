@@ -1,7 +1,5 @@
 package Core
 
-import "fmt"
-
 type TempPPU struct {
 	nameTableByte uint8
 	attrTableByte uint8
@@ -34,6 +32,11 @@ func (p *ppu) cycleTick() {
 			p.Frame++
 
 			p.ScreenChanged = true
+
+			// if m, ok := p.console.mapper.(*MMC3); ok {
+			// 	fmt.Printf("frame: %v, edges %v \n", p.Frame, m.edges)
+			// 	m.edges = 0
+			// }
 		}
 	}
 
@@ -207,6 +210,7 @@ func (p *ppu) evalSprites() {
 			p.Mem.temp.spriteIdx[count] = uint8(i)
 		}
 		count++
+
 	}
 
 	if count > 8 {
@@ -215,6 +219,18 @@ func (p *ppu) evalSprites() {
 	}
 
 	p.Mem.temp.sprintCount = count
+
+	table := getTableAddr(p.Mem.register.SpritePattern)
+	for i := count; i < 8; i++ {
+		var dummyAddr uint16
+		if !p.Mem.register.SpriteSize {
+			dummyAddr = 0x1000*uint16(table) + 0xFF*16
+		} else {
+			dummyAddr = 0x1000*uint16(0xFF&1) + uint16(0xFE)*16
+		}
+		p.read(dummyAddr)
+		p.clockIRQ(dummyAddr)
+	}
 }
 
 func (p *ppu) fetchSpritePattern(i, row int) uint32 {
@@ -381,7 +397,7 @@ func (p *ppu) fetchTileData() uint32 {
 
 func (p *ppu) clockIRQ(addr uint16) {
 	if c, ok := p.console.mapper.(IrqClocker); ok {
-		fmt.Println("clocking irq")
+
 		c.clockIrqCounter(addr)
 	}
 }

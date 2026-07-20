@@ -62,25 +62,26 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			Mirroring:  mirroring,
 			BankSelect: 0,
 		}
+	case 4:
+		fmt.Println("loading mmc3")
+		m = &MMC3{
+			PRGROM:     prgData,
+			CHRROM:     chrData,
+			PRGRAM:     make([]uint8, 0x2000),
+			Mirroring:  mirroring,
+			hasBattery: hasBattery,
+		}
 	case 163:
 		m = &Mapper163{
-			PRGROM:    prgData,
-			PRGRAM:    make([]uint8, 0x2000),
-			CHRRAM:    make([]uint8, 0x2000),
-			Mirroring: int(mirroring),
+			PRGROM:     prgData,
+			PRGRAM:     make([]uint8, 0x2000),
+			CHRRAM:     make([]uint8, 0x2000),
+			hasBattery: hasBattery,
+			Mirroring:  int(mirroring),
 		}
 	default:
 		fmt.Println("unknown:", id)
 	}
-
-	// case 4:
-	// 	m = &Mapper4{
-	// 		PRGROM:    prgData,
-	// 		CHRROM:    chrData,
-	// 		Mirroring: mirroring,
-	// 	}
-
-	// }
 
 	c.mapper = m
 }
@@ -625,6 +626,8 @@ type MMC3 struct {
 
 	Mirroring uint8
 
+	hasBattery bool
+
 	BankSelect uint8
 	BankReg    [8]uint8
 
@@ -638,6 +641,13 @@ type MMC3 struct {
 
 	prevA12   uint8
 	a12LowCnt int
+
+	edges int
+}
+
+func (m *MMC3) CreateEmptySnapshot() MapperScreenShot {
+	return nil
+
 }
 
 func (m *MMC3) WritePRG(addr uint16, val uint8) {
@@ -651,8 +661,10 @@ func (m *MMC3) WritePRG(addr uint16, val uint8) {
 	case addr >= 0x8000 && addr < 0xA000:
 		if even {
 			m.BankSelect = val
+
 		} else {
 			m.BankReg[m.BankSelect&0x07] = val
+
 		}
 		return
 	case addr >= 0xA000 && addr < 0xC000:
@@ -669,16 +681,20 @@ func (m *MMC3) WritePRG(addr uint16, val uint8) {
 	case addr >= 0xC000 && addr < 0xE000:
 		if even {
 			m.irqLatch = val
+
 		} else {
-			m.irqCounter = val
+			m.irqReload = true
+
 		}
 		return
 	case addr >= 0xE000:
 		if even {
 			m.irqEnable = false
 			m.irqPending = false
+
 		} else {
 			m.irqEnable = true
+
 		}
 
 		return
@@ -695,7 +711,7 @@ func (m *MMC3) ReadPRG(addr uint16) uint8 {
 		return 0
 	}
 
-	numBanks := uint32(len(m.PRGROM) / 0x8000)
+	numBanks := uint32(len(m.PRGROM) / 0x2000)
 	last := numBanks - 1
 	secondLast := numBanks - 2
 
@@ -763,15 +779,39 @@ func (m *MMC3) ReadCHR(addr uint16) uint8 {
 
 }
 
+func (m *MMC3) WriteCHR(addr uint16, val uint8) {
+
+}
+
+func (m *MMC3) getMirroring() uint8 {
+	return m.Mirroring
+}
+
+// func (m *MMC3) clockIrqCounter(addr uint16) {
+// 	a12 := uint8((addr >> 12) & 0x01)
+
+// 	if a12 == 0 {
+// 		m.a12LowCnt++
+// 	} else {
+// 		if m.prevA12 == 0 && m.a12LowCnt >= 8 {
+// 			m.clockScanlineCounter()
+// 		}
+// 		m.a12LowCnt = 0
+// 	}
+
+// 	m.prevA12 = a12
+// }
+
 func (m *MMC3) clockIrqCounter(addr uint16) {
 	a12 := uint8((addr >> 12) & 0x01)
 
 	if m.prevA12 == 0 && a12 == 1 {
-
+		// fmt.Println("A12 raw edge")
+		m.edges++
+		m.clockScanlineCounter()
 	}
 
 	m.prevA12 = a12
-
 }
 
 func (m *MMC3) clockScanlineCounter() {
@@ -783,10 +823,23 @@ func (m *MMC3) clockScanlineCounter() {
 	}
 
 	if m.irqCounter == 0 && m.irqEnable {
+		// fmt.Println("MMC3 IRQ fired")
 		m.irqPending = true
 	}
 }
 
 func (m *MMC3) IRQPending() bool {
 	return m.irqPending
+}
+
+func (m *MMC3) GetPRGRAM() []uint8 {
+	return m.PRGRAM
+}
+
+func (m *MMC3) HasBattery() bool {
+	return false
+}
+
+func (m *MMC3) TakeSnapshot(MapperScreenShot) {
+
 }

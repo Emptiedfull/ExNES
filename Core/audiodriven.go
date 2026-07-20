@@ -47,8 +47,16 @@ func (c *Console) TickNoAudio() {
 	}
 
 	c.Apu.tick()
-	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
-		c.Cpu.triggerIRQ()
+
+	c.Cpu.irqLine = c.Apu.IRGPending || c.Apu.Dmc.IRGPending
+
+	if m, ok := c.mapper.(IrqClocker); ok {
+
+		if m.IRQPending() {
+
+			c.Cpu.irqLine = true
+		}
+
 	}
 
 }

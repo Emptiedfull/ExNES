@@ -19,11 +19,15 @@
 {
 "name": "zelda.nes",
 "location": "/Users/test/Projects/ExNES/games/Mapper1/zelda.nes"
+},
+{
+"name": "mario3.nes",
+"location": "/Users/test/Projects/ExNES/games/Mapper4/mario3.nes"
 }
 ],
 "settings": {
 "show_fps": true,
-"current_speed": "200%",
+"current_speed": "100%",
 "muted": true,
 "current_volume": "25%",
 "controlBinds": {

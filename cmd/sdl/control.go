@@ -680,12 +680,13 @@ func (main *controlMain) handleClick() {
 func (main *controlMain) handleListen(code sdl.Scancode) {
 
 	if action := main.ListeningFor; action != nil {
-		if main.ListeningAction == "BIND" {
+		switch main.ListeningAction {
+		case "BIND":
 			main.State.Settings.Inputs.AssignKey(code, main.ListeningFor.actionButton)
 
 			main.syncText()
 			main.ListeningFor = nil
-		} else if main.ListeningAction == "TURBO" {
+		case "TURBO":
 			main.State.Settings.TurboInputs.AssignKey(code, main.ListeningFor.actionButton)
 
 			main.syncText()

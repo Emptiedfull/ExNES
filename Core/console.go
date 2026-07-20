@@ -273,16 +273,6 @@ func (c *Console) tick() {
 
 	c.Apu.tick()
 
-	if c.Apu.IRGPending || c.Apu.Dmc.IRGPending {
-		c.Cpu.triggerIRQ()
-	}
-
-	if m, ok := c.mapper.(IrqClocker); ok {
-		if m.IRQPending() {
-			c.Cpu.triggerIRQ()
-		}
-	}
-
 }
 
 func (c *Console) RunFrame() {
