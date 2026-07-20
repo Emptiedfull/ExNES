@@ -1,7 +1,5 @@
 package Core
 
-import "fmt"
-
 // Contains utility for the snapshot function
 
 type Snapshot struct {
@@ -213,7 +211,6 @@ func (c Cpu) TakeCpuSnapshot(S *CpuSnapshot) {
 }
 
 func (c *Console) PopulateSnapshot(s *Snapshot) {
-	fmt.Println("snapshot struct:", s.mapperState)
 
 	if c.mapper == nil || c.Cpu == nil || c.Ppu == nil || c.Apu == nil {
 		return

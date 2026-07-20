@@ -152,8 +152,8 @@ func (s Mapper0SS) LoadSS(m Mapper) {
 		log.Fatalf("FUCK FUCK SMTH RLLY WRONG HAPPENED SHUT DOWN")
 	}
 
-	copy(s.CHRROM, safe.CHRROM)
-	copy(s.PRGROM, safe.PRGROM)
+	copy(safe.CHRROM, s.CHRROM)
+	copy(safe.PRGROM, s.PRGROM)
 	safe.Mirrroring = s.Mirroring
 }
 
@@ -639,15 +639,67 @@ type MMC3 struct {
 
 	protect uint8
 
-	prevA12   uint8
-	a12LowCnt int
+	prevA12 uint8
 
 	edges int
 }
 
-func (m *MMC3) CreateEmptySnapshot() MapperScreenShot {
-	return nil
+type MMC3SS struct {
+	PRGROM []uint8
+	PRGRAM []uint8
+	CHRROM []uint8
 
+	Mirroring uint8
+
+	BankSelect uint8
+	BankReg    [8]uint8
+
+	irqLatch   uint8
+	irqCounter uint8
+	irqEnable  bool
+	irqReload  bool
+	irqPending bool
+
+	protect uint8
+
+	prevA12 uint8
+}
+
+func (s MMC3SS) LoadSS(m Mapper) {
+	safe, ok := m.(*MMC3)
+
+	if !ok {
+		log.Fatal("doie")
+	}
+
+	copy(safe.CHRROM, s.CHRROM)
+	copy(safe.PRGROM, s.PRGROM)
+	copy(safe.PRGRAM, s.PRGRAM)
+
+	safe.Mirroring = s.Mirroring
+
+	safe.BankSelect = s.BankSelect
+	safe.BankReg = s.BankReg
+
+	safe.irqLatch = s.irqLatch
+	safe.irqCounter = s.irqCounter
+	safe.irqEnable = s.irqEnable
+	safe.irqPending = s.irqPending
+	safe.irqReload = s.irqReload
+
+	safe.protect = s.protect
+
+	safe.prevA12 = s.prevA12
+
+}
+
+func (m *MMC3) CreateEmptySnapshot() MapperScreenShot {
+	s := MMC3SS{
+		CHRROM: make([]uint8, len(m.CHRROM)),
+		PRGROM: make([]uint8, len(m.PRGROM)),
+		PRGRAM: make([]uint8, len(m.PRGRAM)),
+	}
+	return s
 }
 
 func (m *MMC3) WritePRG(addr uint16, val uint8) {
@@ -787,21 +839,6 @@ func (m *MMC3) getMirroring() uint8 {
 	return m.Mirroring
 }
 
-// func (m *MMC3) clockIrqCounter(addr uint16) {
-// 	a12 := uint8((addr >> 12) & 0x01)
-
-// 	if a12 == 0 {
-// 		m.a12LowCnt++
-// 	} else {
-// 		if m.prevA12 == 0 && m.a12LowCnt >= 8 {
-// 			m.clockScanlineCounter()
-// 		}
-// 		m.a12LowCnt = 0
-// 	}
-
-// 	m.prevA12 = a12
-// }
-
 func (m *MMC3) clockIrqCounter(addr uint16) {
 	a12 := uint8((addr >> 12) & 0x01)
 
@@ -840,6 +877,31 @@ func (m *MMC3) HasBattery() bool {
 	return false
 }
 
-func (m *MMC3) TakeSnapshot(MapperScreenShot) {
+func (m *MMC3) TakeSnapshot(s MapperScreenShot) {
+	res, ok := s.(*MMC3SS)
+
+	if !ok {
+		fmt.Println("FUCK FUCK FUCK FUCK")
+		return
+	}
+
+	copy(res.CHRROM, m.CHRROM)
+	copy(res.PRGROM, m.PRGROM)
+	copy(res.PRGRAM, m.PRGRAM)
+
+	res.BankReg = m.BankReg
+	res.BankSelect = m.BankSelect
+
+	res.Mirroring = m.Mirroring
+
+	res.irqCounter = m.irqCounter
+	res.irqReload = m.irqReload
+	res.irqLatch = m.irqLatch
+	res.irqEnable = m.irqEnable
+	res.irqPending = m.irqPending
+
+	res.protect = m.protect
+
+	res.prevA12 = m.prevA12
 
 }
