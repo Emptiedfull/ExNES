@@ -1,0 +1,14 @@
+:{$PORT:9000} {
+	root * ./cmd/wasm/server/static
+	encode gzip zstd
+
+	header Cross-Origin-Opener-Policy same-origin
+	header Cross-Origin-Embedder-Policy require-corp
+
+	@wasm path *.wasm
+	header @wasm Content-Type application/wasm
+
+	rewrite /games /games.json
+
+	file_server
+}

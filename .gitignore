@@ -2,3 +2,4 @@
 nes6502/
 *.xml
 *.sav
+*/dist/

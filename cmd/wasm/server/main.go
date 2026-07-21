@@ -1,8 +1,10 @@
+// go: build dev
 package main
 
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"io/fs"
@@ -40,22 +42,26 @@ var compressibleList = map[string]bool{
 }
 
 func main() {
+	noWatch := flag.Bool("no-watch", false, "disable the file watcher")
+	flag.Parse()
+
 	PrepareGameList()
 	err, _ := compileWasm("../wasm.go", "./static/nes.wasm")
-
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	fmt.Println("Wasm compiled")
 
 	restartChan := make(chan int)
 
-	go StartServer(restartChan)
+	if *noWatch {
 
-	startWatcher(restartChan)
+		StartServer(restartChan)
+	} else {
+		go StartServer(restartChan)
+		startWatcher(restartChan)
+	}
 }
-
 func StartServer(restartChan chan int) {
 
 	fmt.Println("building assests...")

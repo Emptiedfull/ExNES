@@ -149,6 +149,5 @@ func startLoop(state *localState) {
 
 		}
 
-		sdl.Delay(1)
 	}
 }

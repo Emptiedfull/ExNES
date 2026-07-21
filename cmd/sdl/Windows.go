@@ -30,7 +30,7 @@ type cheatWindow struct {
 }
 
 func openCheatWindow(console *game) (Window, error) {
-	win, err := sdl.CreateWindow("Cheats", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 350, 450, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE)
+	win, err := sdl.CreateWindow("Cheats", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 350, 450, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE|sdl.RENDERER_PRESENTVSYNC)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func openControlWindow(state *localState) (Window, error) {
 	}
 
 	font.SetHinting(ttf.HINTING_LIGHT)
-	win, err := sdl.CreateWindow("controls", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 750, 450, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE)
+	win, err := sdl.CreateWindow("controls", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 750, 450, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE|sdl.RENDERER_PRESENTVSYNC)
 	if err != nil {
 		log.Fatal("WINDOW BAD", err)
 	}
@@ -246,7 +246,7 @@ func openGameWindow(font *ttf.Font, console *game, state *localState) (Window, e
 	windowW := int32(game_width * scale)
 	windowH := int32((game_heigth + menu_height) * scale)
 
-	win, err := sdl.CreateWindow("ExNES", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, windowW, windowH, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI)
+	win, err := sdl.CreateWindow("ExNES", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, windowW, windowH, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.RENDERER_PRESENTVSYNC)
 	if err != nil {
 		log.Fatal("man why even", err)
 		return nil, err
@@ -349,7 +349,8 @@ func (win *gameWindow) handleTextInput(e *sdl.TextInputEvent) {
 }
 
 func (win *gameWindow) close() {
-	windows[win.id] = nil
+
+	delete(windows, win.id)
 	win.renderer.Destroy()
 	win.window.Destroy()
 	sdl.CloseAudioDevice(win.audioDevice)

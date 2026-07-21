@@ -130,7 +130,9 @@ func startFrameDriver() {
 		}
 
 		if emu.Ppu.ScreenChanged {
-			js.CopyBytesToJS(jsScreen, emu.Ppu.BackBuffer[:])
+			buf := emu.Ppu.NewBuffer
+			bytes := unsafe.Slice((*byte)(unsafe.Pointer(&buf[0])), len(buf)*4)
+			js.CopyBytesToJS(jsScreen, bytes)
 
 			if emu.Ppu.Frame%10 == 0 {
 
@@ -154,36 +156,11 @@ type SnapInfo struct {
 var outHeader [3]uint32
 var snapshotExport []uint8
 
-// func makeSnapList(B Core.SnapshotBuffer) uintptr {
-// 	res := make([]SnapInfo, len(B.Data))
-
-// 	for x, snap := range B.Data {
-// 		res[x] = SnapInfo{
-// 			Frameno: snap.Frame_no,
-// 			Index:   x,
-// 		}
-// 	}
-
-// 	b, err := json.Marshal(res)
-// 	if err != nil {
-// 		log.Fatalf("FICK")
-// 	}
-
-// 	outHeader[0] = uint32(uintptr(unsafe.Pointer(&b[0])))
-// 	outHeader[1] = uint32(len(b))
-// 	outHeader[2] = uint32(uintptr(unsafe.Pointer(&snapshotExport[0])))
-
-// 	return uintptr(unsafe.Pointer(&outHeader[0]))
-
-// }
-
 func makeSnapshotList(B Core.SnapshotBuffer) uintptr {
 	length := B.GetLength()
 
 	res := make([]SnapInfo, length)
 	snapshotExport = make([]uint8, length*size)
-
-	fmt.Println("the length of our list is:", length)
 
 	for i := range length {
 		res[i] = SnapInfo{
@@ -191,11 +168,10 @@ func makeSnapshotList(B Core.SnapshotBuffer) uintptr {
 			Index:   i,
 		}
 
-		if i == 5 {
-			fmt.Printf("first 8:", B.Data[i].PpuState.BackBuffer[:32])
-		}
+		buf := B.Data[i].PpuState.NewBuffer
+		bytes := unsafe.Slice((*byte)(unsafe.Pointer(&buf[0])), len(buf)*4)
 
-		copy(snapshotExport[i*size:], B.Data[i].PpuState.BackBuffer)
+		copy(snapshotExport[i*size:], bytes)
 	}
 
 	b, err := json.Marshal(res)
@@ -211,23 +187,6 @@ func makeSnapshotList(B Core.SnapshotBuffer) uintptr {
 }
 
 const size = 256 * 240 * 4
-
-// func prepareSnapshotImages(B Core.SnapshotBuffer) uintptr {
-
-// 	total := B.GetLength()
-
-// 	snapshotExport = make([]uint8, total*size)
-
-// 	for i := range total {
-// 		copy(snapshotExport[i*size:], B.Data[i].PpuState.BackBuffer)
-// 	}
-
-// 	// for i, snapshot := range B.Data {
-// 	// 	copy(snapshotExport[i*size:], snapshot.PpuState.BackBuffer)
-// 	// }
-
-// 	return uintptr(unsafe.Pointer(&snapshotExport[0]))
-// }
 
 func getSpeed(speedBuf js.Value) float32 {
 	bytes := make([]byte, 4)
