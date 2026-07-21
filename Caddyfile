@@ -1,6 +1,6 @@
 :80 {
 	log
-	root * ./cmd/wasm/server/static
+	root * /srv
 	encode gzip zstd
 
 	header Cross-Origin-Opener-Policy same-origin
