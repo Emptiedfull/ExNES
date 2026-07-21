@@ -1,4 +1,5 @@
 :80 {
+	log
 	root * ./cmd/wasm/server/static
 	encode gzip zstd
 
