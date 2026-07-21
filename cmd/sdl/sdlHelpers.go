@@ -151,6 +151,35 @@ func (mb *menuBar) getLoadItems() []expandableOption {
 func (mb *menuBar) setupMenus() {
 	mb.updateSettingsMenu()
 	mb.updateSoundMenu()
+	mb.updatePalleteMenu()
+}
+
+func (mb *menuBar) updatePalleteMenu() {
+	palleteCont := &mb.Items[2].options[4]
+
+	list := make([]expandableOption, 0)
+
+	for i, pallete := range mb.console.core.PalleteEngine.GetPalletes() {
+		option := expandableOption{
+			label:   pallete,
+			enabled: true,
+			onClick: func() {
+				mb.console.core.PalleteEngine.LoadPallete(i)
+				mb.updatePalleteMenu()
+			},
+		}
+
+		if i == mb.console.core.PalleteEngine.Loaded {
+			option.Icon = "./icons/check.svg"
+		}
+		list = append(list, option)
+
+	}
+
+	palleteCont.ExpandableItems = list
+
+	mb.positionLayout()
+	fmt.Println(palleteCont.label)
 }
 
 func (mb *menuBar) updateSettingsMenu() {

@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"strings"
 )
 
 //go:embed NESpalette/ntsc.pal
@@ -40,10 +41,30 @@ func (p *PalleteEngine) Init() {
 			return nil
 		}
 
-		p.ListPal = append(p.ListPal, PalleteEntry{Name: path, Pal: pal})
+		name := strings.TrimSuffix(strings.TrimPrefix(path, "NESpalette/"), ".pal")
+
+		if name == "ntsc" {
+			p.Loaded = len(p.ListPal)
+		}
+
+		p.ListPal = append(p.ListPal, PalleteEntry{Name: name, Pal: pal})
 
 		return nil
 	})
+}
+
+func (p *PalleteEngine) GetPalletes() []string {
+	list := make([]string, len(p.ListPal))
+
+	for i, item := range p.ListPal {
+		list[i] = item.Name
+	}
+
+	return list
+}
+
+func (p *PalleteEngine) LoadPallete(idx int) {
+	p.Loaded = idx
 }
 
 func (p *PalleteEngine) getColPacked(e int, idx uint8) uint32 {
@@ -82,7 +103,7 @@ func LoadPal(data []byte) (packedPal, error) {
 		return out, nil
 
 	default:
-		return out, fmt.Errorf("Invalid length:", len(data))
+		return out, fmt.Errorf("Invalid length: %v ", len(data))
 	}
 
 }

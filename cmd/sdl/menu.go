@@ -328,6 +328,12 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 						}
 						windows[win.getID()] = win
 					},
+				}, {
+					label:           "Palettes",
+					enabled:         true,
+					Icon:            "./icons/palette.svg",
+					Expandable:      true,
+					ExpandableItems: make([]expandableOption, 0),
 				},
 			},
 		},
