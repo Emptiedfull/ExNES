@@ -27,7 +27,7 @@ type Console struct {
 
 	OpenBusVal uint8
 
-	ScreenChannel chan ScreenInfo
+	ScreenChannel chan []uint32
 
 	Snapshots SnapshotBuffer
 
@@ -167,8 +167,13 @@ func InitializeConsole() *Console {
 		Cpu: &Cpu{},
 
 		OpenBusVal: 0,
+		PalleteEngine: &PalleteEngine{
+			ListPal: make([]PalleteEntry, 0),
+		},
 		// palette:    loadFPal(Pallete),
 	}
+
+	c.PalleteEngine.Init()
 
 	db, err := LoadDB()
 	if err != nil {
@@ -178,7 +183,8 @@ func InitializeConsole() *Console {
 	c.DatabaseEngine = db
 	c.CheatEngine = InitCheat()
 
-	c.Ppu.BackBuffer = make([]uint8, 245760)
+	// c.Ppu.BackBuffer = make([]uint8, 245760)
+	c.Ppu.NewBuffer = make([]uint32, 256*240)
 
 	c.Player1 = &joyPad{}
 	c.Player2 = &joyPad{}
@@ -189,7 +195,7 @@ func InitializeConsole() *Console {
 
 	c.OpenBusVal = 0
 	c.Cpu.fetchNew = true
-	c.ScreenChannel = make(chan ScreenInfo, 100)
+	c.ScreenChannel = make(chan []uint32, 100)
 
 	c.Snapshots.Data = make([]Snapshot, 100)
 
@@ -252,14 +258,11 @@ func (c *Console) PowerCycle() {
 }
 
 func (c *Console) RunDisplayUpdates() {
-	if c.Ppu.ScreenChanged {
-		S := ScreenInfo{
-			Buffer: c.Ppu.BackBuffer,
-		}
-		c.Ppu.ScreenChanged = false
-		c.ScreenChannel <- S
-	}
 
+	if c.Ppu.ScreenChanged {
+		c.ScreenChannel <- c.Ppu.NewBuffer
+		c.Ppu.ScreenChanged = false
+	}
 }
 
 func (c *Console) tick() {

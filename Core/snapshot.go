@@ -77,7 +77,9 @@ type PpuSnapshot struct {
 	mirroring       int
 	mirroringChange bool
 
-	BackBuffer []uint8
+	// BackBuffer []uint8
+
+	NewBuffer []uint32
 
 	screenChanged bool
 }
@@ -156,7 +158,7 @@ func (c *Console) createEmptySnapshot() Snapshot {
 		ApuState:    ApuSnapshot{},
 	}
 
-	s.PpuState.BackBuffer = make([]uint8, 256*240*4)
+	s.PpuState.NewBuffer = make([]uint32, 256*240)
 
 	return s
 
@@ -170,7 +172,7 @@ func (p *ppu) TakePpuSnapshot(S *PpuSnapshot) {
 	S.Scanline = p.Scanline
 	S.Frame = p.Frame
 
-	copy(S.BackBuffer, p.BackBuffer)
+	copy(S.NewBuffer, p.NewBuffer)
 
 	S.screenChanged = p.ScreenChanged
 
@@ -244,7 +246,7 @@ func (p *ppu) LoadPpuSnapshot(snap PpuSnapshot) {
 	p.Scanline = snap.Scanline
 	p.Frame = snap.Frame
 
-	copy(p.BackBuffer, snap.BackBuffer)
+	copy(p.NewBuffer, snap.NewBuffer)
 
 	p.ScreenChanged = snap.screenChanged
 }

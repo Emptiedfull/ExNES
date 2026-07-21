@@ -12,7 +12,9 @@ type ppu struct {
 
 	// BackBuffer [245760]uint8
 
-	BackBuffer []uint8
+	// BackBuffer []uint8
+
+	NewBuffer []uint32
 
 	mirroring int
 
@@ -114,8 +116,8 @@ func (p *ppu) reset() {
 	p.Mem = ppu_Mem{}
 	p.Mem.CHR_isRam = isRam
 
-	if p.BackBuffer != nil {
-		clear(p.BackBuffer)
+	if p.NewBuffer != nil {
+		clear(p.NewBuffer)
 	}
 	if p.DebugBuffer != nil {
 		clear(p.DebugBuffer)

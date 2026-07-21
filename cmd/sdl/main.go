@@ -41,7 +41,7 @@ var windows = make(Windows)
 
 func main() {
 
-	displayChannel := make(chan Core.ScreenInfo, 100)
+	displayChannel := make(chan []uint32, 100)
 	pauseChannel := make(chan bool)
 
 	g := &game{

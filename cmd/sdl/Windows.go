@@ -332,7 +332,7 @@ func (win *gameWindow) render() {
 
 	select {
 	case s := <-win.menuBar.console.screenChannel:
-		renderFrame(win.gameTexture, win.renderer, s.Buffer, win.gameRect)
+		renderFrame(win.gameTexture, win.renderer, s, win.gameRect)
 
 	default:
 		win.renderer.Copy(win.gameTexture, nil, win.gameRect)

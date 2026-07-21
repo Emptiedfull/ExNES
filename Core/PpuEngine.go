@@ -336,20 +336,16 @@ func (p *ppu) renderPixel() {
 	}
 
 	idx := p.readPallete(uint16(color) % 64)
+	col := p.console.PalleteEngine.getColPacked(p.Mem.register.emphasisIndex, idx)
+	p.pushRGB(col, x, y)
 
 	// p.pushRGB(p.console.palette[p.Mem.register.emphasisIndex][in], x, y)
-	p.pushRGB(p.console.PalleteEngine.GetRGB(p.Mem.register.emphasisIndex, idx), x, y)
 
 }
 
-func (p *ppu) pushRGB(rgb [3]uint8, x, y int) {
+func (p *ppu) pushRGB(col uint32, x, y int) {
 
-	idx := ((y << 8) + x) << 2
-
-	p.BackBuffer[idx] = rgb[0]
-	p.BackBuffer[idx+1] = rgb[1]
-	p.BackBuffer[idx+2] = rgb[2]
-	p.BackBuffer[idx+3] = 255
+	p.NewBuffer[(y<<8)+x] = col
 }
 
 func (p *ppu) readPallete(addr uint16) uint8 {

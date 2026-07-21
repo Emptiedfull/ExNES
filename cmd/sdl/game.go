@@ -19,7 +19,7 @@ type game struct {
 	romPath     string
 
 	pauseChannel  chan bool
-	screenChannel chan Core.ScreenInfo
+	screenChannel chan []uint32
 
 	fps    int
 	volume float32
@@ -52,7 +52,7 @@ func (console *game) LoadRom(filepath string, mb *menuBar) error {
 	return nil
 }
 
-func (g *game) initConsole(screenChannel chan Core.ScreenInfo) {
+func (g *game) initConsole(screenChannel chan []uint32) {
 	g.core = Core.InitializeConsole()
 
 	g.core.LoadRam = LoadRam
@@ -242,7 +242,7 @@ func (console *game) changeVolume(volumeStr string) {
 	console.volume = volume
 }
 
-func renderFrame(texture *sdl.Texture, renderer *sdl.Renderer, buffer []byte, gameRect *sdl.Rect) {
+func renderFrame(texture *sdl.Texture, renderer *sdl.Renderer, buffer []uint32, gameRect *sdl.Rect) {
 	texture.Update(nil, unsafe.Pointer(&buffer[0]), 256*4)
 	renderer.Copy(texture, nil, gameRect)
 
