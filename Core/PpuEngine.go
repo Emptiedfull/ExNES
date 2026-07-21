@@ -335,9 +335,10 @@ func (p *ppu) renderPixel() {
 		}
 	}
 
-	in := p.readPallete(uint16(color) % 64)
+	idx := p.readPallete(uint16(color) % 64)
 
-	p.pushRGB(p.console.palette[p.Mem.register.emphasisIndex][in], x, y)
+	// p.pushRGB(p.console.palette[p.Mem.register.emphasisIndex][in], x, y)
+	p.pushRGB(p.console.PalleteEngine.GetRGB(p.Mem.register.emphasisIndex, idx), x, y)
 
 }
 

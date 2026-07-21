@@ -18,6 +18,7 @@ type Console struct {
 
 	CheatEngine    *GameGenieEngine
 	DatabaseEngine *RomDB
+	PalleteEngine  *PalleteEngine
 
 	romHash uint32
 
@@ -38,8 +39,6 @@ type Console struct {
 
 	mapper  Mapper
 	LoadRam func(Name string, rom []uint8)
-
-	palette FullPalette
 }
 
 func (c *Console) GetRam() []uint8 {
@@ -136,7 +135,11 @@ func (c *Console) InitRom(data io.Reader) error {
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring), hasBattery)
 
 	if c.LoadRam != nil {
-		c.LoadRam(c.GetHash(), c.mapper.GetPRGRAM())
+		fmt.Println("has battery:", hasBattery)
+		if hasBattery {
+			c.LoadRam(c.GetHash(), c.mapper.GetPRGRAM())
+		}
+
 	}
 
 	c.SetUpSnapshots()
@@ -164,7 +167,7 @@ func InitializeConsole() *Console {
 		Cpu: &Cpu{},
 
 		OpenBusVal: 0,
-		palette:    loadFPal(Pallete),
+		// palette:    loadFPal(Pallete),
 	}
 
 	db, err := LoadDB()

@@ -28,8 +28,8 @@
 "settings": {
 "show_fps": true,
 "current_speed": "100%",
-"muted": true,
-"current_volume": "25%",
+"muted": false,
+"current_volume": "100%",
 "controlBinds": {
 "Dpad-Down": "Down",
 "Dpad-Left": "Left",

@@ -1,9 +1,5 @@
 package Core
 
-import (
-	_ "embed"
-)
-
 type flags = uint8
 
 const (
@@ -16,9 +12,6 @@ const (
 	oVerflow        = 1 << 6
 	Negative        = 1 << 7
 )
-
-//go:embed ntsc.pal
-var Pallete []byte
 
 type Cpu struct {
 	console *Console

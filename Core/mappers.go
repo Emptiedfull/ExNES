@@ -54,12 +54,14 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			control:       0x0F,
 			shiftRegister: 0x10,
 			isRam:         c.Ppu.Mem.CHR_isRam,
+			battery:       hasBattery,
 		}
 	case 2:
 		m = &Mapper2{
-			PRGROM:     prgData,
-			CHRROM:     chrData,
-			Mirroring:  mirroring,
+			PRGROM:    prgData,
+			CHRROM:    chrData,
+			Mirroring: mirroring,
+
 			BankSelect: 0,
 		}
 	case 4:
@@ -699,7 +701,7 @@ func (m *MMC3) CreateEmptySnapshot() MapperScreenShot {
 		PRGROM: make([]uint8, len(m.PRGROM)),
 		PRGRAM: make([]uint8, len(m.PRGRAM)),
 	}
-	return s
+	return &s
 }
 
 func (m *MMC3) WritePRG(addr uint16, val uint8) {
@@ -882,6 +884,7 @@ func (m *MMC3) TakeSnapshot(s MapperScreenShot) {
 
 	if !ok {
 		fmt.Println("FUCK FUCK FUCK FUCK")
+
 		return
 	}
 

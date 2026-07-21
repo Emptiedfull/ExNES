@@ -1,9 +1,5 @@
 package Core
 
-import (
-	"fmt"
-)
-
 //for any readers, please stop here I barely understand what ive done
 
 type ppu struct {
@@ -25,30 +21,6 @@ type ppu struct {
 	DebugBuffer []uint8
 
 	ppuOpenBus uint8
-}
-
-type FullPalette [8][64][3]byte
-
-func loadFPal(data []byte) FullPalette {
-
-	expectedLen := 8 * 64 * 3
-	if len(data) < expectedLen {
-		fmt.Println("AHHHH")
-		return FullPalette{}
-	}
-
-	var pal FullPalette
-	offset := 0
-	for e := range 8 {
-		for i := range 64 {
-			pal[e][i][0] = data[offset+0]
-			pal[e][i][1] = data[offset+1]
-			pal[e][i][2] = data[offset+2]
-			offset += 3
-		}
-	}
-
-	return pal
 }
 
 var NesPaletteLUT = [64]RGB{
