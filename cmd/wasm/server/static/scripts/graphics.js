@@ -70,7 +70,7 @@ export const updateKey = async (key) => {
     flashAnim.play()
     return
   }
-   const res = await fetch(`./Spritesheets/${key.toLocaleLowerCase()}.png`)
+   const res = await fetch(`./keys/${key.toLocaleLowerCase()}.png`)
 
   if (res.ok) {
     flashAnim.cancel()
@@ -87,7 +87,7 @@ export const updateKey = async (key) => {
 
     keyDisplay.style.backgroundSize = `${wFull}px ${h}px `
 
-    keyDisplay.style.backgroundImage = `url('./Spritesheets/${key.toLocaleLowerCase()}.png')`
+    keyDisplay.style.backgroundImage = `url('./keys/${key.toLocaleLowerCase()}.png')`
 
     keyDisplay.animate([
       { backgroundPosition: '0px 0px' },
