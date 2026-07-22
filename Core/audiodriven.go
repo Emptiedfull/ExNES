@@ -34,6 +34,33 @@ func (a *APU) DriveSamples(output []byte, samplesNeeded uint32) {
 	}
 
 }
+
+func (c *Console) TickSpecial() {
+	if c.Cpu.Stall > 0 {
+		c.Cpu.Stall--
+		c.Cpu.TotalCycles++
+	} else {
+		c.Cpu.Tick()
+	}
+
+	for range 3 {
+		c.Ppu.step()
+	}
+
+	// c.Apu.tick()
+
+	// c.Cpu.irqLine = c.Apu.IRGPending || c.Apu.Dmc.IRGPending
+
+	if m, ok := c.mapper.(IrqClocker); ok {
+
+		if m.IRQPending() {
+
+			c.Cpu.irqLine = true
+		}
+
+	}
+}
+
 func (c *Console) TickNoAudio() {
 	if c.Cpu.Stall > 0 {
 		c.Cpu.Stall--

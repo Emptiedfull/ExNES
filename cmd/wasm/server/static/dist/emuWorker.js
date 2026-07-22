@@ -17,6 +17,9 @@
   var audioBufS = new SharedArrayBuffer(SIZE * 4 + 4 + 4 + 4 + 4);
   var samples = new Float32Array(audioBufS, 0, SIZE);
   var control = new Int32Array(audioBufS, SIZE * 4, 3);
+  var frameSigBuf = new SharedArrayBuffer(12);
+  var frameSig = new Int32Array(frameSigBuf);
+  var rafrunning = false;
   var S_size = 1024;
   var S_buf = new Float32Array(S_size);
   self.onmessage = async ({ data }) => {
@@ -26,15 +29,23 @@
         initBuffer(new Uint8Array(S_buf.buffer));
         initInput(new Int32Array(data.inputBuf));
         initSpeed(new Uint8Array(data.speedBuf));
-        self.postMessage({ type: "init", audioBufS, FBuf, SIZE, S_size });
+        self.postMessage({ type: "init", audioBufS, FBuf, SIZE, S_size, frameSigBuf });
         break;
       case "loadRom":
         console.log("loading rom");
         await loadRom(data.rom);
-        pump();
         break;
       case "pump":
         pump();
+        break;
+      case "startRaF":
+        rafrunning = true;
+        rafPump();
+        break;
+      case "endRaf":
+        rafrunning = false;
+        Atomics.add(frameSig, 0, 1);
+        Atomics.notify(frameSig, 0);
         break;
       case "reset":
         console.log("Recieved reset request");
@@ -71,6 +82,21 @@
       snapshots[i].image = await createImageBitmap(data);
     }
     return snapshots;
+  };
+  var rafPump = () => {
+    console.log("starting loop");
+    while (rafrunning) {
+      const done = Atomics.load(frameSig, 1);
+      Atomics.wait(frameSig, 0, done);
+      if (Atomics.load(frameSig, 2) === 1) {
+        Atomics.store(frameSig, 2, 0);
+        break;
+      }
+      runFrame();
+      FBytes.set(new Uint8Array(frameBuffer.buffer));
+      self.postMessage({ type: "frameUp" });
+      Atomics.add(frameSig, 1, 1);
+    }
   };
   var pump = () => {
     while (true) {

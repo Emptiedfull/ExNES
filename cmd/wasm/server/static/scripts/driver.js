@@ -15,6 +15,15 @@ const imageData = ctx.createImageData(256, 240)
 const speedBuf = new SharedArrayBuffer(4)
 const speedNum = new Int32Array(speedBuf)
 
+const NES_FPS = 60.0988
+const FRAME_MS = 1000 / NES_FPS
+
+let frameSig = null
+let rafMode = false
+let rafId = null
+let lastT = 0
+let  acc = 0
+
 let audioBufS = null
 let control = null
 
@@ -22,6 +31,7 @@ Atomics.store(speedNum,0,1000)
 
 export const state = {
     romRunning: false,
+    runMode:1, //0-aduio run 1 - raf run
 }
 
 let audioCtx = null
@@ -36,7 +46,12 @@ window.addEventListener("keydown",async (e)=>{
         
        
        
-    } 
+    } else if (e.code == "KeyT"){
+        console.log("switchign state")
+        
+        
+        switchMode(0)
+    }
 })
 
 const setUpAudio = async (audioBufS, SIZE) => {
@@ -123,6 +138,7 @@ worker.onmessage = async ({ data }) => {
             fBytes = new Uint8Array(data.FBuf)
             audioBufS = data.audioBufS
             control = new Int32Array(audioBufS,data.SIZE*4,3)
+            frameSig = new Int32Array(data.frameSigBuf)
             await setUpAudio(data.audioBufS, data.SIZE)
             break
         case "wasm":
@@ -150,13 +166,31 @@ const ControlMap = {
     "dpad-right": 7,
 }
 
-export const loadRom = (game) => {
+const switchMode = (mode)=>{
+    if (mode == 0){
+        state.runMode= 0
+        startAudioBuf()
+    }else{
+        state.runMode = 1
+        startRaf()
+    }
+}
+
+export const loadRom = async (game) => {
+  
     Atomics.store(control,2,1)
     Atomics.notify(control,2)
 
     audioCtx.resume()
 
     worker.postMessage({ type: 'loadRom', rom: game })
+    
+    await wait(1000)
+    if (state.runMode == 0){
+        await startAudioBuf()
+    }else{
+        await startRaf()
+    }
 }
 
 export const UpdateSpeed = (speed) =>{
@@ -173,4 +207,65 @@ export const UpdateRelease = (btn) => {
 
     Atomics.and(inputState, 0, ~(1 << ControlMap[btn]))
 
+}
+
+export const startAudioBuf = async  ()=>{
+    rafMode = false
+
+    if (rafId) cancelAnimationFrame(rafId)
+    rafId = null
+
+    worker.postMessage({type:"endRaf"})
+
+    if (audioCtx) {
+        await audioCtx.resume()
+    }
+
+    Atomics.store(control,2,1)
+    Atomics.notify(control,2)
+
+    worker.postMessage({type:"pump"})
+    
+}
+
+export const startRaf = ()=>{
+    if (!frameSig) return
+
+    if (control) {
+        Atomics.store(control,2,2)
+        Atomics.notify(control,2)
+    }
+
+    if (audioCtx) audioCtx.suspend()
+
+    rafMode = true
+    lastT = performance.now()
+    acc = 0
+
+     worker.postMessage({type:"startRaF"})
+
+    rafId = requestAnimationFrame(rafLoop)
+
+}
+
+export const stopRaf = ()=>{
+    
+}
+
+const rafLoop = (now)=>{
+    if (!rafMode) return
+
+    acc += now - lastT
+    lastT = now 
+
+    if (acc > 250) acc = 250
+
+    while (acc > FRAME_MS){
+        Atomics.add(frameSig,0,1)
+        Atomics.notify(frameSig,0)
+
+        acc -= FRAME_MS
+    }
+
+    rafId = requestAnimationFrame(rafLoop)
 }

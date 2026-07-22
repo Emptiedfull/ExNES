@@ -28,6 +28,18 @@ const audioBufS = new SharedArrayBuffer(SIZE*4 + 4 + 4 +4 + 4 ) //uh the plus 4 
 const samples = new Float32Array(audioBufS,0,SIZE)
 const control = new Int32Array(audioBufS,SIZE*4,3)
 
+const frameSigBuf = new SharedArrayBuffer(12)
+const frameSig = new Int32Array(frameSigBuf)
+ const done = Atomics.load(frameSig,1)
+        Atomics.wait(frameSig,0,done)
+
+        if (Atomics.load(frameSig,2) === 1){   // stop requested via SHARED FLAG
+            Atomics.store(frameSig,2,0)
+            break
+        }
+
+
+
 const S_size = 1024
 const S_buf = new Float32Array(S_size)
 
@@ -35,21 +47,35 @@ self.onmessage = async ({data}) =>{
     
     switch (data.type){
         case 'init':
+
             startEmulator()
             initBuffer(new Uint8Array(S_buf.buffer))
             initInput(new Int32Array(data.inputBuf))
             initSpeed(new Uint8Array(data.speedBuf))
-            self.postMessage({type:"init",audioBufS,FBuf,SIZE,S_size})
+            self.postMessage({type:"init",audioBufS,FBuf,SIZE,S_size,frameSigBuf})
             break
 
         case 'loadRom':
              console.log("loading rom")
             await loadRom(data.rom)
            
-            pump()
+            
+           
             break
         case 'pump':
             pump()
+            break
+        case 'startRaF':
+            
+            rafPump()
+            break
+
+        case 'endRaf':
+            
+
+            Atomics.add(frameSig,0,1)
+            Atomics.notify(frameSig,0)
+
             break
         
         case 'reset':
@@ -125,6 +151,28 @@ const prepareSnapshotImages = async (bufferPTR,frames)=>{
 
     return Promise.all(images)
 
+}
+
+const rafPump = ()=>{
+    console.log("starting loop")
+    while (true){
+        
+         const done = Atomics.load(frameSig,1)
+        Atomics.wait(frameSig,0,done)
+
+        if (Atomics.load(frameSig,2) === 1){  
+            Atomics.store(frameSig,2,0)
+            break
+        }
+
+
+        runFrame()
+
+        FBytes.set(new Uint8Array(frameBuffer.buffer))
+        self.postMessage({type:"frameUp"})
+
+         Atomics.add(frameSig, 1, 1)  
+    }
 }
 
 const pump = ()=>{

@@ -62,7 +62,7 @@ func startFrameDriver() {
 	}))
 
 	js.Global().Set("initRom", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		fmt.Println("ininting rom")
+
 		Arr := args[0]
 		romData := make([]byte, Arr.Get("length").Int())
 		js.CopyBytesToGo(romData, Arr)
@@ -76,6 +76,8 @@ func startFrameDriver() {
 		}
 
 		emu.Cpu.Reset()
+
+		fmt.Println("rom ready for playing")
 
 		return nil
 	}))
@@ -103,6 +105,24 @@ func startFrameDriver() {
 			fmt.Println("resetting the console")
 			return nil
 		}
+
+		return nil
+	}))
+
+	js.Global().Set("runFrame", js.FuncOf(func(this js.Value, args []js.Value) any {
+		syncInputs(emu, Input_Arr)
+		frame := emu.Ppu.Frame
+		for emu.Ppu.Frame < frame+1 {
+			emu.TickNoAudio()
+			for emu.Apu.HasSample() {
+				emu.Apu.PopSample()
+			}
+
+		}
+
+		buf := emu.Ppu.NewBuffer
+		bytes := unsafe.Slice((*byte)(unsafe.Pointer(&buf[0])), len(buf)*4)
+		js.CopyBytesToJS(jsScreen, bytes)
 
 		return nil
 	}))

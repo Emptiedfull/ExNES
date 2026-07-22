@@ -220,17 +220,29 @@ var ctx2 = canvas.getContext("2d");
 var imageData = ctx2.createImageData(256, 240);
 var speedBuf = new SharedArrayBuffer(4);
 var speedNum = new Int32Array(speedBuf);
+var NES_FPS = 60.0988;
+var FRAME_MS = 1e3 / NES_FPS;
+var frameSig = null;
+var rafMode = false;
+var rafId = null;
+var lastT = 0;
+var acc = 0;
 var audioBufS = null;
 var control = null;
 Atomics.store(speedNum, 0, 1e3);
 var state = {
-  romRunning: false
+  romRunning: false,
+  runMode: 1
+  //0-aduio run 1 - raf run
 };
 var audioCtx = null;
 var gain = null;
 window.addEventListener("keydown", async (e) => {
   if (e.code == "KeyR") {
     await getSnapList();
+  } else if (e.code == "KeyT") {
+    console.log("switchign state");
+    switchMode(0);
   }
 });
 var setUpAudio = async (audioBufS2, SIZE) => {
@@ -289,6 +301,7 @@ worker.onmessage = async ({ data }) => {
       fBytes = new Uint8Array(data.FBuf);
       audioBufS = data.audioBufS;
       control = new Int32Array(audioBufS, data.SIZE * 4, 3);
+      frameSig = new Int32Array(data.frameSigBuf);
       await setUpAudio(data.audioBufS, data.SIZE);
       break;
     case "wasm":
@@ -314,11 +327,26 @@ var ControlMap = {
   "dpad-left": 6,
   "dpad-right": 7
 };
-var loadRom = (game) => {
+var switchMode = (mode) => {
+  if (mode == 0) {
+    state.runMode = 0;
+    startAudioBuf();
+  } else {
+    state.runMode = 1;
+    startRaf();
+  }
+};
+var loadRom = async (game) => {
   Atomics.store(control, 2, 1);
   Atomics.notify(control, 2);
   audioCtx.resume();
   worker.postMessage({ type: "loadRom", rom: game });
+  await wait(1e3);
+  if (state.runMode == 0) {
+    await startAudioBuf();
+  } else {
+    await startRaf();
+  }
 };
 var UpdateSpeed = (speed) => {
   Atomics.store(speedNum, 0, speed);
@@ -328,6 +356,43 @@ var UpdatePress = (btn) => {
 };
 var UpdateRelease = (btn) => {
   Atomics.and(inputState, 0, ~(1 << ControlMap[btn]));
+};
+var startAudioBuf = async () => {
+  rafMode = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+  worker.postMessage({ type: "endRaf" });
+  if (audioCtx) {
+    await audioCtx.resume();
+  }
+  Atomics.store(control, 2, 1);
+  Atomics.notify(control, 2);
+  worker.postMessage({ type: "pump" });
+};
+var startRaf = () => {
+  if (!frameSig) return;
+  if (control) {
+    Atomics.store(control, 2, 2);
+    Atomics.notify(control, 2);
+  }
+  if (audioCtx) audioCtx.suspend();
+  rafMode = true;
+  lastT = performance.now();
+  acc = 0;
+  worker.postMessage({ type: "startRaF" });
+  rafId = requestAnimationFrame(rafLoop);
+};
+var rafLoop = (now) => {
+  if (!rafMode) return;
+  acc += now - lastT;
+  lastT = now;
+  if (acc > 250) acc = 250;
+  while (acc > FRAME_MS) {
+    Atomics.add(frameSig, 0, 1);
+    Atomics.notify(frameSig, 0);
+    acc -= FRAME_MS;
+  }
+  rafId = requestAnimationFrame(rafLoop);
 };
 
 // static/scripts/joypad.js
@@ -571,7 +636,7 @@ var updateKey = async (key) => {
     flashAnim.play();
     return;
   }
-  const res = await fetch(`./dist/spritesheets/${key}.png`);
+  const res = await fetch(`./keys/${key.toLocaleLowerCase()}.png`);
   if (res.ok) {
     flashAnim.cancel();
     keyDisplay.innerText = "";
@@ -583,7 +648,7 @@ var updateKey = async (key) => {
     keyDisplay.style.height = h + "px";
     keyDisplay.style.width = w + "px";
     keyDisplay.style.backgroundSize = `${wFull}px ${h}px `;
-    keyDisplay.style.backgroundImage = `url('./dist/spritesheets/${key}.png')`;
+    keyDisplay.style.backgroundImage = `url('./keys/${key.toLocaleLowerCase()}.png')`;
     keyDisplay.animate([
       { backgroundPosition: "0px 0px" },
       { backgroundPosition: `-${wFull}px 0px` }
