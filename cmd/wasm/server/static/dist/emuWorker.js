@@ -19,7 +19,6 @@
   var control = new Int32Array(audioBufS, SIZE * 4, 3);
   var frameSigBuf = new SharedArrayBuffer(12);
   var frameSig = new Int32Array(frameSigBuf);
-  var rafrunning = false;
   var S_size = 1024;
   var S_buf = new Float32Array(S_size);
   self.onmessage = async ({ data }) => {
@@ -39,13 +38,7 @@
         pump();
         break;
       case "startRaF":
-        rafrunning = true;
         rafPump();
-        break;
-      case "endRaf":
-        rafrunning = false;
-        Atomics.add(frameSig, 0, 1);
-        Atomics.notify(frameSig, 0);
         break;
       case "reset":
         console.log("Recieved reset request");
@@ -85,7 +78,7 @@
   };
   var rafPump = () => {
     console.log("starting loop");
-    while (rafrunning) {
+    while (true) {
       const done = Atomics.load(frameSig, 1);
       Atomics.wait(frameSig, 0, done);
       if (Atomics.load(frameSig, 2) === 1) {
@@ -120,7 +113,6 @@
       Atomics.store(control, 2, 0);
       Atomics.notify(control, 2);
     }
-    console.log("execution has been paused");
   };
   var loadRom = async (game) => {
     const response = await fetch("/games/" + game + ".nes");

@@ -210,12 +210,7 @@ export const UpdateRelease = (btn) => {
 }
 
 export const startAudioBuf = async  ()=>{
-    rafMode = false
-
-    if (rafId) cancelAnimationFrame(rafId)
-    rafId = null
-
-    worker.postMessage({type:"endRaf"})
+   stopRaF()
 
     if (audioCtx) {
         await audioCtx.resume()
@@ -268,4 +263,15 @@ const rafLoop = (now)=>{
     }
 
     rafId = requestAnimationFrame(rafLoop)
+}
+
+export const stopRaF = ()=>{
+    if (rafId) cancelAnimationFrame(rafId)
+
+    rafId = null
+    if (frameSig){
+        Atomics.store(frameSig,2,1)
+        Atomics.add(frameSig,0,1)
+        Atomics.notify(frameSig,0)
+    }
 }

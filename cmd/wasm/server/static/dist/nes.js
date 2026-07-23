@@ -358,10 +358,7 @@ var UpdateRelease = (btn) => {
   Atomics.and(inputState, 0, ~(1 << ControlMap[btn]));
 };
 var startAudioBuf = async () => {
-  rafMode = false;
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = null;
-  worker.postMessage({ type: "endRaf" });
+  stopRaF();
   if (audioCtx) {
     await audioCtx.resume();
   }
@@ -393,6 +390,15 @@ var rafLoop = (now) => {
     acc -= FRAME_MS;
   }
   rafId = requestAnimationFrame(rafLoop);
+};
+var stopRaF = () => {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+  if (frameSig) {
+    Atomics.store(frameSig, 2, 1);
+    Atomics.add(frameSig, 0, 1);
+    Atomics.notify(frameSig, 0);
+  }
 };
 
 // static/scripts/joypad.js

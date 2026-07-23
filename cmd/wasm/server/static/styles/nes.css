@@ -518,15 +518,19 @@
 
 .main-title{
   
-  height: 40%;
+  
   width: 45%;
   position: absolute;
-  top: 0;
+  background-color: rebeccapurple;
+  top: 15%;
+  
   right: 0;
+  
   text-align: center;
   align-items: center;
   display: flex;
   justify-content: center;
+  flex-direction: column;
 }
 
 .main-title span{

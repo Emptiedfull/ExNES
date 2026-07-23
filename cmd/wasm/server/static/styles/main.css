@@ -24,31 +24,31 @@ body {
       transparent 16px,
 
 
- 
+
       rgba(229, 228, 237, 0.08) 19px);
-      
+
 }
 
 
-.screen-items{
+.screen-items {
   height: 100vh;
   width: 100vw;
   display: flex;
   flex-direction: column;
-  
+
 }
 
 .main {
   height: 80%;
-  
+
   width: 100%;
- 
+
   padding-bottom: 0%;
   display: flex;
   flex-direction: row;
   padding-left: 2rem;
   padding-right: 2rem;
-  
+
   justify-content: space-around;
   align-items: end;
 }
@@ -56,13 +56,13 @@ body {
 .tv {
   display: flex;
   flex-direction: column;
-  
-  height: 85%; 
-  
-  
+
+  height: 85%;
+
+
   width: fit-content;
-  
-  
+
+
 }
 
 
@@ -70,18 +70,15 @@ body {
   z-index: 2;
   background: #c8b89a;
 
-  background-image: 
-    
-    repeating-linear-gradient(
-      0deg,
+  background-image:
+
+    repeating-linear-gradient(0deg,
       transparent 0px,
       transparent 3px,
       rgba(0, 0, 0, 0.12) 3px,
-      rgba(0, 0, 0, 0.12) 6px
-    ),
-    linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 50%),
-    repeating-linear-gradient(
-      92deg,
+      rgba(0, 0, 0, 0.12) 6px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.3), transparent 50%),
+    repeating-linear-gradient(92deg,
       transparent 0px,
       transparent 40px,
       rgba(0, 0, 0, 0.05) 40px,
@@ -89,8 +86,7 @@ body {
       transparent 42px,
       transparent 80px,
       rgba(255, 255, 255, 0.04) 80px,
-      rgba(255, 255, 255, 0.04) 81px
-    );
+      rgba(255, 255, 255, 0.04) 81px);
 
 
   box-shadow:
@@ -124,7 +120,7 @@ body {
     8px -8px 0 #160e06,
     -8px -8px 0 #a59a83;
 
-    
+
 
 
 
@@ -141,7 +137,7 @@ body {
 #screen {
   background: #000;
   height: 100%;
-  
+
   aspect-ratio: 1/1;
 
   cursor: pointer;
@@ -164,13 +160,11 @@ body {
 .control-bar {
   flex: 1;
   background-color: grey;
-    background-image: repeating-linear-gradient(
-    90deg,
-    transparent 0px,
-    transparent 6px,
-    rgba(0,0,0,0.1) 7px,
-    rgba(0,0,0,0.1) 9px
-  );
+  background-image: repeating-linear-gradient(90deg,
+      transparent 0px,
+      transparent 6px,
+      rgba(0, 0, 0, 0.1) 7px,
+      rgba(0, 0, 0, 0.1) 9px);
   border-color: black;
   border-style: solid;
   border-radius: 5px;
@@ -212,25 +206,21 @@ body {
   height: 100%;
   width: 18%;
   background-color: #978a74;
-  background-image: repeating-linear-gradient(
-    180deg,
-    transparent 0px,
-    transparent 6px,
-    rgba(0,0,0,0.12) 6px,
-    rgba(0,0,0,0.12) 7px
-  );
+  background-image: repeating-linear-gradient(180deg,
+      transparent 0px,
+      transparent 6px,
+      rgba(0, 0, 0, 0.12) 6px,
+      rgba(0, 0, 0, 0.12) 7px);
   image-rendering: pixelated;
   box-shadow:
-    inset 3px 0px 0px #a09080, -
-    inset -3px 0px 0px #1a1408,
+    inset 3px 0px 0px #a09080, - inset -3px 0px 0px #1a1408,
     inset 0px -4px 0px #0e0a04;
-  clip-path: polygon(
-    5%  0%,
-    95% 0%,
-    100% 100%,
-    0%  100%
-  );
+  clip-path: polygon(5% 0%,
+      95% 0%,
+      100% 100%,
+      0% 100%);
 }
+
 .pixel-corners {
   clip-path: polygon(0px calc(100% - 24px),
       6px calc(100% - 24px),
@@ -368,7 +358,7 @@ body {
 
 .tv-corners,
 .tv-corners--wrapper {
-  
+
   clip-path: polygon(0px calc(100% - 12px),
       4px calc(100% - 12px),
       4px calc(100% - 8px),
@@ -476,4 +466,61 @@ body {
 
 .tv-corners::after {
   margin: -16px;
+}
+
+.main-title-controls {
+  background-color: pink;
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+
+.main-timing {
+  position: relative;
+  background: #1c1c1c;
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, .7), 0 2px 0 rgba(255, 255, 255, .06);
+  cursor: pointer;
+  height: 70%;
+  width: 70%;
+  max-width: 200px;
+
+}
+
+.main-timing::before {
+  content: "";
+  position: absolute;
+
+  inset: 6px;
+  border-radius: 6px;
+  background: #141414;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .8);
+}
+
+.main-timing-paddle {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 46%;
+  height: calc(100% - 12px);
+  border-radius: 6px;
+  background: linear-gradient(#e8e2cc, #c9c2a4);
+  box-shadow: 0 3px 0 #8a8464, 0 4px 6px rgba(0, 0, 0, .5);
+
+   transition: transform .16s cubic-bezier(.5,0,.3,1);
+
+  display: flex;
+  align-items: center;
+
+  justify-content: center;
+  z-index: 1
+}
+
+#rocker[data-mode="0"] .main-timing-paddle{
+  transform: translateX(106%);
+  background: linear-gradient(#8fb0d8, #5f86b6);
 }

@@ -30,15 +30,7 @@ const control = new Int32Array(audioBufS,SIZE*4,3)
 
 const frameSigBuf = new SharedArrayBuffer(12)
 const frameSig = new Int32Array(frameSigBuf)
- const done = Atomics.load(frameSig,1)
-        Atomics.wait(frameSig,0,done)
-
-        if (Atomics.load(frameSig,2) === 1){   // stop requested via SHARED FLAG
-            Atomics.store(frameSig,2,0)
-            break
-        }
-
-
+       
 
 const S_size = 1024
 const S_buf = new Float32Array(S_size)
@@ -59,8 +51,6 @@ self.onmessage = async ({data}) =>{
              console.log("loading rom")
             await loadRom(data.rom)
            
-            
-           
             break
         case 'pump':
             pump()
@@ -70,13 +60,6 @@ self.onmessage = async ({data}) =>{
             rafPump()
             break
 
-        case 'endRaf':
-            
-
-            Atomics.add(frameSig,0,1)
-            Atomics.notify(frameSig,0)
-
-            break
         
         case 'reset':
             console.log("Recieved reset request")
@@ -165,7 +148,6 @@ const rafPump = ()=>{
             break
         }
 
-
         runFrame()
 
         FBytes.set(new Uint8Array(frameBuffer.buffer))
@@ -209,7 +191,7 @@ const pump = ()=>{
         Atomics.notify(control,2) //god pls work this is my 5th rewrite
     }
 
-    console.log("execution has been paused")
+   
 }
 
 
