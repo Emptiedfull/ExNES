@@ -21,9 +21,13 @@
                 <div><span style="color: rgb(70, 123, 215);">Ex</span><span style="color: #E60012;">NES</span></div>
                 <div class="main-title-controls">
                   
-                    <div class="main-timing" id="rocker" data-mode="0">
-                        <div class="main-timing-paddle">
-                            Hello
+                    <div class="mode-rocker" id="rocker" data-mode="0">
+                        <div class="mode-titles">
+                            <span class="mode-title">rAF</span>
+                            <span class="mode-title">Audio</span>
+                        </div>
+                        <div class="mode-paddle" id="paddle">
+                            Audio
                         </div>
                     </div>
                 </div>
@@ -406,6 +410,21 @@
             </div>
         </div>
     </div>
+    <div class="guide-overlay guide-corners">
+        <div class="guide-top">
+             WELCOME TO EXNES
+        </div>
+        <div class="guide-main">
+            <div class="guide-sidebar">
+               
+            </div>
+            <div class="guide-content">
+
+            </div>
+        </div>
+
+
+    </div>
 
         <div class="controller-cable controller-corners" id="cable-1"> </div>
         <div class="cable-wire" id="wire-1"></div>
@@ -417,6 +436,7 @@
 
         </div>
 </body>
+<script src="/scripts/marked.min.js"></script>
 <script src="/dist/nes.js" type="module"></script>
 
 </html>

@@ -232,7 +232,7 @@ var control = null;
 Atomics.store(speedNum, 0, 1e3);
 var state = {
   romRunning: false,
-  runMode: 1
+  runMode: 0
   //0-aduio run 1 - raf run
 };
 var audioCtx = null;
@@ -241,8 +241,11 @@ window.addEventListener("keydown", async (e) => {
   if (e.code == "KeyR") {
     await getSnapList();
   } else if (e.code == "KeyT") {
-    console.log("switchign state");
-    switchMode(0);
+    await PauseGame();
+    await wait(200);
+    worker.postMessage({ type: "reset" });
+    await wait(500);
+    await ResumeGame();
   }
 });
 var setUpAudio = async (audioBufS2, SIZE) => {
@@ -342,6 +345,8 @@ var loadRom = async (game) => {
   audioCtx.resume();
   worker.postMessage({ type: "loadRom", rom: game });
   await wait(1e3);
+  state.romRunning = true;
+  console.log("starting the fucking game");
   if (state.runMode == 0) {
     await startAudioBuf();
   } else {
@@ -358,6 +363,7 @@ var UpdateRelease = (btn) => {
   Atomics.and(inputState, 0, ~(1 << ControlMap[btn]));
 };
 var startAudioBuf = async () => {
+  if (!state.romRunning) return;
   stopRaF();
   if (audioCtx) {
     await audioCtx.resume();
@@ -367,12 +373,15 @@ var startAudioBuf = async () => {
   worker.postMessage({ type: "pump" });
 };
 var startRaf = () => {
+  if (!state.romRunning) return;
   if (!frameSig) return;
   if (control) {
     Atomics.store(control, 2, 2);
     Atomics.notify(control, 2);
   }
   if (audioCtx) audioCtx.suspend();
+  Atomics.store(frameSig, 2, 0);
+  Atomics.store(frameSig, 1, Atomics.load(frameSig, 0));
   rafMode = true;
   lastT = performance.now();
   acc = 0;
@@ -394,6 +403,7 @@ var rafLoop = (now) => {
 var stopRaF = () => {
   if (rafId) cancelAnimationFrame(rafId);
   rafId = null;
+  rafMode = false;
   if (frameSig) {
     Atomics.store(frameSig, 2, 1);
     Atomics.add(frameSig, 0, 1);
@@ -953,11 +963,14 @@ var GamesArray = [];
 var powerLed = document.getElementById("power");
 var powerBtn = document.getElementById("start");
 var pauseBtn = document.getElementById("pause");
+var rocker = document.getElementById("rocker");
+var paddle = document.getElementById("paddle");
 var romLoaded = "";
 var power = false;
 var roms = [left, middle2, right];
 document.addEventListener("DOMContentLoaded", async () => {
   startRandomTipEngine();
+  await setUpRocker();
   await setUpKnobs();
   await setUpButtons();
   await initGames();
@@ -969,6 +982,14 @@ var BeginKnobs = async () => {
   knobSettings["angle"] = 180;
   await turnKnob("sound", 180);
   await turnKnob("speed", 180);
+};
+var setUpRocker = () => {
+  paddle.addEventListener("click", () => {
+    const m = rocker.dataset.mode == "1" ? "0" : "1";
+    rocker.dataset.mode = m;
+    paddle.innerHTML = m === "1" ? "rAF" : "Audio";
+    switchMode(Number(m));
+  });
 };
 var setUpKnobs = async () => {
   const soundKnob = document.getElementById("sound");

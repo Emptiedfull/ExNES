@@ -1,5 +1,5 @@
 import { openCap, closeCap, slotCart, activateJoypad, alignCable, pushbtn, turnKnob, wiggleKnob, knobSettings } from "./graphics.js"
-import { initConsole, loadRom, state, updateVolume, UpdateSpeed, PauseGame, ResumeGame } from "./driver.js"
+import { initConsole, loadRom, state, updateVolume, UpdateSpeed, PauseGame, ResumeGame, switchMode } from "./driver.js"
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
 import { activateTip, startRandomTipEngine } from "./tooltips.js"
@@ -24,6 +24,9 @@ const powerLed = document.getElementById("power")
 const powerBtn = document.getElementById("start")
 const pauseBtn = document.getElementById("pause")
 
+const rocker = document.getElementById("rocker")
+const paddle = document.getElementById("paddle")
+
 let romLoaded = ""
 let power = false
 
@@ -32,6 +35,7 @@ const roms = [left, middle, right]
 document.addEventListener("DOMContentLoaded", async () => {
 
     startRandomTipEngine()
+    await setUpRocker()
     await setUpKnobs()
     await setUpButtons()
     await initGames()
@@ -47,6 +51,18 @@ const BeginKnobs = async () => {
 
     await turnKnob("sound", 180)
     await turnKnob("speed", 180)
+}
+
+const setUpRocker = ()=>{
+
+    paddle.addEventListener("click",()=>{
+        const m = rocker.dataset.mode == '1' ? "0" : "1"
+        rocker.dataset.mode = m
+
+        paddle.innerHTML = m === '1' ? "rAF" : "Audio"
+        switchMode(Number(m))
+    })
+    
 }
 
 

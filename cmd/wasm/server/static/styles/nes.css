@@ -277,7 +277,7 @@
     position: absolute;
     
     left: 8%;
-    z-index: 100;
+    z-index: 4;
     width: 60%;
     height: 30%;
 
@@ -521,7 +521,7 @@
   
   width: 45%;
   position: absolute;
-  background-color: rebeccapurple;
+  
   top: 15%;
   
   right: 0;
@@ -534,7 +534,8 @@
 }
 
 .main-title span{
-  font-size: 16rem;
+  font-size: 12rem;
+ 
 }
 
 .strip {

@@ -279,3 +279,189 @@
     100% { transform: translateY(0px); }
 }
 
+
+.guide-corners,
+.guide-corners--wrapper {
+  clip-path: polygon(0px calc(100% - 24px),
+    6px calc(100% - 24px),
+    6px calc(100% - 18px),
+    12px calc(100% - 18px),
+    12px calc(100% - 12px),
+    18px calc(100% - 12px),
+    18px calc(100% - 6px),
+    24px calc(100% - 6px),
+    24px 100%,
+    calc(100% - 24px) 100%,
+    calc(100% - 24px) calc(100% - 6px),
+    calc(100% - 18px) calc(100% - 6px),
+    calc(100% - 18px) calc(100% - 12px),
+    calc(100% - 12px) calc(100% - 12px),
+    calc(100% - 12px) calc(100% - 18px),
+    calc(100% - 6px) calc(100% - 18px),
+    calc(100% - 6px) calc(100% - 24px),
+    100% calc(100% - 24px),
+    100% 24px,
+    calc(100% - 6px) 24px,
+    calc(100% - 6px) 18px,
+    calc(100% - 12px) 18px,
+    calc(100% - 12px) 12px,
+    calc(100% - 18px) 12px,
+    calc(100% - 18px) 6px,
+    calc(100% - 24px) 6px,
+    calc(100% - 24px) 0px,
+    24px 0px,
+    24px 6px,
+    18px 6px,
+    18px 12px,
+    12px 12px,
+    12px 18px,
+    6px 18px,
+    6px 24px,
+    0px 24px);
+
+}
+.guide-corners {
+  border: 18px solid transparent;
+}
+.guide-corners--wrapper {
+  width: fit-content;
+  height: fit-content;
+}
+.guide-corners--wrapper .guide-corners {
+  display: block;
+  clip-path: polygon(18px 30px,
+    24px 30px,
+    24px 24px,
+    30px 24px,
+    30px 18px,
+    calc(100% - 30px) 18px,
+    calc(100% - 30px) 24px,
+    calc(100% - 24px) 24px,
+    calc(100% - 24px) 30px,
+    calc(100% - 18px) 30px,
+    calc(100% - 18px) calc(100% - 30px),
+    calc(100% - 24px) calc(100% - 30px),
+    calc(100% - 24px) calc(100% - 24px),
+    calc(100% - 30px) calc(100% - 24px),
+    calc(100% - 30px) calc(100% - 18px),
+    30px calc(100% - 18px),
+    30px calc(100% - 24px),
+    24px calc(100% - 24px),
+    24px calc(100% - 30px),
+    18px calc(100% - 30px));
+}
+.guide-corners::after,
+.guide-corners--wrapper::after {
+  content: "";
+  position: absolute;
+  clip-path: polygon(0px calc(100% - 24px),
+    6px calc(100% - 24px),
+    6px calc(100% - 18px),
+    12px calc(100% - 18px),
+    12px calc(100% - 12px),
+    18px calc(100% - 12px),
+    18px calc(100% - 6px),
+    24px calc(100% - 6px),
+    24px 100%,
+    calc(100% - 24px) 100%,
+    calc(100% - 24px) calc(100% - 6px),
+    calc(100% - 18px) calc(100% - 6px),
+    calc(100% - 18px) calc(100% - 12px),
+    calc(100% - 12px) calc(100% - 12px),
+    calc(100% - 12px) calc(100% - 18px),
+    calc(100% - 6px) calc(100% - 18px),
+    calc(100% - 6px) calc(100% - 24px),
+    100% calc(100% - 24px),
+    100% 24px,
+    calc(100% - 6px) 24px,
+    calc(100% - 6px) 18px,
+    calc(100% - 12px) 18px,
+    calc(100% - 12px) 12px,
+    calc(100% - 18px) 12px,
+    calc(100% - 18px) 6px,
+    calc(100% - 24px) 6px,
+    calc(100% - 24px) 0px,
+    24px 0px,
+    24px 6px,
+    18px 6px,
+    18px 12px,
+    12px 12px,
+    12px 18px,
+    6px 18px,
+    6px 24px,
+    0px 24px,
+    0px 50%,
+    18px 50%,
+    18px 30px,
+    24px 30px,
+    24px 24px,
+    30px 24px,
+    30px 18px,
+    calc(100% - 30px) 18px,
+    calc(100% - 30px) 24px,
+    calc(100% - 24px) 24px,
+    calc(100% - 24px) 30px,
+    calc(100% - 18px) 30px,
+    calc(100% - 18px) calc(100% - 30px),
+    calc(100% - 24px) calc(100% - 30px),
+    calc(100% - 24px) calc(100% - 24px),
+    calc(100% - 30px) calc(100% - 24px),
+    calc(100% - 30px) calc(100% - 18px),
+    30px calc(100% - 18px),
+    30px calc(100% - 24px),
+    24px calc(100% - 24px),
+    24px calc(100% - 30px),
+    18px calc(100% - 30px),
+    18px 50%,
+    0px 50%);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgb(76, 57, 45);
+  display: block;
+  pointer-events: none;
+}
+.guide-corners::after {
+  margin: -18px;
+}
+
+.guide-overlay{
+    background: #c8b89a;
+    border: 10px #3a3018 solid;
+    position: absolute;
+    height: 90%;
+    width: 90%;
+    z-index: 5;
+   top: 5%;
+   left: 5%;
+   padding: 2rem;
+
+   display: flex;
+   flex-direction: column;
+   gap: 1rem;
+   
+}
+
+.guide-top{
+   padding-left: 4rem;
+    width: 100%;
+    font-size: 4rem;
+    border-bottom: 4px solid rgb(76, 57, 45);
+    height: fit-content;
+    
+}
+
+.guide-main{
+    
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+}
+
+.guide-sidebar{
+    width: 20%;
+    
+     border-right: 4px solid rgb(76, 57, 45);
+}

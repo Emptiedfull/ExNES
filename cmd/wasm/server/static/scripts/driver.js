@@ -31,7 +31,7 @@ Atomics.store(speedNum,0,1000)
 
 export const state = {
     romRunning: false,
-    runMode:1, //0-aduio run 1 - raf run
+    runMode:0, //0-aduio run 1 - raf run
 }
 
 let audioCtx = null
@@ -47,10 +47,12 @@ window.addEventListener("keydown",async (e)=>{
        
        
     } else if (e.code == "KeyT"){
-        console.log("switchign state")
-        
-        
-        switchMode(0)
+        await PauseGame()
+        await wait(200)
+        worker.postMessage({type:"reset"})
+
+        await wait (500)
+        await ResumeGame()
     }
 })
 
@@ -166,7 +168,7 @@ const ControlMap = {
     "dpad-right": 7,
 }
 
-const switchMode = (mode)=>{
+export const switchMode = (mode)=>{
     if (mode == 0){
         state.runMode= 0
         startAudioBuf()
@@ -186,6 +188,8 @@ export const loadRom = async (game) => {
     worker.postMessage({ type: 'loadRom', rom: game })
     
     await wait(1000)
+    state.romRunning = true
+    console.log("starting the fucking game")
     if (state.runMode == 0){
         await startAudioBuf()
     }else{
@@ -210,6 +214,8 @@ export const UpdateRelease = (btn) => {
 }
 
 export const startAudioBuf = async  ()=>{
+
+    if (!state.romRunning) return
    stopRaF()
 
     if (audioCtx) {
@@ -224,6 +230,7 @@ export const startAudioBuf = async  ()=>{
 }
 
 export const startRaf = ()=>{
+    if (!state.romRunning) return
     if (!frameSig) return
 
     if (control) {
@@ -233,6 +240,8 @@ export const startRaf = ()=>{
 
     if (audioCtx) audioCtx.suspend()
 
+    Atomics.store(frameSig, 2, 0)  
+    Atomics.store(frameSig, 1, Atomics.load(frameSig, 0)) 
     rafMode = true
     lastT = performance.now()
     acc = 0
@@ -243,9 +252,7 @@ export const startRaf = ()=>{
 
 }
 
-export const stopRaf = ()=>{
-    
-}
+
 
 const rafLoop = (now)=>{
     if (!rafMode) return
@@ -269,6 +276,7 @@ export const stopRaF = ()=>{
     if (rafId) cancelAnimationFrame(rafId)
 
     rafId = null
+    rafMode = false
     if (frameSig){
         Atomics.store(frameSig,2,1)
         Atomics.add(frameSig,0,1)
