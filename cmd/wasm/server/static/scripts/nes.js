@@ -4,6 +4,7 @@ import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
 import { activateTip, startRandomTipEngine } from "./tooltips.js"
 import { makeMockTiles } from "./rewind.js"
+import { openGuides } from "./guides.js"
 
 
 
@@ -33,6 +34,8 @@ let power = false
 const roms = [left, middle, right]
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+    openGuides()
 
     startRandomTipEngine()
     await setUpRocker()

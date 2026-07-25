@@ -445,11 +445,20 @@
 
 .guide-top{
    padding-left: 4rem;
+   padding-right: 2rem;
     width: 100%;
-    font-size: 4rem;
+    
     border-bottom: 4px solid rgb(76, 57, 45);
     height: fit-content;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     
+}
+
+.guide-top span{
+    font-size: 4rem;
 }
 
 .guide-main{
@@ -464,4 +473,94 @@
     width: 20%;
     
      border-right: 4px solid rgb(76, 57, 45);
+     display: flex;
+     flex-direction: column;
+     padding: 1rem;
 }
+
+.guide-sidebar-title{
+     border-bottom: 4px solid rgb(76, 57, 45);
+     font-size: 2.4rem;
+     text-align: center;
+}
+
+.guide-close{
+    height: 5rem;
+    color: #c70000;
+    aspect-ratio: 1/1;
+    cursor: pointer;
+    padding: 1rem;
+}
+
+.guide-items{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-top: 2rem;
+    
+}
+
+.guide-item{
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap:2rem;
+}
+
+.guide-item::before{
+    content: "";
+    width: 0.8rem;
+    height: 0.8rem;
+    background: rgb(76, 57, 45);
+    flex-shrink: 0;
+}
+.markdown-body {
+  padding: 24px 32px;
+  max-width: 90%;              
+  color: #3a3428;
+  
+  font-size: 13px;             
+  line-height: 2;              
+  overflow-y: auto;
+}
+
+
+.markdown-body h1 { font-size: 22px; margin: 0 0 20px; line-height: 1.4; }
+.markdown-body h2 { font-size: 18px; margin: 28px 0 14px; line-height: 1.4; }
+.markdown-body h3 { font-size: 15px; margin: 22px 0 12px; line-height: 1.4; }
+
+
+.markdown-body p { margin: 0 0 16px; }
+
+
+.markdown-body ul,
+.markdown-body ol { margin: 0 0 16px; padding-left: 24px; }
+.markdown-body li { margin-bottom: 8px; }
+
+
+.markdown-body code {
+  background: #b8ab8c;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+.markdown-body pre {
+  background: #2b2e22;
+  color: #d8d2b8;
+  padding: 16px;
+  overflow-x: auto;
+  border: 3px solid #14160f;
+  margin: 0 0 16px;
+}
+.markdown-body pre code { background: none; padding: 0; }
+
+
+.markdown-body a { color: #3b6fc4; }
+.markdown-body strong { color: #c0392b; }   
+.markdown-body blockquote {
+  border-left: 4px solid #8a8464;
+  margin: 0 0 16px;
+  padding-left: 16px;
+  color: #5a5240;
+}
+.markdown-body img { max-width: 100%; height: auto; }
