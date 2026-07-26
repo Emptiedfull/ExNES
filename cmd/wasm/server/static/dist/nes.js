@@ -444,13 +444,13 @@ var controller = null;
 var handleUpdateListeners = () => {
   controller = new AbortController();
   const { signal } = controller;
-  buttons.forEach((element) => {
-    element.addEventListener("mousedown", async (e) => {
-      console.log(element.id, getKeyFromAction(element.id));
-      let x2 = getKeyFromAction(element.id);
+  buttons.forEach((element2) => {
+    element2.addEventListener("mousedown", async (e) => {
+      console.log(element2.id, getKeyFromAction(element2.id));
+      let x2 = getKeyFromAction(element2.id);
       console.log(x2);
-      addUpdatePanel(element.id, getKeyFromAction(element.id));
-      UpdatingKey = element.id;
+      addUpdatePanel(element2.id, getKeyFromAction(element2.id));
+      UpdatingKey = element2.id;
     }, { signal });
   });
 };
@@ -2194,14 +2194,42 @@ var tn = x.lex;
 // static/scripts/guides.js
 var guideWindow = document.querySelector(".guide-overlay");
 var markdownContainer = document.querySelector(".markdown-body");
+var closeBtn = document.getElementById("guide-close");
+var guidesCont = document.getElementById("guideList");
 var openGuides = async () => {
-  await fetchAndFill("sample");
+  await fetchAndFillGuides();
+};
+var fetchAndFillGuides = async () => {
+  const response = await fetch(`./docs`);
+  const guides = await response.json();
+  guides.forEach((element2) => {
+    const guide = document.createElement("div");
+    guide.innerText = element2;
+    guide.classList.add("guide-item");
+    guide.id = element2;
+    if (element2 == "Introduction") {
+      guide.classList.add("active");
+      fetchAndFill(element2);
+    }
+    guide.addEventListener("click", () => {
+      fetchAndFill(element2);
+    });
+    guidesCont.appendChild(guide);
+  });
+  console.log(guides);
+};
+var makeActive2 = (name) => {
+  for (const child of parent.children) {
+    console.log(child);
+  }
+  const item = document.getElementById(name);
 };
 var fetchAndFill = async (name) => {
+  makeActive2(element);
   const response = await fetch(`./docs/${name}.md`);
   const md = await response.text();
   console.log(g.parse(md));
-  markdownContainer.innerHTML = md;
+  markdownContainer.innerHTML = g.parse(md);
 };
 
 // static/scripts/nes.js
@@ -2288,8 +2316,8 @@ var initGames = async () => {
   let response = await fetch("./games");
   if (response.ok) {
     let data = await response.json();
-    data.forEach((element) => {
-      GamesArray.push(element);
+    data.forEach((element2) => {
+      GamesArray.push(element2);
     });
   }
 };
@@ -2303,15 +2331,15 @@ function updateRom() {
   }
   if (romSelection.length == 3) {
     for (let i = 0; i < 3; i++) {
-      const element = romSelection[i];
+      const element2 = romSelection[i];
       const rom = roms[i];
-      rom.id = element.ID;
+      rom.id = element2.ID;
       const rom_title = rom.querySelector("span");
       const img = rom.querySelector("img");
-      img.src = "/rom_images/" + element.ID + ".webp";
+      img.src = "/rom_images/" + element2.ID + ".webp";
       const spine = rom.querySelector(".rom-spine");
-      spine.innerText = element.name;
-      rom_title.innerText = element.name;
+      spine.innerText = element2.name;
+      rom_title.innerText = element2.name;
     }
   }
 }

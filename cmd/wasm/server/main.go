@@ -80,6 +80,14 @@ func StartServer(restartChan chan int) {
 
 	})
 
+	mux.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		err := json.NewEncoder(w).Encode(PrepareDocList())
+		if err != nil {
+			http.Error(w, "FUCKF UHRQIORHIOQHRIOQ", http.StatusBadRequest)
+			return
+		}
+	})
+
 	server := &http.Server{Handler: mux, Addr: ":8070"}
 
 	go func() {
@@ -198,5 +206,34 @@ func PrepareGameList() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+}
+
+func PrepareDocList() []string {
+	list := make([]string, 0)
+
+	err := filepath.WalkDir("./static/docs", func(path string, d fs.DirEntry, err error) error {
+		fmt.Println(path)
+
+		s, found := strings.CutPrefix(path, "static/docs/")
+
+		if found {
+			name, found := strings.CutSuffix(s, ".md")
+
+			if !found {
+				return nil
+			}
+
+			list = append(list, name)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return list
 
 }
