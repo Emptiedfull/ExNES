@@ -488,7 +488,7 @@
 }
 
 .guide-close{
-    height: 5rem;
+    height: 8rem;
     color: #c70000;
     aspect-ratio: 1/1;
     cursor: pointer;
@@ -516,7 +516,7 @@
 }
 
 .guide-item.active{
-    padding-left: 1rem;
+    transform: translateX(1rem);
     color: #c0392b ;
 }
 

@@ -26,7 +26,9 @@ func main() {
 
 	scripts := filepath.Join(root, "scripts")
 	styles := filepath.Join(root, "styles")
+
 	games := filepath.Join(root, "games")
+	docs := filepath.Join(root, "docs")
 
 	out := filepath.Join(root, "dist")
 
@@ -83,8 +85,26 @@ func main() {
 		return nil
 	})
 
+	docsList := make([]string, 0)
+	filepath.WalkDir(docs, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+
+		name := filepath.Base(path)
+		docsList = append(docsList, name)
+		return nil
+	})
+
 	out = filepath.Join(root, "games.json")
 	f, err := os.Create(out)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	out = filepath.Join(root, "docs.json")
+	f, err = os.Create(out)
 
 	if err != nil {
 		log.Fatalln(err)

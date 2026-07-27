@@ -444,13 +444,13 @@ var controller = null;
 var handleUpdateListeners = () => {
   controller = new AbortController();
   const { signal } = controller;
-  buttons.forEach((element2) => {
-    element2.addEventListener("mousedown", async (e) => {
-      console.log(element2.id, getKeyFromAction(element2.id));
-      let x2 = getKeyFromAction(element2.id);
+  buttons.forEach((element) => {
+    element.addEventListener("mousedown", async (e) => {
+      console.log(element.id, getKeyFromAction(element.id));
+      let x2 = getKeyFromAction(element.id);
       console.log(x2);
-      addUpdatePanel(element2.id, getKeyFromAction(element2.id));
-      UpdatingKey = element2.id;
+      addUpdatePanel(element.id, getKeyFromAction(element.id));
+      UpdatingKey = element.id;
     }, { signal });
   });
 };
@@ -2197,38 +2197,50 @@ var markdownContainer = document.querySelector(".markdown-body");
 var closeBtn = document.getElementById("guide-close");
 var guidesCont = document.getElementById("guideList");
 var openGuides = async () => {
+  guideWindow.style.display = "flex";
+  initButtons();
   await fetchAndFillGuides();
+};
+var initButtons = () => {
+  closeBtn.addEventListener("click", () => {
+    guideWindow.style.display = "none";
+  });
 };
 var fetchAndFillGuides = async () => {
   const response = await fetch(`./docs`);
   const guides = await response.json();
-  guides.forEach((element2) => {
+  guides.forEach((element) => {
     const guide = document.createElement("div");
-    guide.innerText = element2;
+    guide.innerText = element;
     guide.classList.add("guide-item");
-    guide.id = element2;
-    if (element2 == "Introduction") {
+    guide.id = element;
+    if (element == "Introduction") {
       guide.classList.add("active");
-      fetchAndFill(element2);
+      fetchAndFill(element);
     }
     guide.addEventListener("click", () => {
-      fetchAndFill(element2);
+      fetchAndFill(element);
     });
     guidesCont.appendChild(guide);
+    console.log(guidesCont);
   });
-  console.log(guides);
 };
 var makeActive2 = (name) => {
-  for (const child of parent.children) {
+  for (const child of guidesCont.children) {
     console.log(child);
+    if (child.classList.contains("active")) {
+      child.classList.remove("active");
+    }
   }
   const item = document.getElementById(name);
+  if (item) {
+    item.classList.add("active");
+  }
 };
 var fetchAndFill = async (name) => {
-  makeActive2(element);
+  makeActive2(name);
   const response = await fetch(`./docs/${name}.md`);
   const md = await response.text();
-  console.log(g.parse(md));
   markdownContainer.innerHTML = g.parse(md);
 };
 
@@ -2316,8 +2328,8 @@ var initGames = async () => {
   let response = await fetch("./games");
   if (response.ok) {
     let data = await response.json();
-    data.forEach((element2) => {
-      GamesArray.push(element2);
+    data.forEach((element) => {
+      GamesArray.push(element);
     });
   }
 };
@@ -2331,15 +2343,15 @@ function updateRom() {
   }
   if (romSelection.length == 3) {
     for (let i = 0; i < 3; i++) {
-      const element2 = romSelection[i];
+      const element = romSelection[i];
       const rom = roms[i];
-      rom.id = element2.ID;
+      rom.id = element.ID;
       const rom_title = rom.querySelector("span");
       const img = rom.querySelector("img");
-      img.src = "/rom_images/" + element2.ID + ".webp";
+      img.src = "/rom_images/" + element.ID + ".webp";
       const spine = rom.querySelector(".rom-spine");
-      spine.innerText = element2.name;
-      rom_title.innerText = element2.name;
+      spine.innerText = element.name;
+      rom_title.innerText = element.name;
     }
   }
 }

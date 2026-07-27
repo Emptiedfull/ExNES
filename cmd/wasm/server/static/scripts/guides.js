@@ -8,11 +8,29 @@ const closeBtn = document.getElementById("guide-close")
 const guidesCont = document.getElementById("guideList")
 
 export const openGuides = async ()=>{ 
-
+     guideWindow.style.display = "flex"
+     initButtons()
     await fetchAndFillGuides()
    
     
 }
+
+const initButtons = ()=>{
+    closeBtn.addEventListener("click",()=>{
+
+        guideWindow.style.display = "none"
+    })
+}
+
+export const openGuideTarget = ()=>{
+    guideWindow.computedStyleMap.op
+}
+
+export const closeGuide = ()=>{
+    guideWindow.style.display = "none"
+}
+
+
 
 const fetchAndFillGuides = async ()=>{
     const response = await fetch(`./docs`)
@@ -39,28 +57,35 @@ const fetchAndFillGuides = async ()=>{
         })
 
         guidesCont.appendChild(guide)
+        console.log(guidesCont)
     });
-
-    console.log(guides)
+    
 }
 
 const makeActive = (name) =>{
 
-    for (const child of parent.children){
+    for (const child of guidesCont.children){
         console.log(child)
+        if (child.classList.contains("active")){
+            child.classList.remove("active")
+        }
     }
 
     const item = document.getElementById(name)
+    if (item){
+         item.classList.add("active")
+    }
+   
 
 
 }
 
 const fetchAndFill =  async (name)=>{
-    makeActive(element)
+    makeActive(name)
     const response = await fetch(`./docs/${name}.md`)
     const md = await response.text()
 
-    console.log(marked.parse(md))
+ 
     markdownContainer.innerHTML = marked.parse(md)
     
 }
