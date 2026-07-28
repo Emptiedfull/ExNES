@@ -549,6 +549,11 @@
     }
 .markdown-body h2 { font-size: 20px; margin: 28px 0 14px; line-height: 1.4; }
 
+.markdown-body h3 { 
+    font-size: 18px;
+    line-height: 1.4;
+}
+
 
 
 .markdown-body p,a { 
