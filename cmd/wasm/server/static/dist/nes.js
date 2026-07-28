@@ -2196,6 +2196,7 @@ var guideWindow = document.querySelector(".guide-overlay");
 var markdownContainer = document.querySelector(".markdown-body");
 var closeBtn = document.getElementById("guide-close");
 var guidesCont = document.getElementById("guideList");
+var docHeaders = [];
 var openGuides = async () => {
   guideWindow.style.display = "flex";
   initButtons();
@@ -2214,6 +2215,7 @@ var fetchAndFillGuides = async () => {
     guide.innerText = element;
     guide.classList.add("guide-item");
     guide.id = element;
+    docHeaders.push(element);
     if (element == "Introduction") {
       guide.classList.add("active");
       fetchAndFill(element);
@@ -2242,6 +2244,25 @@ var fetchAndFill = async (name) => {
   const response = await fetch(`./docs/${name}.md`);
   const md = await response.text();
   markdownContainer.innerHTML = g.parse(md);
+  hijackLinks(g.parse(md));
+  markdownContainer.scrollTo({ top: 0, behavior: "smooth" });
+};
+var hijackLinks = (content) => {
+  const links = document.querySelectorAll("a");
+  const start2 = window.location.href.length;
+  links.forEach((element) => {
+    const dest = element.href.slice(start2);
+    if (dest.includes("docs")) {
+      const doc = dest.slice(5, -3);
+      if (docHeaders.includes(doc)) {
+        element.addEventListener("click", (e) => {
+          e.preventDefault();
+          console.log("clciked me hehe");
+          fetchAndFill(doc);
+        });
+      }
+    }
+  });
 };
 
 // static/scripts/nes.js

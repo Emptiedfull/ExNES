@@ -7,6 +7,8 @@ const closeBtn = document.getElementById("guide-close")
 
 const guidesCont = document.getElementById("guideList")
 
+const docHeaders = []
+
 export const openGuides = async ()=>{ 
      guideWindow.style.display = "flex"
      initButtons()
@@ -42,9 +44,13 @@ const fetchAndFillGuides = async ()=>{
 
         const guide = document.createElement("div")
 
+
+
         guide.innerText = element
         guide.classList.add("guide-item")
         guide.id = element
+
+        docHeaders.push(element)
         
         if (element == "Introduction"){
             guide.classList.add("active")
@@ -85,7 +91,43 @@ const fetchAndFill =  async (name)=>{
     const response = await fetch(`./docs/${name}.md`)
     const md = await response.text()
 
- 
+   
     markdownContainer.innerHTML = marked.parse(md)
+     hijackLinks(marked.parse(md))
     
+   markdownContainer.scrollTo({ top: 0, behavior: "smooth" })
+}
+
+const hijackLinks = (content)=>{
+
+    const links = document.querySelectorAll("a")
+    const start = window.location.href.length
+
+    links.forEach(element =>{
+        const dest = element.href.slice(start)
+       
+
+        if (dest.includes("docs")){
+            const doc = dest.slice(5,-3)
+          
+
+            if (docHeaders.includes(doc)){
+               
+                element.addEventListener("click",(e)=>{
+                    e.preventDefault()
+                    console.log("clciked me hehe")
+
+                    fetchAndFill(doc)
+                })
+            }
+          
+           
+        
+        }
+
+        
+        
+        
+    })
+
 }
