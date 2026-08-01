@@ -42,15 +42,15 @@ Press on the **slot** to open up the rom selection menu. Using it mid game can b
 
 ### Speed dial(1)
 
-It can be used to control the emulation speed to slow or speed it up, by defualt the increment are in orders of 50%. Only works in audio clocked mode.
+It can be used to control the **emulation speed** to slow or speed it up, by defualt the increment are in orders of **50%**. Only works in audio clocked mode.
 
 ### Volume dial(2)
 
-Pretty obvious, controls the audio. Only works in audio clocking mode.
+Pretty obvious, controls the **audio volume**. Can be used to **mute** the program. Only works in audio clocking mode.
 
 ### Tv Screen
 
-Clicking on the screen changes the display mode to fullscreen
+Clicking on the screen changes the display mode to **fullscreen**
 
 ## Miscellanous 
 

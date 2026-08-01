@@ -102,16 +102,21 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer f.Close()
 
-	out = filepath.Join(root, "docs.json")
-	f, err = os.Create(out)
+	path := filepath.Join(root, "docs.json")
+	df, err := os.Create(path)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	defer f.Close()
+	defer df.Close()
 	if err := json.NewEncoder(f).Encode(gamesList); err != nil {
+		log.Fatalln(err)
+	}
+
+	if err := json.NewEncoder(df).Encode(docsList); err != nil {
 		log.Fatalln(err)
 	}
 

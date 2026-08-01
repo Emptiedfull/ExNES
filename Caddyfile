@@ -10,6 +10,7 @@
 	header @wasm Content-Type application/wasm
 
 	rewrite /games /games.json
+	rewrite /docs /docs.json
 
 	file_server
 }
