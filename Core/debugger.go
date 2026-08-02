@@ -73,7 +73,7 @@ func (d *Debugger) StartDebugConsole() {
 		now := time.Now()
 		for now.After(targetTime) {
 
-			d.Console.RunFrame()
+			// d.Console.RunFrame()
 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
 
 		}
@@ -98,7 +98,7 @@ func (d *Debugger) RunDebugFrame() {
 
 func (d *Debugger) DebugTick() {
 
-	d.Console.tick()
+	d.Console.TickNoAudio()
 	// if d.Console.Cpu.currentstep == 0 {
 	// 	d.DisAssemble(d.Console.Cpu.PC)
 	// }
@@ -112,7 +112,7 @@ func (d *Debugger) StepCycles(cycles int) {
 		if d.Console.Cpu.currentstep == 0 {
 			d.Disassembly[d.Console.Cpu.PC] = d.DisAssemble(d.Console.Cpu.PC)
 		}
-		d.Console.tick()
+		d.Console.TickNoAudio()
 
 	}
 }

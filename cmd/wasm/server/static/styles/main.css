@@ -468,6 +468,17 @@ body {
   margin: -16px;
 }
 
+.main-links{
+  width: 100%;
+  background-color: purple;
+ 
+}
+
+.main-links img{
+  height: 30px;
+  aspect-ratio: 1/1;
+} 
+
 .main-title-controls {
  
   width: 100%;

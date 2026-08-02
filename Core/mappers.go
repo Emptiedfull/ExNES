@@ -73,6 +73,7 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			Mirroring:  mirroring,
 			hasBattery: hasBattery,
 		}
+
 	case 163:
 		m = &Mapper163{
 			PRGROM:     prgData,
@@ -906,5 +907,32 @@ func (m *MMC3) TakeSnapshot(s MapperScreenShot) {
 	res.protect = m.protect
 
 	res.prevA12 = m.prevA12
+
+}
+
+type MMC6 struct {
+	PRGROM []uint8
+	PRGRAM []uint8
+	CHRROM []uint8
+}
+
+func (m *MMC6) CreateEmptySnapshot() MapperScreenShot {
+	res := Mapper0SS{}
+	return res
+}
+
+func (m *MMC6) WriteCHR(addr uint16, val uint8) {
+
+}
+
+func (m *MMC6) WritePRG(addr uint16, val uint8) {
+
+}
+
+func (m *MMC6) ReadCHR(addr uint16) {
+
+}
+
+func (m *MMC6) ReadPRG(addr uint16) {
 
 }

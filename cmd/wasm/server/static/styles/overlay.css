@@ -644,6 +644,20 @@
   vertical-align: middle;
 }
 
+.markdown-body hr {
+  
+  height: 3px;
+
+  border-radius: 2px;
+  
+  background: linear-gradient(90deg,
+    transparent 0%,
+    #8a8464 20%,
+    #8a8464 80%,
+    transparent 100%);
+
+border: none;
+}
 
 .markdown-body tbody tr:nth-child(even) {
   background: #cdc2a0;

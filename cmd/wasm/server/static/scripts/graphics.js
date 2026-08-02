@@ -1,3 +1,4 @@
+import { openGuides } from "./guides.js"
 import { createModal } from "./modal.js"
 import { activateTip } from "./tooltips.js"
 
@@ -509,4 +510,18 @@ export const drawNav = () => {
     ctx.fillRect(col * PS, r * PS, PS, PS);
   }
 
+}
+
+export const setUpMainLinks = ()=>{
+  const docLink = document.getElementById("docs")
+  const hubLink = document.getElementById("github")
+  
+
+  docLink.addEventListener("click",()=>{
+    openGuides()
+  })
+
+  hubLink.addEventListener("click",()=>{
+    window.location.href = "https://github.com/Emptiedfull/ExNES/"
+  })
 }

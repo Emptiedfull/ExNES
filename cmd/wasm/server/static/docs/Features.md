@@ -4,7 +4,7 @@ This page is a comphrensive list of all available features (hopefully)
 
 ## Console Controls 
 
-![hehe](./icons/legend.png)
+![hehe](./icons/console.png)
 
 ### Power button (1)
 
@@ -36,9 +36,11 @@ Uh my bad they aren't really implemented yet but they would allow you to use ext
 Press on the **slot** to open up the rom selection menu. Using it mid game can be used to hotswap games which can be used for some exploits in particular games, it can also however cause data corruption. Restart the tab to fix this.
 
 
-## Television controls 
 
-![altTextisCringeSorry](./static/icons/tv.png)
+***
+
+
+## Television controls 
 
 ### Speed dial(1)
 
@@ -48,21 +50,24 @@ It can be used to control the **emulation speed** to slow or speed it up, by def
 
 Pretty obvious, controls the **audio volume**. Can be used to **mute** the program. Only works in audio clocking mode.
 
+
 ### Tv Screen
 
-Clicking on the screen changes the display mode to **fullscreen**
+Clicking on the screen changes the display mode to **fullscreen**, the scaling is based on the browser auto scaling so pixel ratio might be distorted.
+
+***
 
 ## Miscellanous 
 
 ### Timing control
 
-Probably the most drastic control option you have the liberty to change. Check out [here](./docs/timing.md) for more info
+Probably the most drastic control option you have the liberty to change. Check out [here](./docs/Timing.md) for more info
 
 ### Updating controls 
 
-The on screen controller can be used to change up the controls, simply press the button and then rebind it with any keyboard key (or hopefully external controller but no promises). The onscreen controller can also be used to actually control the emulator btw!
+The **on screen controller** can be used to change up the controls, simply press the button and then rebind it with any keyboard key (or hopefully external controller but no promises). The onscreen controller can also be used to actually control the emulator btw!
 
 ### Rewind
 
-You found the easter egg!!!! Press the R key on the keyboard to open up the rewind overlay, you can then use the timeline to scrub into a past frame from a collection of the last 4 seconds of frames. The frame can then be loaded into for rewinding, enjoy cheating you lil bitch.
+You found the **easter egg**!!!! Press the R key on the keyboard to open up the **rewind** overlay, you can then use the timeline to scrub into a past frame from a collection of the **last 4 seconds of frames**. The frame can then be loaded into for rewinding, enjoy cheating you lil bitch.
 

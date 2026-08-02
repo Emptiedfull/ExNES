@@ -30,6 +30,7 @@ var mimeList = map[string]string{
 	".css":  "text/css",
 	".wasm": "application/wasm",
 	".png":  "image/png",
+	".svg":  "image/svg+xml",
 }
 
 var compressibleList = map[string]bool{
@@ -216,16 +217,11 @@ func PrepareDocList() []string {
 		fmt.Println(path)
 
 		s, found := strings.CutPrefix(path, "static/docs/")
-
-		if found {
-			name, found := strings.CutSuffix(s, ".md")
-
-			if !found {
-				return nil
-			}
-
-			list = append(list, name)
+		if !found {
+			return nil
 		}
+
+		list = append(list, s)
 
 		return nil
 	})

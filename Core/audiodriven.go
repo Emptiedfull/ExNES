@@ -47,10 +47,6 @@ func (c *Console) TickSpecial() {
 		c.Ppu.step()
 	}
 
-	// c.Apu.tick()
-
-	// c.Cpu.irqLine = c.Apu.IRGPending || c.Apu.Dmc.IRGPending
-
 	if m, ok := c.mapper.(IrqClocker); ok {
 
 		if m.IRQPending() {

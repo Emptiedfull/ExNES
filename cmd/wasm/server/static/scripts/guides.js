@@ -52,7 +52,7 @@ const fetchAndFillGuides = async ()=>{
 
         docHeaders.push(element)
         
-        if (element == "Introduction"){
+        if (element == "Introduction.md"){
             guide.classList.add("active")
             fetchAndFill(element)
         }
@@ -63,7 +63,7 @@ const fetchAndFillGuides = async ()=>{
         })
 
         guidesCont.appendChild(guide)
-        console.log(guidesCont)
+      
     });
     
 }
@@ -71,8 +71,9 @@ const fetchAndFillGuides = async ()=>{
 const makeActive = (name) =>{
 
     for (const child of guidesCont.children){
-        console.log(child)
+        
         if (child.classList.contains("active")){
+
             child.classList.remove("active")
         }
     }
@@ -88,7 +89,7 @@ const makeActive = (name) =>{
 
 const fetchAndFill =  async (name)=>{
     makeActive(name)
-    const response = await fetch(`./docs/${name}.md`)
+    const response = await fetch(`./docs/${name}`)
     const md = await response.text()
 
    
@@ -105,17 +106,22 @@ const hijackLinks = (content)=>{
 
     links.forEach(element =>{
         const dest = element.href.slice(start)
+     
        
 
         if (dest.includes("docs")){
-            const doc = dest.slice(5,-3)
-          
 
+            const doc = dest.slice(5)
+            console.log(doc,docHeaders)
+
+            
+        
             if (docHeaders.includes(doc)){
+                console.log("included hiajck")
                
                 element.addEventListener("click",(e)=>{
                     e.preventDefault()
-                    console.log("clciked me hehe")
+                   
 
                     fetchAndFill(doc)
                 })

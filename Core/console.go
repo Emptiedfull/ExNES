@@ -265,29 +265,36 @@ func (c *Console) RunDisplayUpdates() {
 	}
 }
 
-func (c *Console) tick() {
-	// c.RunDisplayUpdates()
-	if c.Cpu.Stall > 0 {
-		c.Cpu.Stall--
-		c.Cpu.TotalCycles++
-	} else {
-		c.Cpu.Tick()
-	}
-	for range 3 {
-		c.Ppu.step()
-	}
+// func (c *Console) tick() {
+// 	// c.RunDisplayUpdates()
+// 	if c.Cpu.Stall > 0 {
+// 		c.Cpu.Stall--
+// 		c.Cpu.TotalCycles++
+// 	} else {
+// 		c.Cpu.Tick()
+// 	}
+// 	for range 3 {
+// 		c.Ppu.step()
+// 	}
 
-	c.Apu.tick()
+// 	c.Apu.tick()
 
-}
+// }
+
+// func (c *Console) RunFrame() {
+
+// 	targetFrame := c.Ppu.Frame + 1
+// 	for targetFrame != c.Ppu.Frame {
+// 		c.tick()
+// 	}
+
+// }
 
 func (c *Console) RunFrame() {
-
-	targetFrame := c.Ppu.Frame + 1
-	for targetFrame != c.Ppu.Frame {
-		c.tick()
+	target := c.Ppu.Frame + 1
+	for target != c.Ppu.Frame {
+		c.TickNoAudio()
 	}
-
 }
 
 func Quickstart(filepath string) *Console {

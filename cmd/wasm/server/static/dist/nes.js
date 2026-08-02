@@ -1,955 +1,3 @@
-// static/scripts/rewind.js
-var track = document.getElementById("items-container");
-var preview_img = document.getElementById("preview-img");
-var rewind_overlay = document.getElementById("rewind-overlay");
-var timeline = document.getElementById("rewind-timeline");
-var highligh_view = document.getElementById("rewind-highlight");
-var back = document.getElementById("rewind-back");
-var next = document.getElementById("rewind-next");
-var start = document.getElementById("rewind-start");
-var end = document.getElementById("rewind-end");
-var load = document.getElementById("review-load");
-var cart = document.getElementById("review-cart");
-var saveCap = document.getElementById("rewind-cap");
-var saveArea = document.getElementById("rewind-area");
-var slot2 = document.getElementById("rewind-slot");
-var activeID = 0;
-var clicker = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        clickSound();
-        makeActive(entry.target);
-        updateHighlight();
-      }
-    });
-  },
-  {
-    root: track,
-    rootMargin: "0px -45% 0px -45%",
-    threshold: 0.1
-  }
-);
-var ctx = new AudioContext();
-var createTilesFromSnapshots = async (snapshots) => {
-  console.log("creating snapshot tiles");
-  openCap();
-  let lastTile = null;
-  rewind_overlay.style.display = "flex";
-  setupRewindButtons(snapshots.length);
-  setupTimeline(snapshots.length);
-  for (let i = 0; i < snapshots.length; i++) {
-    let snapshot = snapshots[i];
-    let tile = document.createElement("div");
-    tile.id = "tile-" + i;
-    clicker.observe(tile);
-    tile.classList.add("tape-item");
-    let img = document.createElement("canvas");
-    img.height = snapshot.image.height;
-    img.width = snapshot.image.width;
-    tile.addEventListener("mousedown", () => {
-      makeActive(tile);
-    });
-    img.getContext("2d").drawImage(snapshot.image, 0, 0);
-    lastTile = tile;
-    tile.append(img);
-    track.append(tile);
-  }
-  lastTile.scrollIntoView({
-    behavior: "smooth",
-    inline: "nearest",
-    block: "center"
-  });
-};
-var setupRewindButtons = (length) => {
-  next.addEventListener("click", () => {
-    let target = parseInt(activeID, 10) + 1;
-    if (target > length - 1) {
-      target = length - 1;
-    }
-    let targetEl = document.getElementById("tile-" + target);
-    makeActive(document.getElementById("tile-" + target));
-    scrollReelToValue(target, convertValToPerc().center);
-  });
-  back.addEventListener("click", () => {
-    let target = parseInt(activeID, 10) - 1;
-    if (target < 0) {
-      target = 0;
-    }
-    let targetEl = document.getElementById("tile-" + target);
-    makeActive(targetEl);
-    scrollReelToValue(target, convertValToPerc().center);
-  });
-  end.addEventListener("click", async () => {
-    let target = length - 1;
-    let targetEl = document.getElementById("tile-" + target);
-    scrollReelToValue(target, false);
-    await wait(200);
-    makeActive(targetEl);
-  });
-  start.addEventListener("click", async () => {
-    let target = 0;
-    let targetEl = document.getElementById("tile-" + target);
-    scrollReelToValue(target, false);
-    await wait(200);
-    makeActive(targetEl);
-  });
-  load.addEventListener("click", async () => {
-    console.log("loading snapshot:", activeID);
-    await startSaveLoad();
-    await loadSnap(parseInt(activeID, 10));
-  });
-};
-var startSaveLoad = async () => {
-  let clone = cart.cloneNode(true);
-  clone.classList.add("rewind-cart-clone");
-  let originalRect = cart.getBoundingClientRect();
-  let slotRect = slot2.getBoundingClientRect();
-  let areaRect = saveArea.getBoundingClientRect();
-  let areaHeight = areaRect.top - areaRect.bottom;
-  let sourceCanvas = cart.querySelector("canvas");
-  let width = originalRect.right - originalRect.left;
-  let targetWidth = slotRect.right - slotRect.left;
-  let scaleFactor2 = targetWidth / width;
-  clone.style.position = "fixed";
-  clone.style.left = originalRect.left + "px";
-  clone.style.top = originalRect.top + "px";
-  clone.style.width = width + "px";
-  clone.style.transformOrigin = "top left";
-  clone.style.transition = "transform 0.8s cubic-bezier(0.34, 1.56, 0.67 , 1)";
-  clone.style.zIndex = 0;
-  clone.querySelector("canvas").getContext("2d").drawImage(sourceCanvas, 0, 0);
-  document.body.appendChild(clone);
-  await wait(10);
-  rewind_overlay.style.display = "none";
-  let dx = slotRect.left - originalRect.left;
-  let dy = slotRect.top - originalRect.top;
-  clone.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleFactor2})`;
-  await wait(1e3);
-  let movedown = slotRect.bottom - slotRect.top;
-  clone.style.transition = "transform 0.8s ease";
-  clone.style.transform = `translate(${dx}px, ${dy - areaHeight}px) scale(${scaleFactor2})`;
-  closeCap();
-};
-var openCap = () => {
-  console.log(slot2);
-  let Rect = saveArea.getBoundingClientRect();
-  let dy = Rect.top - Rect.bottom;
-  console.log(dy);
-  let capRect = saveCap.getBoundingClientRect();
-  let capheight = capRect.bottom - capRect.top;
-  saveArea.style.transform = `translateY(${dy}px)`;
-  saveCap.style.transform = `translateY(${dy - capheight}px)`;
-};
-var closeCap = () => {
-  saveArea.style.transform = `translateY(0)`;
-  saveCap.style.transform = `translateY(0)`;
-};
-var lastactive = null;
-var makeActive = (el) => {
-  if (lastactive != null) {
-    lastactive.classList.remove("tape-active");
-  }
-  let source = el.querySelector("canvas");
-  preview_img.height = 240;
-  preview_img.width = 256;
-  preview_img.getContext("2d").drawImage(source, 0, 0);
-  el.classList.add("tape-active");
-  let index = el.id.slice(5);
-  timeline.value = index;
-  activeID = index;
-  lastactive = el;
-};
-var setupTimeline = (val) => {
-  timeline.min = 0;
-  timeline.max = val - 1;
-};
-timeline.addEventListener("input", (e) => {
-  scrollReelToValue(timeline.value, convertValToPerc().center);
-});
-var updateHighlight = () => {
-  let res = convertValToPerc();
-  highligh_view.style.left = res.perc - 6 + "%";
-  return res.center;
-};
-var scrollReelToValue = (value, center) => {
-  let elemtentID = "tile-" + Math.round(value);
-  let tile = document.getElementById(elemtentID);
-  tile.scrollIntoView({
-    behavior: "instant",
-    inline: center ? "center" : "nearest",
-    block: "center"
-  });
-};
-var convertValToPerc = () => {
-  let max = timeline.max;
-  let min = timeline.min;
-  let val = timeline.value;
-  let perc = (val - min) / (max - min) * 100;
-  let center = true;
-  if (perc < 6) {
-    perc = 6;
-    center = false;
-  }
-  if (perc > 94) {
-    perc = 94;
-    center = false;
-  }
-  return { perc, center };
-};
-var clickSound = () => {
-  if (ctx == null) return;
-  const osc = ctx.createOscillator();
-  const gain2 = ctx.createGain();
-  osc.connect(gain2);
-  gain2.connect(ctx.destination);
-  osc.frequency.value = 900;
-  gain2.gain.setValueAtTime(0.4, ctx.currentTime);
-  gain2.gain.exponentialRampToValueAtTime(1e-3, ctx.currentTime + 0.02);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.02);
-};
-
-// static/scripts/driver.js
-var worker = new Worker(new URL("./emuWorker.js", import.meta.url));
-var fBytes = null;
-var inputBuf = new SharedArrayBuffer(4);
-var inputState = new Int32Array(inputBuf);
-var canvas = document.getElementById("screen");
-var ctx2 = canvas.getContext("2d");
-var imageData = ctx2.createImageData(256, 240);
-var speedBuf = new SharedArrayBuffer(4);
-var speedNum = new Int32Array(speedBuf);
-var NES_FPS = 60.0988;
-var FRAME_MS = 1e3 / NES_FPS;
-var frameSig = null;
-var rafMode = false;
-var rafId = null;
-var lastT = 0;
-var acc = 0;
-var audioBufS = null;
-var control = null;
-Atomics.store(speedNum, 0, 1e3);
-var state = {
-  romRunning: false,
-  runMode: 0
-  //0-aduio run 1 - raf run
-};
-var audioCtx = null;
-var gain = null;
-window.addEventListener("keydown", async (e) => {
-  if (e.code == "KeyR") {
-    await getSnapList();
-  } else if (e.code == "KeyT") {
-    await PauseGame();
-    await wait(200);
-    worker.postMessage({ type: "reset" });
-    await wait(500);
-    await ResumeGame();
-  }
-});
-var setUpAudio = async (audioBufS2, SIZE) => {
-  if (audioCtx !== null && gain !== null) {
-    return;
-  }
-  audioCtx = new AudioContext({ sampleRate: 44100 });
-  await audioCtx.audioWorklet.addModule(new URL("./driverWorklet.js", import.meta.url));
-  const node = new AudioWorkletNode(audioCtx, "apu-proc", {
-    outputChannelCount: [1]
-  });
-  gain = audioCtx.createGain();
-  node.port.postMessage({ audioBufS: audioBufS2, SIZE });
-  node.connect(gain);
-  gain.connect(audioCtx.destination);
-};
-var PauseGame = async () => {
-  if (audioCtx == null) {
-    return;
-  }
-  await audioCtx.suspend();
-  Atomics.store(control, 2, 2);
-  Atomics.notify(control, 2);
-};
-var ResumeGame = async () => {
-  console.log("playing");
-  if (audioCtx == null) {
-    return;
-  }
-  await audioCtx.resume();
-  Atomics.store(control, 2, 1);
-  Atomics.notify(control, 2);
-  worker.postMessage({ "type": "pump" });
-};
-var getSnapList = async () => {
-  await PauseGame();
-  worker.postMessage({ type: "getsnap" });
-};
-var loadSnap = async (index) => {
-  worker.postMessage({ type: "loadSnapshot", index });
-  await wait(100);
-  await ResumeGame();
-};
-var updateVolume = (intensity) => {
-  if (gain !== null) {
-    gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(intensity, audioCtx.currentTime + 1);
-  }
-};
-var initConsole = () => {
-  worker.postMessage({ type: "init", speedBuf, inputBuf });
-};
-worker.onmessage = async ({ data }) => {
-  switch (data.type) {
-    case "init":
-      fBytes = new Uint8Array(data.FBuf);
-      audioBufS = data.audioBufS;
-      control = new Int32Array(audioBufS, data.SIZE * 4, 3);
-      frameSig = new Int32Array(data.frameSigBuf);
-      await setUpAudio(data.audioBufS, data.SIZE);
-      break;
-    case "wasm":
-      createModal("Console Ready!!", "Press the power button to start the console");
-      worker.postMessage({ type: "init", inputBuf, speedBuf });
-      break;
-    case "snaps":
-      await createTilesFromSnapshots(data.snaps);
-      break;
-    case "frameUp":
-      imageData.data.set(fBytes);
-      ctx2.putImageData(imageData, 0, 0);
-      break;
-  }
-};
-var ControlMap = {
-  "joypad-A": 0,
-  "joypad-B": 1,
-  "joypad-select": 2,
-  "joypad-start": 3,
-  "dpad-up": 4,
-  "dpad-down": 5,
-  "dpad-left": 6,
-  "dpad-right": 7
-};
-var switchMode = (mode) => {
-  if (mode == 0) {
-    state.runMode = 0;
-    startAudioBuf();
-  } else {
-    state.runMode = 1;
-    startRaf();
-  }
-};
-var loadRom = async (game) => {
-  Atomics.store(control, 2, 1);
-  Atomics.notify(control, 2);
-  audioCtx.resume();
-  worker.postMessage({ type: "loadRom", rom: game });
-  await wait(1e3);
-  state.romRunning = true;
-  console.log("starting the fucking game");
-  if (state.runMode == 0) {
-    await startAudioBuf();
-  } else {
-    await startRaf();
-  }
-};
-var UpdateSpeed = (speed) => {
-  Atomics.store(speedNum, 0, speed);
-};
-var UpdatePress = (btn) => {
-  Atomics.or(inputState, 0, 1 << ControlMap[btn]);
-};
-var UpdateRelease = (btn) => {
-  Atomics.and(inputState, 0, ~(1 << ControlMap[btn]));
-};
-var startAudioBuf = async () => {
-  if (!state.romRunning) return;
-  stopRaF();
-  if (audioCtx) {
-    await audioCtx.resume();
-  }
-  Atomics.store(control, 2, 1);
-  Atomics.notify(control, 2);
-  worker.postMessage({ type: "pump" });
-};
-var startRaf = () => {
-  if (!state.romRunning) return;
-  if (!frameSig) return;
-  if (control) {
-    Atomics.store(control, 2, 2);
-    Atomics.notify(control, 2);
-  }
-  if (audioCtx) audioCtx.suspend();
-  Atomics.store(frameSig, 2, 0);
-  Atomics.store(frameSig, 1, Atomics.load(frameSig, 0));
-  rafMode = true;
-  lastT = performance.now();
-  acc = 0;
-  worker.postMessage({ type: "startRaF" });
-  rafId = requestAnimationFrame(rafLoop);
-};
-var rafLoop = (now) => {
-  if (!rafMode) return;
-  acc += now - lastT;
-  lastT = now;
-  if (acc > 250) acc = 250;
-  while (acc > FRAME_MS) {
-    Atomics.add(frameSig, 0, 1);
-    Atomics.notify(frameSig, 0);
-    acc -= FRAME_MS;
-  }
-  rafId = requestAnimationFrame(rafLoop);
-};
-var stopRaF = () => {
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = null;
-  rafMode = false;
-  if (frameSig) {
-    Atomics.store(frameSig, 2, 1);
-    Atomics.add(frameSig, 0, 1);
-    Atomics.notify(frameSig, 0);
-  }
-};
-
-// static/scripts/joypad.js
-var updateBtn = document.getElementById("control-update");
-var buttons = document.querySelectorAll(".joypad-button");
-var UpdatingKey = "";
-var updatingControls = false;
-var keyMap = {
-  "KeyZ": "joypad-A",
-  "KeyX": "joypad-B",
-  "ShiftLeft": "joypad-select",
-  "Enter": "joypad-start",
-  "ArrowUp": "dpad-up",
-  "ArrowDown": "dpad-down",
-  "ArrowLeft": "dpad-left",
-  "ArrowRight": "dpad-right"
-};
-var neededControls = ["joypad-A", "joypad-B", "joypad-select", "joypad-start", "dpad-up", "dpad-down", "dpad-left", "dpad-right"];
-document.addEventListener("DOMContentLoaded", () => {
-  updateBtn.addEventListener("click", () => {
-    if (updatingControls) {
-      closeControlPanel();
-      removeUpdateListeners();
-    } else {
-      openControlPanel();
-      handleUpdateListeners();
-    }
-    updatingControls = !updatingControls;
-    UpdatingKey = "";
-  });
-});
-var controller = null;
-var handleUpdateListeners = () => {
-  controller = new AbortController();
-  const { signal } = controller;
-  buttons.forEach((element) => {
-    element.addEventListener("mousedown", async (e) => {
-      console.log(element.id, getKeyFromAction(element.id));
-      let x2 = getKeyFromAction(element.id);
-      console.log(x2);
-      addUpdatePanel(element.id, getKeyFromAction(element.id));
-      UpdatingKey = element.id;
-    }, { signal });
-  });
-};
-var getKeyFromAction = (action) => {
-  let keys = Object.keys(keyMap);
-  let res = "";
-  keys.forEach((key) => {
-    if (keyMap[key] == action) {
-      res = key;
-    }
-  });
-  return res;
-};
-var removeUpdateListeners = () => {
-  if (controller) {
-    controller.abort();
-  }
-};
-var updateBinding = (action, newKey) => {
-  let old = structuredClone(keyMap);
-  let Keys = Object.keys(keyMap);
-  Keys.forEach((a) => {
-    if (keyMap[a] == action) {
-      delete keyMap[a];
-    }
-  });
-  keyMap[newKey] = action;
-  checkForMissingKeys();
-};
-var checkForMissingKeys = () => {
-  let keys = Object.keys(keyMap);
-  let needed = structuredClone(neededControls);
-  let maped = [];
-  keys.forEach((key) => {
-    maped.push(keyMap[key]);
-  });
-  needed.forEach((action) => {
-    let x2 = document.getElementById(action);
-    if (maped.includes(action)) {
-      if (x2.classList.contains("key-missing")) {
-        x2.classList.remove("key-missing");
-      }
-    } else {
-      x2.classList.add("key-missing");
-    }
-  });
-};
-window.addEventListener("keydown", (e) => {
-  if (UpdatingKey !== "" && updatingControls) {
-    updateKey(e.code);
-    updateBinding(UpdatingKey, e.code);
-  }
-  if (keyMap[e.code] !== void 0 && state.romRunning) {
-    UpdatePress(keyMap[e.code]);
-    let btn = document.getElementById(keyMap[e.code]);
-    PressBtn(btn);
-  }
-});
-window.addEventListener("keyup", (e) => {
-  if (keyMap[e.code] !== void 0 && state.romRunning) {
-    UpdateRelease(keyMap[e.code]);
-    let btn = document.getElementById(keyMap[e.code]);
-    ReleaseBtn(btn);
-  }
-});
-var PressBtn = async (button) => {
-  button.classList.add("active");
-};
-var ReleaseBtn = async (button) => {
-  button.classList.remove("active");
-};
-function wait(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-// static/scripts/modal.js
-var createModal = async (head, body2, error = false, fleeting = true) => {
-  let modalList = document.querySelector(".moodle-bar");
-  const modal = document.createElement("div");
-  modal.classList.add("modal", "modal-corners");
-  const title = document.createElement("h1");
-  if (error) {
-    title.classList.add("error");
-  } else {
-    title.classList.add("info");
-  }
-  title.textContent = head;
-  modal.appendChild(title);
-  const para = document.createElement("p");
-  para.classList.add("modal-text");
-  para.textContent = body2;
-  modal.appendChild(para);
-  modalList.appendChild(modal);
-  if (fleeting) {
-    setUpForFailure(modal);
-  }
-  activateModal(modal);
-  return modal;
-};
-var activateModal = (modal) => {
-  modal.classList.add("active");
-};
-var deactivateModal = async (modal) => {
-  modal.classList.remove("active");
-  modal.classList.add("inactive");
-  await wait(400);
-  modal.remove();
-};
-var setUpForFailure = async (modal) => {
-  await wait(3500);
-  if (modal.classList.contains("active")) {
-    await deactivateModal(modal);
-  } else {
-    console.log("bro alr failed");
-  }
-};
-
-// static/scripts/tooltips.js
-var activateTip = (tip) => {
-  if (TipsState[tip]["state"]) {
-    TipsState[tip]["function"]();
-    TipsState[tip]["state"] = false;
-  }
-};
-var startRandomTipEngine = () => {
-  scheduleTip();
-};
-var scheduleTip = () => {
-  let delay = Math.random() * (6e4 - 1e4) + 1e4;
-  setTimeout(() => {
-    let tip = tips[Math.floor(Math.random() * tips.length)];
-    TipsState[tip]["function"]();
-    scheduleTip();
-  }, delay);
-};
-var tip_fullscreen = () => {
-  createModal("Go big or go home", "click on the tv screen to go fullscreen mode (resolution not garunteed)");
-};
-var tip_knobs = () => {
-  createModal("Play with the dials!!", "Adjust the dials on the television to control the sound and speed levels");
-};
-var tip_swap = () => {
-  createModal("You dont need to reload(prolly)", "Click the cartridge slot to change games while the console is running");
-};
-var tip_feedback = () => {
-  createModal("Have suggestions or found errors?", "Dm emptiedfull on slack please");
-};
-var TipsState = {
-  "fullscreen": { "state": true, "function": tip_fullscreen },
-  "knobs": { "state": true, "function": tip_knobs },
-  "hotswap": { "state": true, "function": tip_swap },
-  "feedback": { "state": true, "function": tip_feedback },
-  "controls": {}
-};
-var tips = Object.keys(TipsState);
-
-// static/scripts/graphics.js
-var body = document.querySelector("body");
-var middle = document.getElementById("middle");
-var romled = document.getElementById("rom");
-var cap = document.getElementById("cartridge");
-var screen = document.getElementById("screen");
-var control_cont = document.getElementById("joypad-cont");
-var panel = document.getElementById("update-panel");
-var joypad = document.getElementById("joypad");
-var updateBtn2 = document.getElementById("control-update");
-var keyDisplay = document.getElementById("key-display");
-var keyText = document.getElementById("show-text");
-var knobSettings = { "speed": { "angle": 0, "setting": 0 }, "sound": { "angle": 0, "setting": 0 } };
-var scaleFactor = 2;
-function wait2(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-window.addEventListener("DOMContentLoaded", async () => {
-  initCables();
-  drawNav();
-  initCanvas();
-  drawKnob("sound", 0);
-  drawKnob("speed", 0);
-});
-var addUpdatePanel = async (action, key) => {
-  keyText.innerText = action + ":  ";
-  await updateKey(key);
-};
-var flashAnim = keyDisplay.animate([
-  { opacity: 1 },
-  { opacity: 0.2 },
-  { opacity: 1 }
-], {
-  duration: 1e3,
-  iterations: Infinity
-});
-flashAnim.pause();
-var updateKey = async (key) => {
-  if (key == void 0 || key == "") {
-    keyDisplay.style.backgroundImage = "none";
-    keyDisplay.innerText = "NA";
-    keyDisplay.removeAttribute("style");
-    flashAnim.play();
-    return;
-  }
-  const res = await fetch(`./keys/${key.toLocaleLowerCase()}.png`);
-  if (res.ok) {
-    flashAnim.cancel();
-    keyDisplay.innerText = "";
-    const blob = await res.blob();
-    const qwn = await createImageBitmap(blob);
-    let h = qwn.height * scaleFactor;
-    let wFull = (qwn.width - 2) * scaleFactor;
-    let w2 = wFull / 2;
-    keyDisplay.style.height = h + "px";
-    keyDisplay.style.width = w2 + "px";
-    keyDisplay.style.backgroundSize = `${wFull}px ${h}px `;
-    keyDisplay.style.backgroundImage = `url('./keys/${key.toLocaleLowerCase()}.png')`;
-    keyDisplay.animate([
-      { backgroundPosition: "0px 0px" },
-      { backgroundPosition: `-${wFull}px 0px` }
-    ], {
-      duration: 700,
-      easing: "steps(2)",
-      iterations: Infinity
-    });
-  }
-};
-var initCanvas = () => {
-  screen.addEventListener("mouseenter", async () => {
-    activateTip("fullscreen");
-  });
-  screen.addEventListener("click", async () => {
-    try {
-      await screen.requestFullscreen();
-    } catch (e) {
-      await createModal("Unable to go fullscreen", e, true);
-    }
-  });
-};
-var initCables = () => {
-  let cable1 = document.getElementById("cable-1");
-  let port1 = document.getElementById("port-1");
-  let wire1 = document.getElementById("wire-1");
-  let cable2 = document.getElementById("cable-2");
-  let port2 = document.getElementById("port-2");
-  let wire2 = document.getElementById("wire-2");
-  startCable(cable1, port1, wire1);
-  startCable(cable2, port2, wire2);
-};
-var alignCable = (cableID) => {
-  if (cableID == 1) {
-    let cable1 = document.getElementById("cable-1");
-    let port1 = document.getElementById("port-1");
-    let wire1 = document.getElementById("wire-1");
-    alignCables(cable1, port1, wire1);
-  } else if (cableID == 2) {
-    let cable2 = document.getElementById("cable-2");
-    let port2 = document.getElementById("port-2");
-    let wire2 = document.getElementById("wire-2");
-    alignCables(cable2, port2, wire2);
-  }
-};
-var alignCables = (cable, port, wire) => {
-  let portBox = port.getBoundingClientRect();
-  cable.style.top = portBox.top + "px";
-  cable.style.left = portBox.left + "px";
-  let bodyBox = body.getBoundingClientRect();
-  let dy = bodyBox.bottom - portBox.bottom + 200;
-  let dx = portBox.width / 4;
-  wire.style.height = dy + "px";
-  wire.style.top = portBox.top + portBox.height / 2 + "px";
-  wire.style.left = portBox.left + portBox.width / 4 + "px";
-  wire.style.width = dx + "px";
-};
-var startCable = (cable, port, wire) => {
-  let portBox = port.getBoundingClientRect();
-  let bodyBox = document.querySelector("body").getBoundingClientRect();
-  cable.style.position = "absolute";
-  cable.style.width = portBox.width + "px";
-  cable.style.height = portBox.height + "px";
-  cable.style.left = portBox.left + "px";
-  cable.style.top = bodyBox.bottom + "px";
-  wire.style.position = "absolute";
-  let dy = bodyBox.bottom - portBox.bottom + 200;
-  let dx = portBox.width / 4;
-  wire.style.height = dy + "px";
-  wire.style.top = bodyBox.bottom + portBox.height / 2 + "px";
-  wire.style.left = portBox.left + portBox.width / 4 + "px";
-};
-var activateJoypad = () => {
-  let cont = document.getElementById("joypad-cont");
-  cont.classList.add("active");
-};
-var openControlPanel = () => {
-  control_cont.classList.add("updating");
-  panel.classList.add("active");
-  panel.style.pointerEvents = "all";
-  updateBtn2.innerText = "Save Controls";
-};
-var closeControlPanel = () => {
-  control_cont.classList.remove("updating");
-  panel.classList.remove("active");
-  panel.style.pointerEvents = "none";
-  updateBtn2.innerText = "Update Controls";
-};
-var C = {
-  //this color pallete was ai generated
-  body: "#8B6F4E",
-  bodyMid: "#7A5F3E",
-  hi: "#C4A882",
-  hiTop: "#D9C4A0",
-  shadow: "#4A3522",
-  shadowD: "#332614",
-  rim: "#3B2A16",
-  rimHi: "#6B5030",
-  dot: "#1E1208",
-  dotHi: "#3A2810"
-};
-function drawKnob(id, angleDeg) {
-  knobSettings[id].angle = angleDeg;
-  const canvas2 = document.getElementById(id);
-  const ctx3 = canvas2.getContext("2d");
-  const width = canvas2.width;
-  const height = canvas2.height;
-  const cx = Math.floor(width / 2);
-  const cy = Math.floor(height / 2);
-  const r = Math.floor(width / 2) - 1;
-  const fill = (x2, y2, col) => {
-    if (x2 < 0 || y2 < 0 || x2 >= width || y2 >= height) return;
-    ctx3.fillStyle = col;
-    ctx3.fillRect(x2, y2, 1, 1);
-  };
-  for (let py = -r; py <= r; py++) {
-    for (let px = -r; px <= r; px++) {
-      const dist = Math.sqrt(px * px + py * py);
-      if (dist > r + 0.5) continue;
-      const x2 = cx + px;
-      const y2 = cy + py;
-      if (dist > r - 1) {
-        if (px < 0 && py < 0) {
-          fill(x2, y2, C.rimHi);
-        } else {
-          fill(x2, y2, C.rim);
-        }
-        continue;
-      }
-      let col = C.body;
-      if (px <= -Math.floor(r * 0.1) && py <= -Math.floor(r * 0.1) && dist < r * 0.75) {
-        col = C.hi;
-      }
-      if (px <= -Math.floor(r * 0.3) && py <= -Math.floor(r * 0.3) && dist < r * 0.45) {
-        col = C.hiTop;
-      }
-      if (px >= Math.floor(r * 0.2) && py >= Math.floor(r * 0.2)) {
-        col = C.bodyMid;
-      }
-      if (px >= Math.floor(r * 0.45) && py >= Math.floor(r * 0.45)) {
-        col = C.shadow;
-      }
-      if (px >= Math.floor(r * 0.65) && py >= Math.floor(r * 0.65)) {
-        col = C.shadowD;
-      }
-      fill(x2, y2, col);
-    }
-  }
-  const rad = (angleDeg - 90) * Math.PI / 180;
-  const len = r - 3;
-  const ex = Math.round(cx + Math.cos(rad) * len);
-  const ey = Math.round(cy + Math.sin(rad) * len);
-  const steps = Math.max(Math.abs(ex - cx), Math.abs(ey - cy));
-  for (let i = 1; i <= steps; i++) {
-    const t = i / steps;
-    const px = Math.round(cx + (ex - cx) * t);
-    const py = Math.round(cy + (ey - cy) * t);
-    const d2 = Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
-    if (d2 < r - 1) fill(px, py, i < 2 ? C.dotHi : C.dot);
-  }
-  fill(cx, cy, C.dot);
-}
-async function turnKnob(id, targetAngle, durationMs = 400, steps = 20) {
-  const startAngle = knobSettings[id].angle;
-  const diff = targetAngle - startAngle;
-  const stepTime = durationMs / steps;
-  for (let i = 1; i <= steps; i++) {
-    const t = i / steps;
-    const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-    const angle = startAngle + diff * eased;
-    drawKnob(id, angle);
-    await wait2(stepTime);
-  }
-  drawKnob(id, targetAngle);
-}
-async function wiggleKnob(id, intensity = 15) {
-  const current = knobSettings[id].angle;
-  await turnKnob(id, current + intensity, 80, 6);
-  await turnKnob(id, current - intensity, 100, 8);
-  await turnKnob(id, current + intensity * 0.5, 70, 5);
-  await turnKnob(id, current, 80, 6);
-}
-var closeCap2 = async () => {
-  cap.style.transition = "all ease 1s";
-  cap.classList.remove("open");
-  await wait2(200);
-};
-function pushbtn(canvasId) {
-  const c = document.getElementById(canvasId);
-  c.style.filter = "brightness(2)";
-  c.style.transform = "scale(0.85)";
-  setTimeout(() => {
-    c.style.filter = "brightness(1.3)";
-    c.style.transform = "scale(1.1)";
-  }, 150);
-  setTimeout(() => {
-    c.style.filter = "";
-    c.style.transform = "scale(1)";
-  }, 280);
-}
-var openCap2 = async () => {
-  cap.style.transition = "all ease 1s";
-  cap.classList.add("open");
-  await await 200;
-};
-var slotCart = async () => {
-  await wait2(800);
-  overlay.style.opacity = 0;
-  const spine = middle.querySelector(".rom-spine");
-  const spineRect = spine.getBoundingClientRect();
-  const clone = spine.cloneNode(true);
-  const computedStyle = window.getComputedStyle(spine);
-  clone.style.font = computedStyle.font;
-  clone.style.color = computedStyle.color;
-  clone.style.letterSpacing = computedStyle.letterSpacing;
-  clone.style.textTransform = computedStyle.textTransform;
-  clone.style.position = "fixed";
-  clone.style.top = spineRect.top + "px";
-  clone.style.left = spineRect.left + "px";
-  clone.style.width = spineRect.width + "px";
-  clone.style.height = slot.height + "px";
-  clone.style.transform = "none";
-  clone.style.margin = "0";
-  clone.style.zIndex = "99";
-  document.body.appendChild(clone);
-  const slotRect = slot.getBoundingClientRect();
-  const stripRect = strip.getBoundingClientRect();
-  let dy = stripRect.left - slotRect.left;
-  clone.style.transition = "all 1s ease";
-  clone.style.top = slotRect.top + "px";
-  clone.style.left = slotRect.left + "px";
-  clone.style.width = dy + "px";
-  await wait2(1e3);
-  clone.style.transition = "all 0.25s ease-in";
-  clone.style.transform = " scale(0.88)";
-  clone.style.transformOrigin = "center top";
-  await wait2(500);
-  clone.style.transition = "all 0.15s ease-out";
-  clone.style.transform = "scale(0.9)";
-  flickerLed(romled);
-  await wait2(500);
-  await closeCap2();
-  cleapUpOverlay();
-};
-var flickerLed = async (led) => {
-  led.classList.remove("off");
-  await wait2(60);
-  led.classList.add("off");
-  await wait2(80);
-  led.classList.remove("off");
-  await wait2(150);
-  led.classList.add("off");
-  await wait2(120);
-  led.classList.remove("off");
-};
-var cleapUpOverlay = () => {
-  overlay.style.display = "none";
-  middle.classList.remove("rotated");
-  middle.classList.add("active");
-};
-var drawNav = () => {
-  var c = document.getElementById("canvas-back");
-  var ctx3 = c.getContext("2d");
-  var PS = 16, COLS = 14, ROWS = 14;
-  var T2 = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
-  var G = [0, 0, 0, 0, 0, 0, 0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "dk", "dk", "dk", "dk", "hi", 0];
-  for (var i = 0; i < G.length; i++) {
-    if (!G[i]) continue;
-    var r = Math.floor(i / COLS), col = i % COLS;
-    ctx3.fillStyle = T2[G[i]];
-    ctx3.fillRect(col * PS, r * PS, PS, PS);
-  }
-  var c = document.getElementById("canvas-next");
-  var ctx3 = c.getContext("2d");
-  var PS = 16, COLS = 14, ROWS = 14;
-  var T2 = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
-  var G = [0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "dk", "dk", "dk", "dk", "dk", 0, 0, 0, 0, 0, 0, 0];
-  for (var i = 0; i < G.length; i++) {
-    if (!G[i]) continue;
-    var r = Math.floor(i / COLS), col = i % COLS;
-    ctx3.fillStyle = T2[G[i]];
-    ctx3.fillRect(col * PS, r * PS, PS, PS);
-  }
-};
-
 // static/scripts/marked.esm.js
 function z() {
   return { async: false, breaks: false, extensions: null, gfm: true, hooks: null, pedantic: false, renderer: null, silent: false, tokenizer: null, walkTokens: null };
@@ -1011,7 +59,7 @@ var Be = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/;
 var qe = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/;
 var ue = /^( {2,}|\\)\n(?!\s*$)/;
 var De = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/;
-var C2 = /[\p{P}\p{S}]/u;
+var C = /[\p{P}\p{S}]/u;
 var Z = /[\s\p{P}\p{S}]/u;
 var X = /[^\s\p{P}\p{S}]/u;
 var ve = d(/^((?![*_])punctSpace)/, "u").replace(/punctSpace/g, Z).getRegex();
@@ -1020,16 +68,16 @@ var He = /(?!~)[\s\p{P}\p{S}]/u;
 var Ze = /(?:[^\s\p{P}\p{S}]|~)/u;
 var Ge = d(/link|precode-code|html/, "g").replace("link", /\[(?:[^\[\]`]|(?<a>`+)[^`]+\k<a>(?!`))*?\]\((?:\\[\s\S]|[^\\\(\)]|\((?:\\[\s\S]|[^\\\(\)])*\))*\)/).replace("precode-", Te ? "(?<!`)()" : "(^^|[^`])").replace("code", /(?<b>`+)[^`]+\k<b>(?!`)/).replace("html", /<(?! )[^<>]*?>/).getRegex();
 var ce = /^(?:\*+(?:((?!\*)punct)|([^\s*]))?)|^_+(?:((?!_)punct)|([^\s_]))?/;
-var Ne = d(ce, "u").replace(/punct/g, C2).getRegex();
+var Ne = d(ce, "u").replace(/punct/g, C).getRegex();
 var Qe = d(ce, "u").replace(/punct/g, pe).getRegex();
 var he = "^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)punct(\\*+)(?=[\\s]|$)|notPunctSpace(\\*+)(?!\\*)(?=punctSpace|$)|(?!\\*)punctSpace(\\*+)(?=notPunctSpace)|[\\s](\\*+)(?!\\*)(?=punct)|(?!\\*)punct(\\*+)(?!\\*)(?=punct)|notPunctSpace(\\*+)(?=notPunctSpace)";
-var je = d(he, "gu").replace(/notPunctSpace/g, X).replace(/punctSpace/g, Z).replace(/punct/g, C2).getRegex();
+var je = d(he, "gu").replace(/notPunctSpace/g, X).replace(/punctSpace/g, Z).replace(/punct/g, C).getRegex();
 var Fe = d(he, "gu").replace(/notPunctSpace/g, Ze).replace(/punctSpace/g, He).replace(/punct/g, pe).getRegex();
-var Ue = d("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)", "gu").replace(/notPunctSpace/g, X).replace(/punctSpace/g, Z).replace(/punct/g, C2).getRegex();
-var Ke = d(/^~~?(?:((?!~)punct)|[^\s~])/, "u").replace(/punct/g, C2).getRegex();
+var Ue = d("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)", "gu").replace(/notPunctSpace/g, X).replace(/punctSpace/g, Z).replace(/punct/g, C).getRegex();
+var Ke = d(/^~~?(?:((?!~)punct)|[^\s~])/, "u").replace(/punct/g, C).getRegex();
 var We = "^[^~]+(?=[^~])|(?!~)punct(~~?)(?=[\\s]|$)|notPunctSpace(~~?)(?!~)(?=punctSpace|$)|(?!~)punctSpace(~~?)(?=notPunctSpace)|[\\s](~~?)(?!~)(?=punct)|(?!~)punct(~~?)(?!~)(?=punct)|notPunctSpace(~~?)(?=notPunctSpace)";
-var Xe = d(We, "gu").replace(/notPunctSpace/g, X).replace(/punctSpace/g, Z).replace(/punct/g, C2).getRegex();
-var Je = d(/\\(punct)/, "gu").replace(/punct/g, C2).getRegex();
+var Xe = d(We, "gu").replace(/notPunctSpace/g, X).replace(/punctSpace/g, Z).replace(/punct/g, C).getRegex();
+var Je = d(/\\(punct)/, "gu").replace(/punct/g, C).getRegex();
 var Ve = d(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email", /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex();
 var Ye = d(K).replace("(?:-->|$)", "-->").getRegex();
 var et = d("^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment", Ye).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex();
@@ -2216,7 +1264,7 @@ var fetchAndFillGuides = async () => {
     guide.classList.add("guide-item");
     guide.id = element;
     docHeaders.push(element);
-    if (element == "Introduction") {
+    if (element == "Introduction.md") {
       guide.classList.add("active");
       fetchAndFill(element);
     }
@@ -2224,12 +1272,10 @@ var fetchAndFillGuides = async () => {
       fetchAndFill(element);
     });
     guidesCont.appendChild(guide);
-    console.log(guidesCont);
   });
 };
-var makeActive2 = (name) => {
+var makeActive = (name) => {
   for (const child of guidesCont.children) {
-    console.log(child);
     if (child.classList.contains("active")) {
       child.classList.remove("active");
     }
@@ -2240,8 +1286,8 @@ var makeActive2 = (name) => {
   }
 };
 var fetchAndFill = async (name) => {
-  makeActive2(name);
-  const response = await fetch(`./docs/${name}.md`);
+  makeActive(name);
+  const response = await fetch(`./docs/${name}`);
   const md = await response.text();
   markdownContainer.innerHTML = g.parse(md);
   hijackLinks(g.parse(md));
@@ -2253,16 +1299,969 @@ var hijackLinks = (content) => {
   links.forEach((element) => {
     const dest = element.href.slice(start2);
     if (dest.includes("docs")) {
-      const doc = dest.slice(5, -3);
+      const doc = dest.slice(5);
+      console.log(doc, docHeaders);
       if (docHeaders.includes(doc)) {
+        console.log("included hiajck");
         element.addEventListener("click", (e) => {
           e.preventDefault();
-          console.log("clciked me hehe");
           fetchAndFill(doc);
         });
       }
     }
   });
+};
+
+// static/scripts/rewind.js
+var track = document.getElementById("items-container");
+var preview_img = document.getElementById("preview-img");
+var rewind_overlay = document.getElementById("rewind-overlay");
+var timeline = document.getElementById("rewind-timeline");
+var highligh_view = document.getElementById("rewind-highlight");
+var back = document.getElementById("rewind-back");
+var next = document.getElementById("rewind-next");
+var start = document.getElementById("rewind-start");
+var end = document.getElementById("rewind-end");
+var load = document.getElementById("review-load");
+var cart = document.getElementById("review-cart");
+var saveCap = document.getElementById("rewind-cap");
+var saveArea = document.getElementById("rewind-area");
+var slot2 = document.getElementById("rewind-slot");
+var activeID = 0;
+var clicker = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        clickSound();
+        makeActive2(entry.target);
+        updateHighlight();
+      }
+    });
+  },
+  {
+    root: track,
+    rootMargin: "0px -45% 0px -45%",
+    threshold: 0.1
+  }
+);
+var ctx = new AudioContext();
+var createTilesFromSnapshots = async (snapshots) => {
+  console.log("creating snapshot tiles");
+  openCap();
+  let lastTile = null;
+  rewind_overlay.style.display = "flex";
+  setupRewindButtons(snapshots.length);
+  setupTimeline(snapshots.length);
+  for (let i = 0; i < snapshots.length; i++) {
+    let snapshot = snapshots[i];
+    let tile = document.createElement("div");
+    tile.id = "tile-" + i;
+    clicker.observe(tile);
+    tile.classList.add("tape-item");
+    let img = document.createElement("canvas");
+    img.height = snapshot.image.height;
+    img.width = snapshot.image.width;
+    tile.addEventListener("mousedown", () => {
+      makeActive2(tile);
+    });
+    img.getContext("2d").drawImage(snapshot.image, 0, 0);
+    lastTile = tile;
+    tile.append(img);
+    track.append(tile);
+  }
+  lastTile.scrollIntoView({
+    behavior: "smooth",
+    inline: "nearest",
+    block: "center"
+  });
+};
+var setupRewindButtons = (length) => {
+  next.addEventListener("click", () => {
+    let target = parseInt(activeID, 10) + 1;
+    if (target > length - 1) {
+      target = length - 1;
+    }
+    let targetEl = document.getElementById("tile-" + target);
+    makeActive2(document.getElementById("tile-" + target));
+    scrollReelToValue(target, convertValToPerc().center);
+  });
+  back.addEventListener("click", () => {
+    let target = parseInt(activeID, 10) - 1;
+    if (target < 0) {
+      target = 0;
+    }
+    let targetEl = document.getElementById("tile-" + target);
+    makeActive2(targetEl);
+    scrollReelToValue(target, convertValToPerc().center);
+  });
+  end.addEventListener("click", async () => {
+    let target = length - 1;
+    let targetEl = document.getElementById("tile-" + target);
+    scrollReelToValue(target, false);
+    await wait(200);
+    makeActive2(targetEl);
+  });
+  start.addEventListener("click", async () => {
+    let target = 0;
+    let targetEl = document.getElementById("tile-" + target);
+    scrollReelToValue(target, false);
+    await wait(200);
+    makeActive2(targetEl);
+  });
+  load.addEventListener("click", async () => {
+    console.log("loading snapshot:", activeID);
+    await startSaveLoad();
+    await loadSnap(parseInt(activeID, 10));
+  });
+};
+var startSaveLoad = async () => {
+  let clone = cart.cloneNode(true);
+  clone.classList.add("rewind-cart-clone");
+  let originalRect = cart.getBoundingClientRect();
+  let slotRect = slot2.getBoundingClientRect();
+  let areaRect = saveArea.getBoundingClientRect();
+  let areaHeight = areaRect.top - areaRect.bottom;
+  let sourceCanvas = cart.querySelector("canvas");
+  let width = originalRect.right - originalRect.left;
+  let targetWidth = slotRect.right - slotRect.left;
+  let scaleFactor2 = targetWidth / width;
+  clone.style.position = "fixed";
+  clone.style.left = originalRect.left + "px";
+  clone.style.top = originalRect.top + "px";
+  clone.style.width = width + "px";
+  clone.style.transformOrigin = "top left";
+  clone.style.transition = "transform 0.8s cubic-bezier(0.34, 1.56, 0.67 , 1)";
+  clone.style.zIndex = 0;
+  clone.querySelector("canvas").getContext("2d").drawImage(sourceCanvas, 0, 0);
+  document.body.appendChild(clone);
+  await wait(10);
+  rewind_overlay.style.display = "none";
+  let dx = slotRect.left - originalRect.left;
+  let dy = slotRect.top - originalRect.top;
+  clone.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleFactor2})`;
+  await wait(1e3);
+  let movedown = slotRect.bottom - slotRect.top;
+  clone.style.transition = "transform 0.8s ease";
+  clone.style.transform = `translate(${dx}px, ${dy - areaHeight}px) scale(${scaleFactor2})`;
+  closeCap();
+};
+var openCap = () => {
+  console.log(slot2);
+  let Rect = saveArea.getBoundingClientRect();
+  let dy = Rect.top - Rect.bottom;
+  console.log(dy);
+  let capRect = saveCap.getBoundingClientRect();
+  let capheight = capRect.bottom - capRect.top;
+  saveArea.style.transform = `translateY(${dy}px)`;
+  saveCap.style.transform = `translateY(${dy - capheight}px)`;
+};
+var closeCap = () => {
+  saveArea.style.transform = `translateY(0)`;
+  saveCap.style.transform = `translateY(0)`;
+};
+var lastactive = null;
+var makeActive2 = (el) => {
+  if (lastactive != null) {
+    lastactive.classList.remove("tape-active");
+  }
+  let source = el.querySelector("canvas");
+  preview_img.height = 240;
+  preview_img.width = 256;
+  preview_img.getContext("2d").drawImage(source, 0, 0);
+  el.classList.add("tape-active");
+  let index = el.id.slice(5);
+  timeline.value = index;
+  activeID = index;
+  lastactive = el;
+};
+var setupTimeline = (val) => {
+  timeline.min = 0;
+  timeline.max = val - 1;
+};
+timeline.addEventListener("input", (e) => {
+  scrollReelToValue(timeline.value, convertValToPerc().center);
+});
+var updateHighlight = () => {
+  let res = convertValToPerc();
+  highligh_view.style.left = res.perc - 6 + "%";
+  return res.center;
+};
+var scrollReelToValue = (value, center) => {
+  let elemtentID = "tile-" + Math.round(value);
+  let tile = document.getElementById(elemtentID);
+  tile.scrollIntoView({
+    behavior: "instant",
+    inline: center ? "center" : "nearest",
+    block: "center"
+  });
+};
+var convertValToPerc = () => {
+  let max = timeline.max;
+  let min = timeline.min;
+  let val = timeline.value;
+  let perc = (val - min) / (max - min) * 100;
+  let center = true;
+  if (perc < 6) {
+    perc = 6;
+    center = false;
+  }
+  if (perc > 94) {
+    perc = 94;
+    center = false;
+  }
+  return { perc, center };
+};
+var clickSound = () => {
+  if (ctx == null) return;
+  const osc = ctx.createOscillator();
+  const gain2 = ctx.createGain();
+  osc.connect(gain2);
+  gain2.connect(ctx.destination);
+  osc.frequency.value = 900;
+  gain2.gain.setValueAtTime(0.4, ctx.currentTime);
+  gain2.gain.exponentialRampToValueAtTime(1e-3, ctx.currentTime + 0.02);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.02);
+};
+
+// static/scripts/driver.js
+var worker = new Worker(new URL("./emuWorker.js", import.meta.url));
+var fBytes = null;
+var inputBuf = new SharedArrayBuffer(4);
+var inputState = new Int32Array(inputBuf);
+var canvas = document.getElementById("screen");
+var ctx2 = canvas.getContext("2d");
+var imageData = ctx2.createImageData(256, 240);
+var speedBuf = new SharedArrayBuffer(4);
+var speedNum = new Int32Array(speedBuf);
+var NES_FPS = 60.0988;
+var FRAME_MS = 1e3 / NES_FPS;
+var frameSig = null;
+var rafMode = false;
+var rafId = null;
+var lastT = 0;
+var acc = 0;
+var audioBufS = null;
+var control = null;
+Atomics.store(speedNum, 0, 1e3);
+var state = {
+  romRunning: false,
+  runMode: 0
+  //0-aduio run 1 - raf run
+};
+var audioCtx = null;
+var gain = null;
+window.addEventListener("keydown", async (e) => {
+  if (e.code == "KeyR") {
+    await getSnapList();
+  } else if (e.code == "KeyT") {
+    await PauseGame();
+    await wait(200);
+    worker.postMessage({ type: "reset" });
+    await wait(500);
+    await ResumeGame();
+  }
+});
+var setUpAudio = async (audioBufS2, SIZE) => {
+  if (audioCtx !== null && gain !== null) {
+    return;
+  }
+  audioCtx = new AudioContext({ sampleRate: 44100 });
+  await audioCtx.audioWorklet.addModule(new URL("./driverWorklet.js", import.meta.url));
+  const node = new AudioWorkletNode(audioCtx, "apu-proc", {
+    outputChannelCount: [1]
+  });
+  gain = audioCtx.createGain();
+  node.port.postMessage({ audioBufS: audioBufS2, SIZE });
+  node.connect(gain);
+  gain.connect(audioCtx.destination);
+};
+var PauseGame = async () => {
+  if (audioCtx == null) {
+    return;
+  }
+  await audioCtx.suspend();
+  Atomics.store(control, 2, 2);
+  Atomics.notify(control, 2);
+};
+var ResumeGame = async () => {
+  console.log("playing");
+  if (audioCtx == null) {
+    return;
+  }
+  await audioCtx.resume();
+  Atomics.store(control, 2, 1);
+  Atomics.notify(control, 2);
+  worker.postMessage({ "type": "pump" });
+};
+var getSnapList = async () => {
+  await PauseGame();
+  worker.postMessage({ type: "getsnap" });
+};
+var loadSnap = async (index) => {
+  worker.postMessage({ type: "loadSnapshot", index });
+  await wait(100);
+  await ResumeGame();
+};
+var updateVolume = (intensity) => {
+  if (gain !== null) {
+    gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(intensity, audioCtx.currentTime + 1);
+  }
+};
+var initConsole = () => {
+  worker.postMessage({ type: "init", speedBuf, inputBuf });
+};
+worker.onmessage = async ({ data }) => {
+  switch (data.type) {
+    case "init":
+      fBytes = new Uint8Array(data.FBuf);
+      audioBufS = data.audioBufS;
+      control = new Int32Array(audioBufS, data.SIZE * 4, 3);
+      frameSig = new Int32Array(data.frameSigBuf);
+      await setUpAudio(data.audioBufS, data.SIZE);
+      break;
+    case "wasm":
+      createModal("Console Ready!!", "Press the power button to start the console");
+      worker.postMessage({ type: "init", inputBuf, speedBuf });
+      break;
+    case "snaps":
+      await createTilesFromSnapshots(data.snaps);
+      break;
+    case "frameUp":
+      imageData.data.set(fBytes);
+      ctx2.putImageData(imageData, 0, 0);
+      break;
+  }
+};
+var ControlMap = {
+  "joypad-A": 0,
+  "joypad-B": 1,
+  "joypad-select": 2,
+  "joypad-start": 3,
+  "dpad-up": 4,
+  "dpad-down": 5,
+  "dpad-left": 6,
+  "dpad-right": 7
+};
+var switchMode = (mode) => {
+  if (mode == 0) {
+    state.runMode = 0;
+    startAudioBuf();
+  } else {
+    state.runMode = 1;
+    startRaf();
+  }
+};
+var loadRom = async (game) => {
+  Atomics.store(control, 2, 1);
+  Atomics.notify(control, 2);
+  audioCtx.resume();
+  worker.postMessage({ type: "loadRom", rom: game });
+  await wait(1e3);
+  state.romRunning = true;
+  console.log("starting the fucking game");
+  if (state.runMode == 0) {
+    await startAudioBuf();
+  } else {
+    await startRaf();
+  }
+};
+var UpdateSpeed = (speed) => {
+  Atomics.store(speedNum, 0, speed);
+};
+var UpdatePress = (btn) => {
+  Atomics.or(inputState, 0, 1 << ControlMap[btn]);
+};
+var UpdateRelease = (btn) => {
+  Atomics.and(inputState, 0, ~(1 << ControlMap[btn]));
+};
+var startAudioBuf = async () => {
+  if (!state.romRunning) return;
+  stopRaF();
+  if (audioCtx) {
+    await audioCtx.resume();
+  }
+  Atomics.store(control, 2, 1);
+  Atomics.notify(control, 2);
+  worker.postMessage({ type: "pump" });
+};
+var startRaf = () => {
+  if (!state.romRunning) return;
+  if (!frameSig) return;
+  if (control) {
+    Atomics.store(control, 2, 2);
+    Atomics.notify(control, 2);
+  }
+  if (audioCtx) audioCtx.suspend();
+  Atomics.store(frameSig, 2, 0);
+  Atomics.store(frameSig, 1, Atomics.load(frameSig, 0));
+  rafMode = true;
+  lastT = performance.now();
+  acc = 0;
+  worker.postMessage({ type: "startRaF" });
+  rafId = requestAnimationFrame(rafLoop);
+};
+var rafLoop = (now) => {
+  if (!rafMode) return;
+  acc += now - lastT;
+  lastT = now;
+  if (acc > 250) acc = 250;
+  while (acc > FRAME_MS) {
+    Atomics.add(frameSig, 0, 1);
+    Atomics.notify(frameSig, 0);
+    acc -= FRAME_MS;
+  }
+  rafId = requestAnimationFrame(rafLoop);
+};
+var stopRaF = () => {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+  rafMode = false;
+  if (frameSig) {
+    Atomics.store(frameSig, 2, 1);
+    Atomics.add(frameSig, 0, 1);
+    Atomics.notify(frameSig, 0);
+  }
+};
+
+// static/scripts/joypad.js
+var updateBtn = document.getElementById("control-update");
+var buttons = document.querySelectorAll(".joypad-button");
+var UpdatingKey = "";
+var updatingControls = false;
+var keyMap = {
+  "KeyZ": "joypad-A",
+  "KeyX": "joypad-B",
+  "ShiftLeft": "joypad-select",
+  "Enter": "joypad-start",
+  "ArrowUp": "dpad-up",
+  "ArrowDown": "dpad-down",
+  "ArrowLeft": "dpad-left",
+  "ArrowRight": "dpad-right"
+};
+var neededControls = ["joypad-A", "joypad-B", "joypad-select", "joypad-start", "dpad-up", "dpad-down", "dpad-left", "dpad-right"];
+document.addEventListener("DOMContentLoaded", () => {
+  updateBtn.addEventListener("click", () => {
+    if (updatingControls) {
+      closeControlPanel();
+      removeUpdateListeners();
+    } else {
+      openControlPanel();
+      handleUpdateListeners();
+    }
+    updatingControls = !updatingControls;
+    UpdatingKey = "";
+  });
+});
+var controller = null;
+var handleUpdateListeners = () => {
+  controller = new AbortController();
+  const { signal } = controller;
+  buttons.forEach((element) => {
+    element.addEventListener("mousedown", async (e) => {
+      console.log(element.id, getKeyFromAction(element.id));
+      let x2 = getKeyFromAction(element.id);
+      console.log(x2);
+      addUpdatePanel(element.id, getKeyFromAction(element.id));
+      UpdatingKey = element.id;
+    }, { signal });
+  });
+};
+var getKeyFromAction = (action) => {
+  let keys = Object.keys(keyMap);
+  let res = "";
+  keys.forEach((key) => {
+    if (keyMap[key] == action) {
+      res = key;
+    }
+  });
+  return res;
+};
+var removeUpdateListeners = () => {
+  if (controller) {
+    controller.abort();
+  }
+};
+var updateBinding = (action, newKey) => {
+  let old = structuredClone(keyMap);
+  let Keys = Object.keys(keyMap);
+  Keys.forEach((a) => {
+    if (keyMap[a] == action) {
+      delete keyMap[a];
+    }
+  });
+  keyMap[newKey] = action;
+  checkForMissingKeys();
+};
+var checkForMissingKeys = () => {
+  let keys = Object.keys(keyMap);
+  let needed = structuredClone(neededControls);
+  let maped = [];
+  keys.forEach((key) => {
+    maped.push(keyMap[key]);
+  });
+  needed.forEach((action) => {
+    let x2 = document.getElementById(action);
+    if (maped.includes(action)) {
+      if (x2.classList.contains("key-missing")) {
+        x2.classList.remove("key-missing");
+      }
+    } else {
+      x2.classList.add("key-missing");
+    }
+  });
+};
+window.addEventListener("keydown", (e) => {
+  if (UpdatingKey !== "" && updatingControls) {
+    updateKey(e.code);
+    updateBinding(UpdatingKey, e.code);
+  }
+  if (keyMap[e.code] !== void 0 && state.romRunning) {
+    UpdatePress(keyMap[e.code]);
+    let btn = document.getElementById(keyMap[e.code]);
+    PressBtn(btn);
+  }
+});
+window.addEventListener("keyup", (e) => {
+  if (keyMap[e.code] !== void 0 && state.romRunning) {
+    UpdateRelease(keyMap[e.code]);
+    let btn = document.getElementById(keyMap[e.code]);
+    ReleaseBtn(btn);
+  }
+});
+var PressBtn = async (button) => {
+  button.classList.add("active");
+};
+var ReleaseBtn = async (button) => {
+  button.classList.remove("active");
+};
+function wait(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+// static/scripts/modal.js
+var createModal = async (head, body2, error = false, fleeting = true) => {
+  let modalList = document.querySelector(".moodle-bar");
+  const modal = document.createElement("div");
+  modal.classList.add("modal", "modal-corners");
+  const title = document.createElement("h1");
+  if (error) {
+    title.classList.add("error");
+  } else {
+    title.classList.add("info");
+  }
+  title.textContent = head;
+  modal.appendChild(title);
+  const para = document.createElement("p");
+  para.classList.add("modal-text");
+  para.textContent = body2;
+  modal.appendChild(para);
+  modalList.appendChild(modal);
+  if (fleeting) {
+    setUpForFailure(modal);
+  }
+  activateModal(modal);
+  return modal;
+};
+var activateModal = (modal) => {
+  modal.classList.add("active");
+};
+var deactivateModal = async (modal) => {
+  modal.classList.remove("active");
+  modal.classList.add("inactive");
+  await wait(400);
+  modal.remove();
+};
+var setUpForFailure = async (modal) => {
+  await wait(3500);
+  if (modal.classList.contains("active")) {
+    await deactivateModal(modal);
+  } else {
+    console.log("bro alr failed");
+  }
+};
+
+// static/scripts/tooltips.js
+var activateTip = (tip) => {
+  if (TipsState[tip]["state"]) {
+    TipsState[tip]["function"]();
+    TipsState[tip]["state"] = false;
+  }
+};
+var startRandomTipEngine = () => {
+  scheduleTip();
+};
+var scheduleTip = () => {
+  let delay = Math.random() * (6e4 - 1e4) + 1e4;
+  setTimeout(() => {
+    let tip = tips[Math.floor(Math.random() * tips.length)];
+    TipsState[tip]["function"]();
+    scheduleTip();
+  }, delay);
+};
+var tip_fullscreen = () => {
+  createModal("Go big or go home", "click on the tv screen to go fullscreen mode (resolution not garunteed)");
+};
+var tip_knobs = () => {
+  createModal("Play with the dials!!", "Adjust the dials on the television to control the sound and speed levels");
+};
+var tip_swap = () => {
+  createModal("You dont need to reload(prolly)", "Click the cartridge slot to change games while the console is running");
+};
+var tip_feedback = () => {
+  createModal("Have suggestions or found errors?", "Dm emptiedfull on slack please");
+};
+var TipsState = {
+  "fullscreen": { "state": true, "function": tip_fullscreen },
+  "knobs": { "state": true, "function": tip_knobs },
+  "hotswap": { "state": true, "function": tip_swap },
+  "feedback": { "state": true, "function": tip_feedback },
+  "controls": {}
+};
+var tips = Object.keys(TipsState);
+
+// static/scripts/graphics.js
+var body = document.querySelector("body");
+var middle = document.getElementById("middle");
+var romled = document.getElementById("rom");
+var cap = document.getElementById("cartridge");
+var screen = document.getElementById("screen");
+var control_cont = document.getElementById("joypad-cont");
+var panel = document.getElementById("update-panel");
+var joypad = document.getElementById("joypad");
+var updateBtn2 = document.getElementById("control-update");
+var keyDisplay = document.getElementById("key-display");
+var keyText = document.getElementById("show-text");
+var knobSettings = { "speed": { "angle": 0, "setting": 0 }, "sound": { "angle": 0, "setting": 0 } };
+var scaleFactor = 2;
+function wait2(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+window.addEventListener("DOMContentLoaded", async () => {
+  initCables();
+  drawNav();
+  initCanvas();
+  drawKnob("sound", 0);
+  drawKnob("speed", 0);
+});
+var addUpdatePanel = async (action, key) => {
+  keyText.innerText = action + ":  ";
+  await updateKey(key);
+};
+var flashAnim = keyDisplay.animate([
+  { opacity: 1 },
+  { opacity: 0.2 },
+  { opacity: 1 }
+], {
+  duration: 1e3,
+  iterations: Infinity
+});
+flashAnim.pause();
+var updateKey = async (key) => {
+  if (key == void 0 || key == "") {
+    keyDisplay.style.backgroundImage = "none";
+    keyDisplay.innerText = "NA";
+    keyDisplay.removeAttribute("style");
+    flashAnim.play();
+    return;
+  }
+  const res = await fetch(`./keys/${key.toLocaleLowerCase()}.png`);
+  if (res.ok) {
+    flashAnim.cancel();
+    keyDisplay.innerText = "";
+    const blob = await res.blob();
+    const qwn = await createImageBitmap(blob);
+    let h = qwn.height * scaleFactor;
+    let wFull = (qwn.width - 2) * scaleFactor;
+    let w2 = wFull / 2;
+    keyDisplay.style.height = h + "px";
+    keyDisplay.style.width = w2 + "px";
+    keyDisplay.style.backgroundSize = `${wFull}px ${h}px `;
+    keyDisplay.style.backgroundImage = `url('./keys/${key.toLocaleLowerCase()}.png')`;
+    keyDisplay.animate([
+      { backgroundPosition: "0px 0px" },
+      { backgroundPosition: `-${wFull}px 0px` }
+    ], {
+      duration: 700,
+      easing: "steps(2)",
+      iterations: Infinity
+    });
+  }
+};
+var initCanvas = () => {
+  screen.addEventListener("mouseenter", async () => {
+    activateTip("fullscreen");
+  });
+  screen.addEventListener("click", async () => {
+    try {
+      await screen.requestFullscreen();
+    } catch (e) {
+      await createModal("Unable to go fullscreen", e, true);
+    }
+  });
+};
+var initCables = () => {
+  let cable1 = document.getElementById("cable-1");
+  let port1 = document.getElementById("port-1");
+  let wire1 = document.getElementById("wire-1");
+  let cable2 = document.getElementById("cable-2");
+  let port2 = document.getElementById("port-2");
+  let wire2 = document.getElementById("wire-2");
+  startCable(cable1, port1, wire1);
+  startCable(cable2, port2, wire2);
+};
+var alignCable = (cableID) => {
+  if (cableID == 1) {
+    let cable1 = document.getElementById("cable-1");
+    let port1 = document.getElementById("port-1");
+    let wire1 = document.getElementById("wire-1");
+    alignCables(cable1, port1, wire1);
+  } else if (cableID == 2) {
+    let cable2 = document.getElementById("cable-2");
+    let port2 = document.getElementById("port-2");
+    let wire2 = document.getElementById("wire-2");
+    alignCables(cable2, port2, wire2);
+  }
+};
+var alignCables = (cable, port, wire) => {
+  let portBox = port.getBoundingClientRect();
+  cable.style.top = portBox.top + "px";
+  cable.style.left = portBox.left + "px";
+  let bodyBox = body.getBoundingClientRect();
+  let dy = bodyBox.bottom - portBox.bottom + 200;
+  let dx = portBox.width / 4;
+  wire.style.height = dy + "px";
+  wire.style.top = portBox.top + portBox.height / 2 + "px";
+  wire.style.left = portBox.left + portBox.width / 4 + "px";
+  wire.style.width = dx + "px";
+};
+var startCable = (cable, port, wire) => {
+  let portBox = port.getBoundingClientRect();
+  let bodyBox = document.querySelector("body").getBoundingClientRect();
+  cable.style.position = "absolute";
+  cable.style.width = portBox.width + "px";
+  cable.style.height = portBox.height + "px";
+  cable.style.left = portBox.left + "px";
+  cable.style.top = bodyBox.bottom + "px";
+  wire.style.position = "absolute";
+  let dy = bodyBox.bottom - portBox.bottom + 200;
+  let dx = portBox.width / 4;
+  wire.style.height = dy + "px";
+  wire.style.top = bodyBox.bottom + portBox.height / 2 + "px";
+  wire.style.left = portBox.left + portBox.width / 4 + "px";
+};
+var activateJoypad = () => {
+  let cont = document.getElementById("joypad-cont");
+  cont.classList.add("active");
+};
+var openControlPanel = () => {
+  control_cont.classList.add("updating");
+  panel.classList.add("active");
+  panel.style.pointerEvents = "all";
+  updateBtn2.innerText = "Save Controls";
+};
+var closeControlPanel = () => {
+  control_cont.classList.remove("updating");
+  panel.classList.remove("active");
+  panel.style.pointerEvents = "none";
+  updateBtn2.innerText = "Update Controls";
+};
+var C2 = {
+  //this color pallete was ai generated
+  body: "#8B6F4E",
+  bodyMid: "#7A5F3E",
+  hi: "#C4A882",
+  hiTop: "#D9C4A0",
+  shadow: "#4A3522",
+  shadowD: "#332614",
+  rim: "#3B2A16",
+  rimHi: "#6B5030",
+  dot: "#1E1208",
+  dotHi: "#3A2810"
+};
+function drawKnob(id, angleDeg) {
+  knobSettings[id].angle = angleDeg;
+  const canvas2 = document.getElementById(id);
+  const ctx3 = canvas2.getContext("2d");
+  const width = canvas2.width;
+  const height = canvas2.height;
+  const cx = Math.floor(width / 2);
+  const cy = Math.floor(height / 2);
+  const r = Math.floor(width / 2) - 1;
+  const fill = (x2, y2, col) => {
+    if (x2 < 0 || y2 < 0 || x2 >= width || y2 >= height) return;
+    ctx3.fillStyle = col;
+    ctx3.fillRect(x2, y2, 1, 1);
+  };
+  for (let py = -r; py <= r; py++) {
+    for (let px = -r; px <= r; px++) {
+      const dist = Math.sqrt(px * px + py * py);
+      if (dist > r + 0.5) continue;
+      const x2 = cx + px;
+      const y2 = cy + py;
+      if (dist > r - 1) {
+        if (px < 0 && py < 0) {
+          fill(x2, y2, C2.rimHi);
+        } else {
+          fill(x2, y2, C2.rim);
+        }
+        continue;
+      }
+      let col = C2.body;
+      if (px <= -Math.floor(r * 0.1) && py <= -Math.floor(r * 0.1) && dist < r * 0.75) {
+        col = C2.hi;
+      }
+      if (px <= -Math.floor(r * 0.3) && py <= -Math.floor(r * 0.3) && dist < r * 0.45) {
+        col = C2.hiTop;
+      }
+      if (px >= Math.floor(r * 0.2) && py >= Math.floor(r * 0.2)) {
+        col = C2.bodyMid;
+      }
+      if (px >= Math.floor(r * 0.45) && py >= Math.floor(r * 0.45)) {
+        col = C2.shadow;
+      }
+      if (px >= Math.floor(r * 0.65) && py >= Math.floor(r * 0.65)) {
+        col = C2.shadowD;
+      }
+      fill(x2, y2, col);
+    }
+  }
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  const len = r - 3;
+  const ex = Math.round(cx + Math.cos(rad) * len);
+  const ey = Math.round(cy + Math.sin(rad) * len);
+  const steps = Math.max(Math.abs(ex - cx), Math.abs(ey - cy));
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const px = Math.round(cx + (ex - cx) * t);
+    const py = Math.round(cy + (ey - cy) * t);
+    const d2 = Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
+    if (d2 < r - 1) fill(px, py, i < 2 ? C2.dotHi : C2.dot);
+  }
+  fill(cx, cy, C2.dot);
+}
+async function turnKnob(id, targetAngle, durationMs = 400, steps = 20) {
+  const startAngle = knobSettings[id].angle;
+  const diff = targetAngle - startAngle;
+  const stepTime = durationMs / steps;
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    const angle = startAngle + diff * eased;
+    drawKnob(id, angle);
+    await wait2(stepTime);
+  }
+  drawKnob(id, targetAngle);
+}
+async function wiggleKnob(id, intensity = 15) {
+  const current = knobSettings[id].angle;
+  await turnKnob(id, current + intensity, 80, 6);
+  await turnKnob(id, current - intensity, 100, 8);
+  await turnKnob(id, current + intensity * 0.5, 70, 5);
+  await turnKnob(id, current, 80, 6);
+}
+var closeCap2 = async () => {
+  cap.style.transition = "all ease 1s";
+  cap.classList.remove("open");
+  await wait2(200);
+};
+function pushbtn(canvasId) {
+  const c = document.getElementById(canvasId);
+  c.style.filter = "brightness(2)";
+  c.style.transform = "scale(0.85)";
+  setTimeout(() => {
+    c.style.filter = "brightness(1.3)";
+    c.style.transform = "scale(1.1)";
+  }, 150);
+  setTimeout(() => {
+    c.style.filter = "";
+    c.style.transform = "scale(1)";
+  }, 280);
+}
+var openCap2 = async () => {
+  cap.style.transition = "all ease 1s";
+  cap.classList.add("open");
+  await await 200;
+};
+var slotCart = async () => {
+  await wait2(800);
+  overlay.style.opacity = 0;
+  const spine = middle.querySelector(".rom-spine");
+  const spineRect = spine.getBoundingClientRect();
+  const clone = spine.cloneNode(true);
+  const computedStyle = window.getComputedStyle(spine);
+  clone.style.font = computedStyle.font;
+  clone.style.color = computedStyle.color;
+  clone.style.letterSpacing = computedStyle.letterSpacing;
+  clone.style.textTransform = computedStyle.textTransform;
+  clone.style.position = "fixed";
+  clone.style.top = spineRect.top + "px";
+  clone.style.left = spineRect.left + "px";
+  clone.style.width = spineRect.width + "px";
+  clone.style.height = slot.height + "px";
+  clone.style.transform = "none";
+  clone.style.margin = "0";
+  clone.style.zIndex = "99";
+  document.body.appendChild(clone);
+  const slotRect = slot.getBoundingClientRect();
+  const stripRect = strip.getBoundingClientRect();
+  let dy = stripRect.left - slotRect.left;
+  clone.style.transition = "all 1s ease";
+  clone.style.top = slotRect.top + "px";
+  clone.style.left = slotRect.left + "px";
+  clone.style.width = dy + "px";
+  await wait2(1e3);
+  clone.style.transition = "all 0.25s ease-in";
+  clone.style.transform = " scale(0.88)";
+  clone.style.transformOrigin = "center top";
+  await wait2(500);
+  clone.style.transition = "all 0.15s ease-out";
+  clone.style.transform = "scale(0.9)";
+  flickerLed(romled);
+  await wait2(500);
+  await closeCap2();
+  cleapUpOverlay();
+};
+var flickerLed = async (led) => {
+  led.classList.remove("off");
+  await wait2(60);
+  led.classList.add("off");
+  await wait2(80);
+  led.classList.remove("off");
+  await wait2(150);
+  led.classList.add("off");
+  await wait2(120);
+  led.classList.remove("off");
+};
+var cleapUpOverlay = () => {
+  overlay.style.display = "none";
+  middle.classList.remove("rotated");
+  middle.classList.add("active");
+};
+var drawNav = () => {
+  var c = document.getElementById("canvas-back");
+  var ctx3 = c.getContext("2d");
+  var PS = 16, COLS = 14, ROWS = 14;
+  var T2 = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
+  var G = [0, 0, 0, 0, 0, 0, 0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "md", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "dk", "dk", "dk", "dk", "hi", 0];
+  for (var i = 0; i < G.length; i++) {
+    if (!G[i]) continue;
+    var r = Math.floor(i / COLS), col = i % COLS;
+    ctx3.fillStyle = T2[G[i]];
+    ctx3.fillRect(col * PS, r * PS, PS, PS);
+  }
+  var c = document.getElementById("canvas-next");
+  var ctx3 = c.getContext("2d");
+  var PS = 16, COLS = 14, ROWS = 14;
+  var T2 = { hi: "#ffc040", md: "#b05000", dk: "#3a1400" };
+  var G = [0, "hi", "hi", "hi", "hi", "hi", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "dk", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "hi", 0, 0, 0, 0, 0, 0, 0, 0, "md", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "md", "md", "md", "md", "dk", 0, 0, 0, 0, 0, 0, 0, "hi", "dk", "dk", "dk", "dk", "dk", 0, 0, 0, 0, 0, 0, 0];
+  for (var i = 0; i < G.length; i++) {
+    if (!G[i]) continue;
+    var r = Math.floor(i / COLS), col = i % COLS;
+    ctx3.fillStyle = T2[G[i]];
+    ctx3.fillRect(col * PS, r * PS, PS, PS);
+  }
 };
 
 // static/scripts/nes.js
