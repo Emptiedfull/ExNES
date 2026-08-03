@@ -33,6 +33,7 @@
       case "loadRom":
         console.log("loading rom");
         await loadRom(data.rom);
+        self.postMessage({ type: "start" });
         break;
       case "pump":
         pump();

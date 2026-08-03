@@ -1635,10 +1635,25 @@ worker.onmessage = async ({ data }) => {
     case "snaps":
       await createTilesFromSnapshots(data.snaps);
       break;
+    case "start":
+      await startConsole();
+      break;
     case "frameUp":
       imageData.data.set(fBytes);
       ctx2.putImageData(imageData, 0, 0);
       break;
+  }
+};
+var startConsole = async () => {
+  if (state.romRunning) {
+    return;
+  }
+  state.romRunning = true;
+  console.log("starting the fucking game");
+  if (state.runMode == 0) {
+    await startAudioBuf();
+  } else {
+    await startRaf();
   }
 };
 var ControlMap = {
@@ -1665,14 +1680,6 @@ var loadRom = async (game) => {
   Atomics.notify(control, 2);
   audioCtx.resume();
   worker.postMessage({ type: "loadRom", rom: game });
-  await wait(1e3);
-  state.romRunning = true;
-  console.log("starting the fucking game");
-  if (state.runMode == 0) {
-    await startAudioBuf();
-  } else {
-    await startRaf();
-  }
 };
 var UpdateSpeed = (speed) => {
   Atomics.store(speedNum, 0, speed);

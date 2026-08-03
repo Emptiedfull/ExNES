@@ -150,11 +150,30 @@ worker.onmessage = async ({ data }) => {
         case 'snaps':
             await createTilesFromSnapshots(data.snaps)
             break
+        case 'start':
+            await startConsole()
+            break
+
         case 'frameUp':
             imageData.data.set(fBytes)
             ctx.putImageData(imageData, 0, 0)
             break
     }
+}
+
+const startConsole = async ()=>{
+    if (state.romRunning){
+        return
+    }
+
+     state.romRunning = true
+    console.log("starting the fucking game")
+    if (state.runMode == 0){
+        await startAudioBuf()
+    }else{
+        await startRaf()
+    }
+    
 }
 
 const ControlMap = {
@@ -187,14 +206,9 @@ export const loadRom = async (game) => {
 
     worker.postMessage({ type: 'loadRom', rom: game })
     
-    await wait(1000)
-    state.romRunning = true
-    console.log("starting the fucking game")
-    if (state.runMode == 0){
-        await startAudioBuf()
-    }else{
-        await startRaf()
-    }
+    // await wait(1000)
+    
+   
 }
 
 export const UpdateSpeed = (speed) =>{
