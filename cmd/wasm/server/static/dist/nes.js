@@ -1245,6 +1245,13 @@ var markdownContainer = document.querySelector(".markdown-body");
 var closeBtn = document.getElementById("guide-close");
 var guidesCont = document.getElementById("guideList");
 var docHeaders = [];
+var checkForFirstGuide = async () => {
+  const current = localStorage.getItem("new");
+  if (current == null) {
+    openGuides();
+    localStorage.setItem("new", "1");
+  }
+};
 var openGuides = async () => {
   guideWindow.style.display = "flex";
   initButtons();
@@ -1534,7 +1541,7 @@ var ctx2 = canvas.getContext("2d");
 var imageData = ctx2.createImageData(256, 240);
 var speedBuf = new SharedArrayBuffer(4);
 var speedNum = new Int32Array(speedBuf);
-var NES_FPS = 60.0988;
+var NES_FPS = 60.0948;
 var FRAME_MS = 1e3 / NES_FPS;
 var frameSig = null;
 var rafMode = false;
@@ -1558,7 +1565,7 @@ window.addEventListener("keydown", async (e) => {
     await PauseGame();
     await wait(200);
     worker.postMessage({ type: "reset" });
-    await wait(500);
+    await wait(600);
     await ResumeGame();
   }
 });
@@ -1889,7 +1896,8 @@ var activateTip = (tip) => {
     TipsState[tip]["state"] = false;
   }
 };
-var startRandomTipEngine = () => {
+var startRandomTipEngine = async () => {
+  await wait(1e3);
   scheduleTip();
 };
 var scheduleTip = () => {
@@ -2202,7 +2210,7 @@ var slotCart = async () => {
   clone.style.height = slot.height + "px";
   clone.style.transform = "none";
   clone.style.margin = "0";
-  clone.style.zIndex = "99";
+  clone.style.zIndex = "3";
   document.body.appendChild(clone);
   const slotRect = slot.getBoundingClientRect();
   const stripRect = strip.getBoundingClientRect();
@@ -2263,6 +2271,16 @@ var drawNav = () => {
     ctx3.fillRect(col * PS, r * PS, PS, PS);
   }
 };
+var setUpMainLinks = () => {
+  const docLink = document.getElementById("docs");
+  const hubLink = document.getElementById("github");
+  docLink.addEventListener("click", () => {
+    openGuides();
+  });
+  hubLink.addEventListener("click", () => {
+    window.location.href = "https://github.com/Emptiedfull/ExNES/";
+  });
+};
 
 // static/scripts/nes.js
 var currentIndex = 3;
@@ -2283,8 +2301,9 @@ var romLoaded = "";
 var power = false;
 var roms = [left, middle2, right];
 document.addEventListener("DOMContentLoaded", async () => {
-  openGuides();
-  startRandomTipEngine();
+  checkForFirstGuide();
+  setUpMainLinks();
+  await startRandomTipEngine();
   await setUpRocker();
   await setUpKnobs();
   await setUpButtons();

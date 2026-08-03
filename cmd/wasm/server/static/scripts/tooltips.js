@@ -1,3 +1,4 @@
+import { wait } from "./joypad"
 import { createModal } from "./modal"
 
 
@@ -8,7 +9,8 @@ export const activateTip = (tip) => {
     }
 }
 
-export const startRandomTipEngine = () => {
+export const startRandomTipEngine = async () => {
+    await wait(1000)
     scheduleTip()
 }
 

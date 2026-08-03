@@ -9,6 +9,15 @@ const guidesCont = document.getElementById("guideList")
 
 const docHeaders = []
 
+export const checkForFirstGuide = async ()=>{
+    const current = localStorage.getItem('new')
+
+    if (current == null){
+        openGuides()
+        localStorage.setItem("new","1")
+    }
+}
+
 export const openGuides = async ()=>{ 
      guideWindow.style.display = "flex"
      initButtons()

@@ -1,10 +1,10 @@
-import { openCap, closeCap, slotCart, activateJoypad, alignCable, pushbtn, turnKnob, wiggleKnob, knobSettings } from "./graphics.js"
+import { openCap, closeCap, slotCart, activateJoypad, alignCable, pushbtn, turnKnob, wiggleKnob, knobSettings, setUpMainLinks } from "./graphics.js"
 import { initConsole, loadRom, state, updateVolume, UpdateSpeed, PauseGame, ResumeGame, switchMode } from "./driver.js"
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
 import { activateTip, startRandomTipEngine } from "./tooltips.js"
 import { makeMockTiles } from "./rewind.js"
-import { openGuides } from "./guides.js"
+import { checkForFirstGuide, openGuides } from "./guides.js"
 
 
 
@@ -35,9 +35,9 @@ const roms = [left, middle, right]
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    openGuides()
-
-    startRandomTipEngine()
+    checkForFirstGuide()
+    setUpMainLinks()
+    await startRandomTipEngine()
     await setUpRocker()
     await setUpKnobs()
     await setUpButtons()
@@ -256,6 +256,7 @@ const setUpButtons = async () => {
 }
 
 async function begin(game) {
+
     initConsole()
     await loadRom(game)
 

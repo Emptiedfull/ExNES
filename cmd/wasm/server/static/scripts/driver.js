@@ -15,7 +15,7 @@ const imageData = ctx.createImageData(256, 240)
 const speedBuf = new SharedArrayBuffer(4)
 const speedNum = new Int32Array(speedBuf)
 
-const NES_FPS = 60.0988
+const NES_FPS = 60.0948
 const FRAME_MS = 1000 / NES_FPS
 
 let frameSig = null
@@ -51,7 +51,7 @@ window.addEventListener("keydown",async (e)=>{
         await wait(200)
         worker.postMessage({type:"reset"})
 
-        await wait (500)
+        await wait (600)
         await ResumeGame()
     }
 })

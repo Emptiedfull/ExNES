@@ -420,7 +420,7 @@ export const slotCart = async () => {
   clone.style.height = slot.height + 'px';
   clone.style.transform = 'none';
   clone.style.margin = '0';
-  clone.style.zIndex = '99';
+  clone.style.zIndex = '3';
 
   document.body.appendChild(clone);
 
@@ -434,8 +434,6 @@ export const slotCart = async () => {
   clone.style.top = slotRect.top + "px"
   clone.style.left = slotRect.left + "px"
   clone.style.width = dy + "px"
-
-
 
   await wait(1000)
   clone.style.transition = 'all 0.25s ease-in';

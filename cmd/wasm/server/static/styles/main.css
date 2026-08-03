@@ -470,12 +470,18 @@ body {
 
 .main-links{
   width: 100%;
-  background-color: purple;
- 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+
+  cursor: pointer;
+  
 }
 
 .main-links img{
   height: 30px;
+  margin-right: 20px;
   aspect-ratio: 1/1;
 } 
 
