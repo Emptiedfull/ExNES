@@ -1536,6 +1536,10 @@ var worker = new Worker(new URL("./emuWorker.js", import.meta.url));
 var fBytes = null;
 var inputBuf = new SharedArrayBuffer(4);
 var inputState = new Int32Array(inputBuf);
+var cmdMap = {
+  "STOP": 1,
+  "RESET": 2
+};
 var canvas = document.getElementById("screen");
 var ctx2 = canvas.getContext("2d");
 var imageData = ctx2.createImageData(256, 240);
@@ -1549,7 +1553,8 @@ var rafId = null;
 var lastT = 0;
 var acc = 0;
 var audioBufS = null;
-var control = null;
+var AudioControl = null;
+var gameControl = null;
 Atomics.store(speedNum, 0, 1e3);
 var state = {
   romRunning: false,
@@ -1563,10 +1568,7 @@ window.addEventListener("keydown", async (e) => {
     await getSnapList();
   } else if (e.code == "KeyT") {
     await PauseGame();
-    await wait(200);
     worker.postMessage({ type: "reset" });
-    await wait(600);
-    await ResumeGame();
   }
 });
 var setUpAudio = async (audioBufS2, SIZE) => {
@@ -1588,17 +1590,16 @@ var PauseGame = async () => {
     return;
   }
   await audioCtx.suspend();
-  Atomics.store(control, 2, 2);
-  Atomics.notify(control, 2);
+  Atomics.store(gameControl, 0, 2);
+  Atomics.notify(gameControl, 0);
 };
 var ResumeGame = async () => {
-  console.log("playing");
   if (audioCtx == null) {
     return;
   }
   await audioCtx.resume();
-  Atomics.store(control, 2, 1);
-  Atomics.notify(control, 2);
+  Atomics.store(gameControl, 0, cmdMap.STOP);
+  Atomics.notify(gameControl, 0);
   worker.postMessage({ "type": "pump" });
 };
 var getSnapList = async () => {
@@ -1624,7 +1625,8 @@ worker.onmessage = async ({ data }) => {
     case "init":
       fBytes = new Uint8Array(data.FBuf);
       audioBufS = data.audioBufS;
-      control = new Int32Array(audioBufS, data.SIZE * 4, 3);
+      AudioControl = new Int32Array(audioBufS, data.SIZE * 4, 3);
+      gameControl = new Int32Array(data.gameBuf);
       frameSig = new Int32Array(data.frameSigBuf);
       await setUpAudio(data.audioBufS, data.SIZE);
       break;
@@ -1636,6 +1638,7 @@ worker.onmessage = async ({ data }) => {
       await createTilesFromSnapshots(data.snaps);
       break;
     case "start":
+      console.log("starting/restarting");
       await startConsole();
       break;
     case "frameUp":
@@ -1645,6 +1648,7 @@ worker.onmessage = async ({ data }) => {
   }
 };
 var startConsole = async () => {
+  await ResumeGame();
   if (state.romRunning) {
     return;
   }
@@ -1676,9 +1680,8 @@ var switchMode = (mode) => {
   }
 };
 var loadRom = async (game) => {
-  Atomics.store(control, 2, 1);
-  Atomics.notify(control, 2);
-  audioCtx.resume();
+  await PauseGame();
+  console.log("loading game");
   worker.postMessage({ type: "loadRom", rom: game });
 };
 var UpdateSpeed = (speed) => {
@@ -1696,16 +1699,15 @@ var startAudioBuf = async () => {
   if (audioCtx) {
     await audioCtx.resume();
   }
-  Atomics.store(control, 2, 1);
-  Atomics.notify(control, 2);
+  await ResumeGame();
   worker.postMessage({ type: "pump" });
 };
 var startRaf = () => {
   if (!state.romRunning) return;
   if (!frameSig) return;
-  if (control) {
-    Atomics.store(control, 2, 2);
-    Atomics.notify(control, 2);
+  if (gameControl) {
+    Atomics.store(gameControl, 0, cmdMap.STOP);
+    Atomics.notify(gameControl, 0);
   }
   if (audioCtx) audioCtx.suspend();
   Atomics.store(frameSig, 2, 0);

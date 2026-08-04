@@ -10,6 +10,7 @@ import (
 	"log"
 	"math"
 	"syscall/js"
+	"time"
 	"unsafe"
 )
 
@@ -99,14 +100,16 @@ func startFrameDriver() {
 	}))
 
 	js.Global().Set("reset", js.FuncOf(func(this js.Value, args []js.Value) any {
-
+		fmt.Println("reset requested")
+		start := time.Now()
 		if emu != nil {
 			emu.Cpu.Reset()
-			fmt.Println("resetting the console")
-			return nil
+
+			fmt.Println("reset took:", time.Since(start))
+			return 1
 		}
 
-		return nil
+		return 1
 	}))
 
 	js.Global().Set("runFrame", js.FuncOf(func(this js.Value, args []js.Value) any {

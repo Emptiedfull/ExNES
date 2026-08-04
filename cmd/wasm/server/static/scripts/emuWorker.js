@@ -26,7 +26,10 @@ const SIZE = 8192
 const audioBufS = new SharedArrayBuffer(SIZE*4 + 4 + 4 +4 + 4 ) //uh the plus 4 are different pointers, write,read and updateflag
 
 const samples = new Float32Array(audioBufS,0,SIZE)
-const control = new Int32Array(audioBufS,SIZE*4,3)
+const AudioControl = new Int32Array(audioBufS,SIZE*4,3) // 0,1 buf || 
+
+const gameBuf = new SharedArrayBuffer(4)
+const GameControl = new Int32Array(gameBuf) // 2-end Loop, 3-reset 
 
 const frameSigBuf = new SharedArrayBuffer(12)
 const frameSig = new Int32Array(frameSigBuf)
@@ -44,7 +47,7 @@ self.onmessage = async ({data}) =>{
             initBuffer(new Uint8Array(S_buf.buffer))
             initInput(new Int32Array(data.inputBuf))
             initSpeed(new Uint8Array(data.speedBuf))
-            self.postMessage({type:"init",audioBufS,FBuf,SIZE,S_size,frameSigBuf})
+            self.postMessage({type:"init",audioBufS,FBuf,SIZE,S_size,frameSigBuf,gameBuf})
             break
 
         case 'loadRom':
@@ -64,9 +67,13 @@ self.onmessage = async ({data}) =>{
 
         
         case 'reset':
-            console.log("Recieved reset request")
+            
            
-            reset()
+            let x = reset()
+            if (x == 1){
+                  self.postMessage({type:"start"})
+            }
+          
             break
 
         case 'getsnap':
@@ -162,14 +169,21 @@ const rafPump = ()=>{
 const pump = ()=>{
    
     while (true){
-        Atomics.wait(control,2,0)
-        if (Atomics.load(control,2) == 2){
-            return
-        }
+        Atomics.wait(AudioControl,2,0)
+
+        // const operation = Atomics.exchange(GameControl,0,0)
+
+
+        // switch (operation){
+            
+        //     case 2:
+        //         return
+        // }
+
        
 
-        const wp = Atomics.load(control,0)
-        const rp = Atomics.load(control,1)
+        const wp = Atomics.load(AudioControl,0)
+        const rp = Atomics.load(AudioControl,1)
 
         const free = SIZE - (wp - rp)
         const want = Math.min(free,S_size)
@@ -182,15 +196,15 @@ const pump = ()=>{
                 samples[(wp + i) % SIZE] = S_buf[i]
             }
 
-            Atomics.store(control,0,wp+want)
+            Atomics.store(AudioControl,0,wp+want)
         }
 
 
         FBytes.set(new Uint8Array(frameBuffer.buffer))
         self.postMessage({type:"frameUp"})
 
-        Atomics.store(control,2,0)
-        Atomics.notify(control,2) //god pls work this is my 5th rewrite
+        Atomics.store(AudioControl,2,0)
+        Atomics.notify(AudioControl,2) //god pls work this is my 5th rewrite
     }
 
    

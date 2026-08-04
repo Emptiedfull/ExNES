@@ -16,7 +16,9 @@
   var SIZE = 8192;
   var audioBufS = new SharedArrayBuffer(SIZE * 4 + 4 + 4 + 4 + 4);
   var samples = new Float32Array(audioBufS, 0, SIZE);
-  var control = new Int32Array(audioBufS, SIZE * 4, 3);
+  var AudioControl = new Int32Array(audioBufS, SIZE * 4, 3);
+  var gameBuf = new SharedArrayBuffer(4);
+  var GameControl = new Int32Array(gameBuf);
   var frameSigBuf = new SharedArrayBuffer(12);
   var frameSig = new Int32Array(frameSigBuf);
   var S_size = 1024;
@@ -28,7 +30,7 @@
         initBuffer(new Uint8Array(S_buf.buffer));
         initInput(new Int32Array(data.inputBuf));
         initSpeed(new Uint8Array(data.speedBuf));
-        self.postMessage({ type: "init", audioBufS, FBuf, SIZE, S_size, frameSigBuf });
+        self.postMessage({ type: "init", audioBufS, FBuf, SIZE, S_size, frameSigBuf, gameBuf });
         break;
       case "loadRom":
         console.log("loading rom");
@@ -42,8 +44,10 @@
         rafPump();
         break;
       case "reset":
-        console.log("Recieved reset request");
-        reset();
+        let x = reset();
+        if (x == 1) {
+          self.postMessage({ type: "start" });
+        }
         break;
       case "getsnap":
         console.log("getting snapshot list");
@@ -94,12 +98,9 @@
   };
   var pump = () => {
     while (true) {
-      Atomics.wait(control, 2, 0);
-      if (Atomics.load(control, 2) == 2) {
-        return;
-      }
-      const wp = Atomics.load(control, 0);
-      const rp = Atomics.load(control, 1);
+      Atomics.wait(AudioControl, 2, 0);
+      const wp = Atomics.load(AudioControl, 0);
+      const rp = Atomics.load(AudioControl, 1);
       const free = SIZE - (wp - rp);
       const want = Math.min(free, S_size);
       if (want > 0) {
@@ -107,12 +108,12 @@
         for (let i = 0; i < want; i++) {
           samples[(wp + i) % SIZE] = S_buf[i];
         }
-        Atomics.store(control, 0, wp + want);
+        Atomics.store(AudioControl, 0, wp + want);
       }
       FBytes.set(new Uint8Array(frameBuffer.buffer));
       self.postMessage({ type: "frameUp" });
-      Atomics.store(control, 2, 0);
-      Atomics.notify(control, 2);
+      Atomics.store(AudioControl, 2, 0);
+      Atomics.notify(AudioControl, 2);
     }
   };
   var loadRom = async (game) => {

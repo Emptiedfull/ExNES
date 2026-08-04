@@ -11,7 +11,7 @@ var dutyTable = [4][8]uint8{
 	{0, 1, 0, 0, 0, 0, 0, 0}, //12.5
 	{0, 1, 1, 0, 0, 0, 0, 0}, //25
 	{0, 1, 1, 1, 1, 0, 0, 0}, // 50
-	{1, 0, 0, 1, 1, 1, 1, 1}, //75
+	{1, 0, 0, 1, 1, 1, 1, 1}, //75 (pls man why do u hv to make this shit not normal)
 }
 
 type PulseChannel struct {

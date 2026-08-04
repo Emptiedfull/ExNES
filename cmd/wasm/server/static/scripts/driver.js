@@ -8,6 +8,11 @@ let fBytes = null
 const inputBuf = new SharedArrayBuffer(4)
 const inputState = new Int32Array(inputBuf)
 
+const cmdMap = {
+    "STOP":1,
+    "RESET":2,
+}
+
 const canvas = document.getElementById("screen")
 const ctx = canvas.getContext("2d")
 const imageData = ctx.createImageData(256, 240)
@@ -25,7 +30,9 @@ let lastT = 0
 let  acc = 0
 
 let audioBufS = null
-let control = null
+let AudioControl = null
+
+let gameControl = null
 
 Atomics.store(speedNum,0,1000)
 
@@ -48,11 +55,10 @@ window.addEventListener("keydown",async (e)=>{
        
     } else if (e.code == "KeyT"){
         await PauseGame()
-        await wait(200)
+        
         worker.postMessage({type:"reset"})
 
-        await wait (600)
-        await ResumeGame()
+       
     }
 })
 
@@ -87,21 +93,20 @@ export const PauseGame = async ()=>{
     }
     await audioCtx.suspend()
 
-    Atomics.store(control,2,2)
-    Atomics.notify(control,2)
-
+    Atomics.store(gameControl,0,2)
+    Atomics.notify(gameControl,0)
 
 }
 
 export const ResumeGame = async ()=>{
-    console.log("playing")
+    
     if (audioCtx == null){
         return
     }
     await audioCtx.resume()
 
-    Atomics.store(control,2,1)
-    Atomics.notify(control,2)
+    Atomics.store(gameControl,0,cmdMap.STOP)
+    Atomics.notify(gameControl,0)
 
     worker.postMessage({"type":"pump"})
 }
@@ -135,11 +140,14 @@ export const initConsole = ()=>{
 
 worker.onmessage = async ({ data }) => {
 
+    
+
     switch (data.type) {
         case 'init':
             fBytes = new Uint8Array(data.FBuf)
             audioBufS = data.audioBufS
-            control = new Int32Array(audioBufS,data.SIZE*4,3)
+            AudioControl = new Int32Array(audioBufS,data.SIZE*4,3)
+            gameControl = new Int32Array(data.gameBuf)
             frameSig = new Int32Array(data.frameSigBuf)
             await setUpAudio(data.audioBufS, data.SIZE)
             break
@@ -151,6 +159,7 @@ worker.onmessage = async ({ data }) => {
             await createTilesFromSnapshots(data.snaps)
             break
         case 'start':
+            console.log("starting/restarting")
             await startConsole()
             break
 
@@ -162,6 +171,7 @@ worker.onmessage = async ({ data }) => {
 }
 
 const startConsole = async ()=>{
+    await ResumeGame()
     if (state.romRunning){
         return
     }
@@ -199,10 +209,12 @@ export const switchMode = (mode)=>{
 
 export const loadRom = async (game) => {
   
-    Atomics.store(control,2,1)
-    Atomics.notify(control,2)
+    // Atomics.store(control,2,1)
+    // Atomics.notify(control,2)
+    await PauseGame()
 
-    audioCtx.resume()
+    // audioCtx.resume()
+    console.log("loading game")
 
     worker.postMessage({ type: 'loadRom', rom: game })
     
@@ -236,8 +248,7 @@ export const startAudioBuf = async  ()=>{
         await audioCtx.resume()
     }
 
-    Atomics.store(control,2,1)
-    Atomics.notify(control,2)
+    await ResumeGame()
 
     worker.postMessage({type:"pump"})
     
@@ -247,9 +258,9 @@ export const startRaf = ()=>{
     if (!state.romRunning) return
     if (!frameSig) return
 
-    if (control) {
-        Atomics.store(control,2,2)
-        Atomics.notify(control,2)
+    if (gameControl) {
+        Atomics.store(gameControl,0,cmdMap.STOP)
+        Atomics.notify(gameControl,0)
     }
 
     if (audioCtx) audioCtx.suspend()
