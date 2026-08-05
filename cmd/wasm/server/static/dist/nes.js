@@ -1567,8 +1567,7 @@ window.addEventListener("keydown", async (e) => {
   if (e.code == "KeyR") {
     await getSnapList();
   } else if (e.code == "KeyT") {
-    await PauseGame();
-    worker.postMessage({ type: "reset" });
+    ResetGame();
   }
 });
 var setUpAudio = async (audioBufS2, SIZE) => {
@@ -1586,17 +1585,19 @@ var setUpAudio = async (audioBufS2, SIZE) => {
   gain.connect(audioCtx.destination);
 };
 var PauseGame = async () => {
-  Atomics.store(gameControl, 0, 2);
-  Atomics.notify(gameControl, 0);
+  if (state.romRunning) {
+    Atomics.store(gameControl, 0, cmdMap.STOP);
+    state.romRunning = false;
+  }
 };
 var ResumeGame = async () => {
-  if (audioCtx == null) {
-    return;
+  if (!state.romRunning) {
+    worker.postMessage({ "type": "pump" });
+    state.romRunning = true;
   }
-  await audioCtx.resume();
-  Atomics.store(gameControl, 0, cmdMap.STOP);
-  Atomics.notify(gameControl, 0);
-  worker.postMessage({ "type": "pump" });
+};
+var ResetGame = async () => {
+  Atomics.store(gameControl, 0, cmdMap.RESET);
 };
 var getSnapList = async () => {
   await PauseGame();
@@ -1644,11 +1645,9 @@ worker.onmessage = async ({ data }) => {
   }
 };
 var startConsole = async () => {
-  await ResumeGame();
   if (state.romRunning) {
     return;
   }
-  state.romRunning = true;
   console.log("starting the fucking game");
   if (state.runMode == 0) {
     await startAudioBuf();
@@ -1690,16 +1689,13 @@ var UpdateRelease = (btn) => {
   Atomics.and(inputState, 0, ~(1 << ControlMap[btn]));
 };
 var startAudioBuf = async () => {
-  if (!state.romRunning) return;
   stopRaF();
   if (audioCtx) {
     await audioCtx.resume();
   }
   await ResumeGame();
-  worker.postMessage({ type: "pump" });
 };
 var startRaf = () => {
-  if (!state.romRunning) return;
   if (!frameSig) return;
   if (gameControl) {
     Atomics.store(gameControl, 0, cmdMap.STOP);

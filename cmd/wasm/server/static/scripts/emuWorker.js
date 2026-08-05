@@ -58,7 +58,7 @@ self.onmessage = async ({data}) =>{
            
             break
         case 'pump':
-            console.log("pump called")
+            
             pump()
             break
         case 'startRaF':
@@ -66,16 +66,6 @@ self.onmessage = async ({data}) =>{
             rafPump()
             break
 
-        
-        case 'reset':
-            
-           
-            let x = reset()
-            if (x == 1){
-                  self.postMessage({type:"start"})
-            }
-          
-            break
 
         case 'getsnap':
             console.log("getting snapshot list")
@@ -174,14 +164,17 @@ const pump = ()=>{
         Atomics.wait(AudioControl,2,0)
 
         const operation = Atomics.exchange(GameControl,0,0)
+        console.log("the op in question is :",operation)
         
 
         switch (operation){
-            
-            
             case 2:
-                console.log("ending loop")
+                reset()
+                break
+            case 1:
+               
                 block = true
+                break
                 
         }
 
@@ -195,7 +188,7 @@ const pump = ()=>{
 
 
         if (want > 0){
-            console.log("driving for the want of:",want)
+            
             drive(want)
 
             for (let i = 0; i < want;i++){

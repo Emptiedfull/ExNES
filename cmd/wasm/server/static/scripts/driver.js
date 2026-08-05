@@ -54,9 +54,7 @@ window.addEventListener("keydown",async (e)=>{
        
        
     } else if (e.code == "KeyT"){
-        await PauseGame()
-        
-        worker.postMessage({type:"reset"})
+       ResetGame()
 
        
     }
@@ -88,29 +86,29 @@ const setUpAudio = async (audioBufS, SIZE) => {
 
 export const PauseGame = async ()=>{
 
-    // if (audioCtx == null) {
-    //     return
-    // }
-    // await audioCtx.suspend()
+    
+    if (state.romRunning){
+         Atomics.store(gameControl,0,cmdMap.STOP)
+         state.romRunning = false
+    }
 
     
-
-    Atomics.store(gameControl,0,2)
-    Atomics.notify(gameControl,0)
 
 }
 
 export const ResumeGame = async ()=>{
     
-    if (audioCtx == null){
-        return
+    if (!state.romRunning){
+          worker.postMessage({"type":"pump"})
+          state.romRunning = true
     }
-    await audioCtx.resume()
+   
 
-    Atomics.store(gameControl,0,cmdMap.STOP)
-    Atomics.notify(gameControl,0)
+  
+}
 
-    worker.postMessage({"type":"pump"})
+export const ResetGame = async ()=>{
+    Atomics.store(gameControl,0,cmdMap.RESET)
 }
 
 export const getSnapList = async ()=>{
@@ -173,12 +171,12 @@ worker.onmessage = async ({ data }) => {
 }
 
 const startConsole = async ()=>{
-    await ResumeGame()
+   
     if (state.romRunning){
         return
     }
 
-     state.romRunning = true
+   
     console.log("starting the fucking game")
     if (state.runMode == 0){
         await startAudioBuf()
@@ -213,6 +211,7 @@ export const loadRom = async (game) => {
   
     // Atomics.store(control,2,1)
     // Atomics.notify(control,2)
+ 
     await PauseGame()
 
     // audioCtx.resume()
@@ -243,7 +242,7 @@ export const UpdateRelease = (btn) => {
 
 export const startAudioBuf = async  ()=>{
 
-    if (!state.romRunning) return
+   
    stopRaF()
 
     if (audioCtx) {
@@ -252,12 +251,12 @@ export const startAudioBuf = async  ()=>{
 
     await ResumeGame()
 
-    worker.postMessage({type:"pump"})
+   
     
 }
 
 export const startRaf = ()=>{
-    if (!state.romRunning) return
+   
     if (!frameSig) return
 
     if (gameControl) {

@@ -27,7 +27,12 @@ func (c *cache) clear() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
+	for key := range c.data {
+		fmt.Println(key)
+	}
+	wasmEntry := c.data["static/nes.wasm"]
 	c.data = make(map[string][]byte)
+	c.data["static/nes.wasm"] = wasmEntry
 }
 
 func (c *cache) get(file string) []byte {

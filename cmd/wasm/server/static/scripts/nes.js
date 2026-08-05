@@ -262,7 +262,6 @@ async function begin(game) {
 
     await BeginKnobs()
 
-
     alignCable(1)
 
     state.romRunning = true

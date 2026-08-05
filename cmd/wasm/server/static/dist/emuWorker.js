@@ -38,17 +38,10 @@
         self.postMessage({ type: "start" });
         break;
       case "pump":
-        console.log("pump called");
         pump();
         break;
       case "startRaF":
         rafPump();
-        break;
-      case "reset":
-        let x = reset();
-        if (x == 1) {
-          self.postMessage({ type: "start" });
-        }
         break;
       case "getsnap":
         console.log("getting snapshot list");
@@ -102,17 +95,20 @@
     while (!block) {
       Atomics.wait(AudioControl, 2, 0);
       const operation = Atomics.exchange(GameControl, 0, 0);
+      console.log("the op in question is :", operation);
       switch (operation) {
         case 2:
-          console.log("ending loop");
+          reset();
+          break;
+        case 1:
           block = true;
+          break;
       }
       const wp = Atomics.load(AudioControl, 0);
       const rp = Atomics.load(AudioControl, 1);
       const free = SIZE - (wp - rp);
       const want = Math.min(free, S_size);
       if (want > 0) {
-        console.log("driving for the want of:", want);
         drive(want);
         for (let i = 0; i < want; i++) {
           samples[(wp + i) % SIZE] = S_buf[i];
