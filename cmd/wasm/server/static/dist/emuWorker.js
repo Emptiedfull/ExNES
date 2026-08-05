@@ -38,6 +38,7 @@
         self.postMessage({ type: "start" });
         break;
       case "pump":
+        console.log("pump called");
         pump();
         break;
       case "startRaF":
@@ -97,13 +98,21 @@
     }
   };
   var pump = () => {
-    while (true) {
+    let block = false;
+    while (!block) {
       Atomics.wait(AudioControl, 2, 0);
+      const operation = Atomics.exchange(GameControl, 0, 0);
+      switch (operation) {
+        case 2:
+          console.log("ending loop");
+          block = true;
+      }
       const wp = Atomics.load(AudioControl, 0);
       const rp = Atomics.load(AudioControl, 1);
       const free = SIZE - (wp - rp);
       const want = Math.min(free, S_size);
       if (want > 0) {
+        console.log("driving for the want of:", want);
         drive(want);
         for (let i = 0; i < want; i++) {
           samples[(wp + i) % SIZE] = S_buf[i];
@@ -115,6 +124,7 @@
       Atomics.store(AudioControl, 2, 0);
       Atomics.notify(AudioControl, 2);
     }
+    console.log("loop ended");
   };
   var loadRom = async (game) => {
     const response = await fetch("/games/" + game + ".nes");

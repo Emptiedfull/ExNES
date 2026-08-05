@@ -1586,10 +1586,6 @@ var setUpAudio = async (audioBufS2, SIZE) => {
   gain.connect(audioCtx.destination);
 };
 var PauseGame = async () => {
-  if (audioCtx == null) {
-    return;
-  }
-  await audioCtx.suspend();
   Atomics.store(gameControl, 0, 2);
   Atomics.notify(gameControl, 0);
 };

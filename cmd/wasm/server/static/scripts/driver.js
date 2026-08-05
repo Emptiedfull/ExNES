@@ -88,10 +88,12 @@ const setUpAudio = async (audioBufS, SIZE) => {
 
 export const PauseGame = async ()=>{
 
-    if (audioCtx == null) {
-        return
-    }
-    await audioCtx.suspend()
+    // if (audioCtx == null) {
+    //     return
+    // }
+    // await audioCtx.suspend()
+
+    
 
     Atomics.store(gameControl,0,2)
     Atomics.notify(gameControl,0)

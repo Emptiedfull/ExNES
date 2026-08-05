@@ -58,6 +58,7 @@ self.onmessage = async ({data}) =>{
            
             break
         case 'pump':
+            console.log("pump called")
             pump()
             break
         case 'startRaF':
@@ -167,18 +168,22 @@ const rafPump = ()=>{
 }
 
 const pump = ()=>{
+    let block = false
    
-    while (true){
+    while (!block){
         Atomics.wait(AudioControl,2,0)
 
-        // const operation = Atomics.exchange(GameControl,0,0)
+        const operation = Atomics.exchange(GameControl,0,0)
+        
 
-
-        // switch (operation){
+        switch (operation){
             
-        //     case 2:
-        //         return
-        // }
+            
+            case 2:
+                console.log("ending loop")
+                block = true
+                
+        }
 
        
 
@@ -190,6 +195,7 @@ const pump = ()=>{
 
 
         if (want > 0){
+            console.log("driving for the want of:",want)
             drive(want)
 
             for (let i = 0; i < want;i++){
@@ -206,6 +212,8 @@ const pump = ()=>{
         Atomics.store(AudioControl,2,0)
         Atomics.notify(AudioControl,2) //god pls work this is my 5th rewrite
     }
+
+    console.log("loop ended")
 
    
 }
