@@ -17,6 +17,5 @@ Gng, its the most akward button on the screen, just use the slider beneath the h
 | Compatiblity    | Medium    | High     |
 | Frame rate   | Frame perfect     |  ~60 fps     |
 |Audio | Supported | Not Supported | 
-| Speed Control | Supported | Not Supported | 
-| Play/Pause | Supported | Not Supported | 
+
 

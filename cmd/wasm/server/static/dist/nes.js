@@ -1566,8 +1566,6 @@ var gain = null;
 window.addEventListener("keydown", async (e) => {
   if (e.code == "KeyR") {
     await getSnapList();
-  } else if (e.code == "KeyT") {
-    ResetGame();
   }
 });
 var setUpAudio = async (audioBufS2, SIZE) => {
@@ -1592,8 +1590,12 @@ var PauseGame = async () => {
 };
 var ResumeGame = async () => {
   if (!state.romRunning) {
-    worker.postMessage({ "type": "pump" });
     state.romRunning = true;
+    if (runMode == 0) {
+      worker.postMessage({ "type": "pump" });
+    } else if (runMode == 1) {
+      worker.postMessage({ "type": "startRaF" });
+    }
   }
 };
 var ResetGame = async () => {
@@ -1676,7 +1678,6 @@ var switchMode = (mode) => {
 };
 var loadRom = async (game) => {
   await PauseGame();
-  console.log("loading game");
   worker.postMessage({ type: "loadRom", rom: game });
 };
 var UpdateSpeed = (speed) => {
@@ -1695,12 +1696,9 @@ var startAudioBuf = async () => {
   }
   await ResumeGame();
 };
-var startRaf = () => {
+var startRaf = async () => {
   if (!frameSig) return;
-  if (gameControl) {
-    Atomics.store(gameControl, 0, cmdMap.STOP);
-    Atomics.notify(gameControl, 0);
-  }
+  await PauseGame();
   if (audioCtx) audioCtx.suspend();
   Atomics.store(frameSig, 2, 0);
   Atomics.store(frameSig, 1, Atomics.load(frameSig, 0));
@@ -2296,6 +2294,7 @@ var GamesArray = [];
 var powerLed = document.getElementById("power");
 var powerBtn = document.getElementById("start");
 var pauseBtn = document.getElementById("pause");
+var resetBtn = document.getElementById("reset");
 var rocker = document.getElementById("rocker");
 var paddle = document.getElementById("paddle");
 var romLoaded = "";
@@ -2414,6 +2413,9 @@ var setUpButtons = async () => {
       await PauseGame();
     }
   });
+  resetBtn.addEventListener("click", async () => {
+    ResetGame();
+  });
   powerBtn.addEventListener("click", async () => {
     power = true;
     if (romLoaded != "") {
@@ -2427,6 +2429,7 @@ var setUpButtons = async () => {
     overlay2.style.transition = "all ease 1";
     overlay2.style.opacity = 1;
   });
+  reset;
   const nav_back = document.getElementById("nav-back");
   nav_back.addEventListener("click", async () => {
     move(-1);

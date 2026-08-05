@@ -1,5 +1,5 @@
 import { openCap, closeCap, slotCart, activateJoypad, alignCable, pushbtn, turnKnob, wiggleKnob, knobSettings, setUpMainLinks } from "./graphics.js"
-import { initConsole, loadRom, state, updateVolume, UpdateSpeed, PauseGame, ResumeGame, switchMode } from "./driver.js"
+import { initConsole, loadRom, state, updateVolume, UpdateSpeed, PauseGame, ResumeGame, switchMode, ResetGame } from "./driver.js"
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
 import { activateTip, startRandomTipEngine } from "./tooltips.js"
@@ -24,6 +24,7 @@ const powerLed = document.getElementById("power")
 
 const powerBtn = document.getElementById("start")
 const pauseBtn = document.getElementById("pause")
+const resetBtn = document.getElementById("reset")
 
 const rocker = document.getElementById("rocker")
 const paddle = document.getElementById("paddle")
@@ -195,6 +196,10 @@ const setUpButtons = async () => {
 
     })
 
+    resetBtn.addEventListener("click",async ()=>{
+        ResetGame()
+    })
+
     powerBtn.addEventListener("click", async () => {
         power = true
 
@@ -211,6 +216,8 @@ const setUpButtons = async () => {
         overlay.style.transition = "all ease 1"
         overlay.style.opacity = 1
     })
+
+    reset
 
     const nav_back = document.getElementById("nav-back")
     nav_back.addEventListener("click", async () => {

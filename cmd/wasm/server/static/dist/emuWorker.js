@@ -33,7 +33,6 @@
         self.postMessage({ type: "init", audioBufS, FBuf, SIZE, S_size, frameSigBuf, gameBuf });
         break;
       case "loadRom":
-        console.log("loading rom");
         await loadRom(data.rom);
         self.postMessage({ type: "start" });
         break;
@@ -76,10 +75,19 @@
     return snapshots;
   };
   var rafPump = () => {
-    console.log("starting loop");
+    let block = false;
     while (true) {
       const done = Atomics.load(frameSig, 1);
       Atomics.wait(frameSig, 0, done);
+      const operation = Atomics.exchange(GameControl, 0, 0);
+      switch (operation) {
+        case 2:
+          reset();
+          break;
+        case 1:
+          block = true;
+          break;
+      }
       if (Atomics.load(frameSig, 2) === 1) {
         Atomics.store(frameSig, 2, 0);
         break;
@@ -95,7 +103,6 @@
     while (!block) {
       Atomics.wait(AudioControl, 2, 0);
       const operation = Atomics.exchange(GameControl, 0, 0);
-      console.log("the op in question is :", operation);
       switch (operation) {
         case 2:
           reset();
@@ -120,7 +127,6 @@
       Atomics.store(AudioControl, 2, 0);
       Atomics.notify(AudioControl, 2);
     }
-    console.log("loop ended");
   };
   var loadRom = async (game) => {
     const response = await fetch("/games/" + game + ".nes");

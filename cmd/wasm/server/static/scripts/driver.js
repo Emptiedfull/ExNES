@@ -53,11 +53,7 @@ window.addEventListener("keydown",async (e)=>{
         
        
        
-    } else if (e.code == "KeyT"){
-       ResetGame()
-
-       
-    }
+    } 
 })
 
 const setUpAudio = async (audioBufS, SIZE) => {
@@ -99,12 +95,16 @@ export const PauseGame = async ()=>{
 export const ResumeGame = async ()=>{
     
     if (!state.romRunning){
-          worker.postMessage({"type":"pump"})
+         
           state.romRunning = true
+
+        if (runMode == 0){
+            worker.postMessage({"type":"pump"})
+        }else if (runMode == 1){
+            worker.postMessage({"type":"startRaF"})
+        }
     }
    
-
-  
 }
 
 export const ResetGame = async ()=>{
@@ -209,17 +209,14 @@ export const switchMode = (mode)=>{
 
 export const loadRom = async (game) => {
   
-    // Atomics.store(control,2,1)
-    // Atomics.notify(control,2)
+   
  
     await PauseGame()
 
-    // audioCtx.resume()
-    console.log("loading game")
 
     worker.postMessage({ type: 'loadRom', rom: game })
     
-    // await wait(1000)
+
     
    
 }
@@ -255,14 +252,11 @@ export const startAudioBuf = async  ()=>{
     
 }
 
-export const startRaf = ()=>{
+export const startRaf = async ()=>{
    
     if (!frameSig) return
 
-    if (gameControl) {
-        Atomics.store(gameControl,0,cmdMap.STOP)
-        Atomics.notify(gameControl,0)
-    }
+    await PauseGame()
 
     if (audioCtx) audioCtx.suspend()
 
@@ -275,6 +269,8 @@ export const startRaf = ()=>{
      worker.postMessage({type:"startRaF"})
 
     rafId = requestAnimationFrame(rafLoop)
+
+  
 
 }
 

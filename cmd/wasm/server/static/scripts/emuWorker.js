@@ -51,7 +51,7 @@ self.onmessage = async ({data}) =>{
             break
 
         case 'loadRom':
-             console.log("loading rom")
+           
             await loadRom(data.rom)
 
             self.postMessage({type:"start"})
@@ -137,11 +137,23 @@ const prepareSnapshotImages = async (bufferPTR,frames)=>{
 }
 
 const rafPump = ()=>{
-    console.log("starting loop")
-    while (true){
+    
+    let block = false
+    while (!false){
         
          const done = Atomics.load(frameSig,1)
         Atomics.wait(frameSig,0,done)
+
+        const operation = Atomics.exchange(GameControl,0,0)
+
+        switch (operation){
+            case 2:
+                reset()
+                break
+            case 1:
+                block = true
+                break
+        }
 
         if (Atomics.load(frameSig,2) === 1){  
             Atomics.store(frameSig,2,0)
@@ -164,7 +176,6 @@ const pump = ()=>{
         Atomics.wait(AudioControl,2,0)
 
         const operation = Atomics.exchange(GameControl,0,0)
-        console.log("the op in question is :",operation)
         
 
         switch (operation){
@@ -206,7 +217,7 @@ const pump = ()=>{
         Atomics.notify(AudioControl,2) //god pls work this is my 5th rewrite
     }
 
-    console.log("loop ended")
+    
 
    
 }

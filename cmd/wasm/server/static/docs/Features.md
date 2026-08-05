@@ -12,12 +12,11 @@ Controls the physical state of being **powered**. It also is the start of the co
 
 ## Reset (2)
 
-Works like the **reset** button on the physical NES. Only works in audio clocked mode. May cause data corruption in some games (this is not a glitch, this is a artifact of accurate emulation)
+Works like the **reset** button on the physical NES. May cause data corruption in some games (this is not a glitch, this is a artifact of accurate emulation)
 
 ## Play/Pause (3)
 
-Can be used to control the state of emulation. The pausing action is not instant and may cause **5-10 frames** of lag. Only works in audio clocked mode.
- 
+Can be used to control the state of emulation. The pausing action is not instant and may cause **5-10 frames** of lag.
 
 ### Power led and ROM Led (4 and 5)
 
