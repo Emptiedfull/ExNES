@@ -158,7 +158,7 @@ func (game *game) beginSampleLoop() {
 
 		for i := range samples {
 			for !game.core.Apu.HasSample() {
-				game.core.TickNoAudio()
+				game.core.Step()
 
 			}
 			sample := game.core.Apu.PopSample()

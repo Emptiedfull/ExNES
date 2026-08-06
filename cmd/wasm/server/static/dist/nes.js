@@ -1591,9 +1591,9 @@ var PauseGame = async () => {
 var ResumeGame = async () => {
   if (!state.romRunning) {
     state.romRunning = true;
-    if (runMode == 0) {
+    if (state.runMode == 0) {
       worker.postMessage({ "type": "pump" });
-    } else if (runMode == 1) {
+    } else if (state.runMode == 1) {
       worker.postMessage({ "type": "startRaF" });
     }
   }
@@ -1699,13 +1699,12 @@ var startAudioBuf = async () => {
 var startRaf = async () => {
   if (!frameSig) return;
   await PauseGame();
-  if (audioCtx) audioCtx.suspend();
   Atomics.store(frameSig, 2, 0);
   Atomics.store(frameSig, 1, Atomics.load(frameSig, 0));
   rafMode = true;
   lastT = performance.now();
   acc = 0;
-  worker.postMessage({ type: "startRaF" });
+  ResumeGame();
   rafId = requestAnimationFrame(rafLoop);
 };
 var rafLoop = (now) => {
@@ -1729,6 +1728,7 @@ var stopRaF = () => {
     Atomics.add(frameSig, 0, 1);
     Atomics.notify(frameSig, 0);
   }
+  state.romRunning = false;
 };
 
 // static/scripts/joypad.js

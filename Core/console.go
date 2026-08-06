@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"sync"
-	"time"
 )
 
 type Console struct {
@@ -34,8 +33,7 @@ type Console struct {
 	Paused   bool
 	pausedMu sync.Mutex
 
-	DebugMode int
-	Debugger  Debugger
+	debug *DebugEngine
 
 	mapper  Mapper
 	LoadRam func(Name string, rom []uint8)
@@ -170,7 +168,6 @@ func InitializeConsole() *Console {
 		PalleteEngine: &PalleteEngine{
 			ListPal: make([]PalleteEntry, 0),
 		},
-		// palette:    loadFPal(Pallete),
 	}
 
 	c.PalleteEngine.Init()
@@ -183,7 +180,6 @@ func InitializeConsole() *Console {
 	c.DatabaseEngine = db
 	c.CheatEngine = InitCheat()
 
-	// c.Ppu.BackBuffer = make([]uint8, 245760)
 	c.Ppu.NewBuffer = make([]uint32, 256*240)
 
 	c.Player1 = &joyPad{}
@@ -204,46 +200,6 @@ func InitializeConsole() *Console {
 	}
 
 	return c
-}
-
-var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988)
-
-func (c *Console) StartConsoleCycle() {
-
-	targetTime := time.Now()
-	defer fmt.Println("console stopped for some reason")
-
-	var framecount = 0
-	start := time.Now()
-
-	for {
-
-		if c.Paused {
-			time.Sleep(100 * time.Millisecond)
-			targetTime = time.Now()
-			continue
-		}
-
-		now := time.Now()
-		for now.After(targetTime) {
-			framecount++
-
-			c.RunFrame()
-			c.RunDisplayUpdates()
-
-			targetTime = targetTime.Add(time.Duration(nsPerFrame))
-		}
-
-		timeLeft := time.Until(targetTime)
-		if timeLeft > 0 {
-			time.Sleep(timeLeft)
-		}
-
-		if framecount == 60 {
-			fmt.Println(time.Since(start))
-		}
-	}
-
 }
 
 func (c *Console) PowerCycle() {
@@ -293,7 +249,7 @@ func (c *Console) RunDisplayUpdates() {
 func (c *Console) RunFrame() {
 	target := c.Ppu.Frame + 1
 	for target != c.Ppu.Frame {
-		c.TickNoAudio()
+		c.Step()
 	}
 }
 
@@ -309,3 +265,43 @@ func Quickstart(filepath string) *Console {
 
 	return c
 }
+
+// var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988)
+
+// func (c *Console) StartConsoleCycle() {
+
+// 	targetTime := time.Now()
+// 	defer fmt.Println("console stopped for some reason")
+
+// 	var framecount = 0
+// 	start := time.Now()
+
+// 	for {
+
+// 		if c.Paused {
+// 			time.Sleep(100 * time.Millisecond)
+// 			targetTime = time.Now()
+// 			continue
+// 		}
+
+// 		now := time.Now()
+// 		for now.After(targetTime) {
+// 			framecount++
+
+// 			c.RunFrame()
+// 			c.RunDisplayUpdates()
+
+// 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
+// 		}
+
+// 		timeLeft := time.Until(targetTime)
+// 		if timeLeft > 0 {
+// 			time.Sleep(timeLeft)
+// 		}
+
+// 		if framecount == 60 {
+// 			fmt.Println(time.Since(start))
+// 		}
+// 	}
+
+// }

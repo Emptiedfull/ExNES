@@ -1,21 +1,49 @@
 package Core
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 type AssemblyLine struct {
 	Opcode      opCode `json:"Opcode"`
 	Disassembly string `json:"disassembly"`
 	Val         uint8  `json:"val,omitempty"`
 }
+type addressingMode int
 
-func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
+const (
+	Implied addressingMode = iota
+	Accumulator
+	Immediate
+	ZeroPage
+	ZeroPageX
+	ZeroPageY
+	Absolute
+	AbsoluteX
+	AbsoluteY
+	Indirect
+	IndirectX
+	IndirectY
+	Relative
+)
 
-	Mem := d.Console.Cpu.Mem
-	if d.Console != nil {
-		if _, ok := d.Disassembly[addr]; ok {
-			return d.Disassembly[addr]
-		}
+type DebugEngine struct {
+	Disassembly map[uint16]AssemblyLine
+	DMux        sync.RWMutex
+}
+
+func (c *Console) DisAssemble(addr uint16) AssemblyLine {
+
+	if c == nil {
+		return AssemblyLine{}
 	}
+
+	if _, ok := c.debug.Disassembly[addr]; ok {
+		return c.debug.Disassembly[addr]
+	}
+
+	Mem := c.Cpu.Mem
 
 	line := AssemblyLine{}
 	opcode := Mem.Read(addr)
@@ -32,17 +60,15 @@ func (d *Debugger) DisAssemble(addr uint16) AssemblyLine {
 	case 2:
 		operand := Mem.Read(addr + 1)
 
-		line.Disassembly, line.Val = formatOpcode(info.Name, info.AddressingMode, uint16(operand), d.Console.Cpu, Mem)
+		line.Disassembly, line.Val = formatOpcode(info.Name, info.AddressingMode, uint16(operand), c.Cpu, Mem)
 		line.Val = Mem.Read(uint16(operand))
 	case 3:
 		operand := builduint16(Mem.Read(addr+1), Mem.Read(addr+2))
-		line.Disassembly, line.Val = formatOpcode(info.Name, info.AddressingMode, uint16(operand), d.Console.Cpu, Mem)
+		line.Disassembly, line.Val = formatOpcode(info.Name, info.AddressingMode, uint16(operand), c.Cpu, Mem)
 		line.Val = Mem.Read(operand)
 	}
 
-	if d.Console != nil {
-		d.Disassembly[addr] = line
-	}
+	c.debug.Disassembly[addr] = line
 
 	return line
 }
@@ -98,7 +124,7 @@ func formatOpcode(mnemonic string, mode addressingMode, operand uint16, Cpu *Cpu
 	}
 }
 
-func (d *Debugger) LookAhead(pc uint16, size int) []AssemblyLine {
+func (d *Console) LookAhead(pc uint16, size int) []AssemblyLine {
 	lines := make([]AssemblyLine, 0)
 	inspectPC := pc
 
@@ -112,6 +138,28 @@ func (d *Debugger) LookAhead(pc uint16, size int) []AssemblyLine {
 	return lines
 }
 
+type Cpustate struct {
+	Pc     uint16    `json:"pc"`
+	S      uint8     `json:"s"`
+	A      uint8     `json:"a"`
+	X      uint8     `json:"x"`
+	Y      uint8     `json:"y"`
+	P      uint8     `json:"p"`
+	Flags  FlagState `json:"flags"`
+	Cycles int       `json:"cycles"`
+	Frames int       `json:"frames"`
+	Ram    [][]int   `json:"-"`
+}
+
+type FlagState struct {
+	Carry     bool `json:"carry"`
+	Overflow  bool `json:"overflow"`
+	Interrupt bool `json:"interrupt"`
+	Zero      bool `json:"zero"`
+	Decimal   bool `json:"decimal"`
+	Negative  bool `json:"negative"`
+}
+
 func (c *Cpu) GetSate() Cpustate {
 	state := Cpustate{}
 
@@ -123,7 +171,7 @@ func (c *Cpu) GetSate() Cpustate {
 	state.Cycles = c.TotalCycles
 	state.Frames = c.console.Ppu.Frame
 
-	f := FlagState{
+	state.Flags = FlagState{
 		Zero:      getbitBool(state.P, 1),
 		Carry:     getbitBool(state.P, 0),
 		Negative:  getbitBool(state.P, 7),
@@ -131,7 +179,6 @@ func (c *Cpu) GetSate() Cpustate {
 		Interrupt: getbitBool(state.P, 2),
 		Overflow:  getbitBool(state.P, 6),
 	}
-	state.Flags = f
 
 	state.S = c.S
 	return state

@@ -11,7 +11,7 @@ func (a *APU) MalgoAdapter(output []byte, input []byte, framecount uint32) {
 func (a *APU) DriveSamples(output []byte, samplesNeeded uint32) {
 	for i := range samplesNeeded {
 		for !a.HasSample() {
-			a.Console.TickNoAudio()
+			a.Console.Step()
 		}
 
 		sample := a.PopSample()
@@ -35,29 +35,7 @@ func (a *APU) DriveSamples(output []byte, samplesNeeded uint32) {
 
 }
 
-func (c *Console) TickSpecial() {
-	if c.Cpu.Stall > 0 {
-		c.Cpu.Stall--
-		c.Cpu.TotalCycles++
-	} else {
-		c.Cpu.Tick()
-	}
-
-	for range 3 {
-		c.Ppu.step()
-	}
-
-	if m, ok := c.mapper.(IrqClocker); ok {
-
-		if m.IRQPending() {
-
-			c.Cpu.irqLine = true
-		}
-
-	}
-}
-
-func (c *Console) TickNoAudio() {
+func (c *Console) Step() {
 	if c.Cpu.Stall > 0 {
 		c.Cpu.Stall--
 		c.Cpu.TotalCycles++
