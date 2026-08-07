@@ -163,6 +163,7 @@ func handleStatic(w http.ResponseWriter, r *http.Request) {
 	} else {
 		file, _ := os.Open(path)
 		io.Copy(w, file)
+		defer file.Close()
 	}
 
 }

@@ -60,6 +60,7 @@ func (c *cache) CompressToMemory(src string) (string, error) {
 	if err != nil {
 		return "0", err
 	}
+	defer input.Close()
 
 	var buf bytes.Buffer
 

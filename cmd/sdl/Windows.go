@@ -353,6 +353,7 @@ func (win *gameWindow) close() {
 	delete(windows, win.id)
 	win.renderer.Destroy()
 	win.window.Destroy()
+	win.menuBar.console.SaveRam()
 	sdl.CloseAudioDevice(win.audioDevice)
 	sdl.StopTextInput()
 

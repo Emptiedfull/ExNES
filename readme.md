@@ -38,6 +38,15 @@ To use the server navigate to cmd/wasm/server and run the binary provided, it de
 
 The other 2 builds present in cmd/wasm are for internal testing and may or may not work depending on the commit, so uh I'm not providing any documentation for it but that might change in the future if I make it stable.
 
+### Features
+
+| Feature | Native build | Web build |
+|---|---| --- | 
+| Speed Adjustment | ✅ |  ✅ | 
+| Audio | ✅ |  ✅ | 
+| Cheats | ✅ |  ❌ | 
+| RAM memory |  ✅ |  ❌ | 
+
 ## Technical details 
 
 ### Emulator Core 
@@ -58,7 +67,11 @@ The core has been built to maximize the accuracy while refraining from entering 
 
 One thing to note is that the Core does not expose any timing mechanism on its own nor does it enforce any, consumption of the core needs to come with its own timing mechanism, it is recommend to either sync using runFrame at around 60fps or use the audio sample starvation for frame perfect emulation.
 
+The core also included a cheat engine which supports game genie codes along with support for raw memory patches in the format of addr:val.
 
+Also bundled in is a headerless No-Intro dataset for indentification of games, this information is used for generating accurate saves and it also connects with the cheat engine to provide all known cheats for a game through a easily querable function.
+
+The documentation for how to use the core is scarce and not very intuituive, hence the best way to utilize it right now is looking at cmd/wasm and cmd/sdl for sample code. 
 
 
 ### Web build 
@@ -74,6 +87,9 @@ These are the following:
 3) Main thread: It handles all the other processes including handling button inputs, cross thread communication and animations.
 
 
+### Native build
+
+The native build runs cross platform by utilizing the sdl library, it includes no dependencies apart from sdl including a layout engine. This means that every window contains its own discrete layout engine and state manager, a lot of this values are hardcoded for ease of development and thus extensions should be carefully made.
 
 
 

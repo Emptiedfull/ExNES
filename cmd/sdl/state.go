@@ -36,6 +36,22 @@ type romSave struct {
 func newState() *localState {
 	return &localState{
 		RecentFiles: make([]recentRom, 0),
+		running:     false,
+		saves:       make([]romSave, 10),
+		Settings:    defaultSettings(),
+	}
+}
+
+func defaultSettings() state_setting {
+	return state_setting{
+		Show_fps:      false,
+		Current_speed: "100%",
+
+		Muted:          false,
+		Current_volume: "50%",
+
+		Inputs:      initializeControls(),
+		TurboInputs: intializeTurboControls(),
 	}
 }
 
@@ -45,17 +61,18 @@ type recentRom struct {
 }
 
 func loadState() *localState {
-	s := &localState{}
+	s := newState()
 
 	data, err := os.ReadFile("state.json")
 	if err != nil {
 		fmt.Println("error loading state:", err)
-
+		return s
 	}
 
 	err = json.Unmarshal(data, s)
 	if err != nil {
 		fmt.Println("error unmarshaling state:", err)
+		return s
 
 	}
 

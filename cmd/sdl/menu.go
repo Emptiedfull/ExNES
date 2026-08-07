@@ -389,11 +389,16 @@ func (mb *menuBar) handleClick(x, y int32) {
 		item := mb.Items[mb.hoverIndex]
 
 		for i, option := range item.options {
+			if !option.enabled {
+				continue
+			}
 			if option.Expandable {
 				if i == mb.optionHoverIndex {
 					for _, subOption := range option.ExpandableItems {
 						if pointInRect(subOption.Rect, x, y) {
-							subOption.onClick()
+							if subOption.onClick != nil {
+								subOption.onClick()
+							}
 
 							return
 						}

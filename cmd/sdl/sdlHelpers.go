@@ -399,7 +399,7 @@ func truncateStr(font *ttf.Font, text string, MaxWidth int32) string {
 	fillerWidth := textWdith(filler, font)
 
 	runes := []rune(text)
-	for i := len(text) - 1; i > 0; i-- {
+	for i := len(runes) - 1; i > 0; i-- {
 		check := string(runes[:i])
 		if textWdith(check, font)+fillerWidth < MaxWidth {
 			return check + filler

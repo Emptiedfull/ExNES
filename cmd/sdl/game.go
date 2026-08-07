@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 	"unsafe"
 
@@ -25,18 +26,25 @@ type game struct {
 	volume float32
 
 	TurboState map[Core.BUTTON]chan bool
+	TurboMux   sync.Mutex
 }
 
 func (console *game) LoadRom(filepath string, mb *menuBar) error {
 	fmt.Println("loading rom")
+
+	mb.state.saves = make([]romSave, 10)
 
 	file, err := os.Open(filepath)
 
 	if err != nil {
 		return fmt.Errorf("uhm: %v", err)
 	}
+	defer file.Close()
 
 	err = console.core.InitRom(file)
+	if err != nil {
+		return fmt.Errorf("bad rom: %v", err)
+	}
 	console.core.Cpu.Reset()
 	fmt.Println("error:", err)
 
@@ -202,6 +210,14 @@ func handleInputs(console *game, e *sdl.KeyboardEvent, inp Inputs, turboInp Inpu
 	if action, ok := turboInp.KeyToAction[e.Keysym.Scancode]; ok {
 
 		pressed := e.State == sdl.PRESSED
+
+		if e.Repeat != 0 {
+
+			return
+		}
+
+		console.TurboMux.Lock()
+		defer console.TurboMux.Unlock()
 
 		if pressed {
 			go console.beginTurbo(action)
