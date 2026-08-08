@@ -28,15 +28,18 @@ func openRom(console *game, state *localState, mb *menuBar) {
 
 }
 
-func (console *game) clickSnapshot(state *localState, index int) {
+func (console *game) clickSnapshot(save *romSave) {
 
-	state.saves[index].snapshot = console.core.SaveState()
-	state.saves[index].timestamp = getSaveTimeStamp()
+	save.timestamp = getSaveTimeStamp()
+	save.snapshot = console.core.SaveState()
+
+	// state.saves[index].snapshot = console.core.SaveState()
+	// state.saves[index].timestamp = getSaveTimeStamp()
 
 }
 
-func (console *game) loadSnapshot(state *localState, index int) {
-	console.core.LoadSnapshot(*state.saves[index].snapshot)
+func (console *game) loadSnapshot(save romSave) {
+	console.core.LoadSnapshot(*save.snapshot)
 
 }
 

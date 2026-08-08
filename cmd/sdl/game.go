@@ -27,12 +27,11 @@ type game struct {
 
 	TurboState map[Core.BUTTON]chan bool
 	TurboMux   sync.Mutex
+
+	gameLoaded bool
 }
 
 func (console *game) LoadRom(filepath string, mb *menuBar) error {
-	fmt.Println("loading rom")
-
-	mb.state.saves = make([]romSave, 10)
 
 	file, err := os.Open(filepath)
 
@@ -46,16 +45,21 @@ func (console *game) LoadRom(filepath string, mb *menuBar) error {
 		return fmt.Errorf("bad rom: %v", err)
 	}
 	console.core.Cpu.Reset()
-	fmt.Println("error:", err)
-
-	go console.beginSampleLoop()
-	go console.frameMonitor(console.core)
-	sdl.PauseAudioDevice(console.audioDevice, false)
-
 	console.romPath = filepath
+
+	if !console.gameLoaded {
+		go console.beginSampleLoop()
+		go console.frameMonitor(console.core)
+		sdl.PauseAudioDevice(console.audioDevice, false)
+	}
+
+	console.core.GetHash()
+	mb.state.NewSaves[console.core.GetHash()] = make([]romSave, 10)
 
 	mb.setFlag(gameRunning, true)
 	mb.setFlag(gamePlaying, true)
+
+	console.gameLoaded = true
 
 	return nil
 }
@@ -72,7 +76,10 @@ func (g *game) initConsole(screenChannel chan []uint32) {
 }
 
 func (g *game) SaveRam() {
-	fmt.Println("trying to save")
+	if g.core.GetMapper() == nil {
+		return
+	}
+
 	data := g.core.GetRam()
 	if data != nil {
 

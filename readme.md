@@ -45,7 +45,9 @@ The other 2 builds present in cmd/wasm are for internal testing and may or may n
 | Speed Adjustment | ✅ |  ✅ | 
 | Audio | ✅ |  ✅ | 
 | Cheats | ✅ |  ❌ | 
-| RAM memory |  ✅ |  ❌ | 
+| RAM memory |  ✅ |   | 
+| Rom Support | Custom |  Included | 
+
 
 ## Technical details 
 

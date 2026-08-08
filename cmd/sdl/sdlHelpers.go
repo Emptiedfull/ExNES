@@ -81,11 +81,19 @@ func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOp
 				if mb.menuFlags[gameRunning] {
 					console.romPath = rom.Location
 					console.reloadROM()
+					// mb.state.saves = make([]romSave, 10)
+					if _, ok := mb.state.NewSaves[console.core.GetHash()]; !ok {
+						mb.state.NewSaves[console.core.GetHash()] = make([]romSave, 10)
+					}
+					mb.setFlag(saveAvailable, false)
+					mb.updateSavesMenus()
+
 					return
 				}
 
 				console.LoadRom(rom.Location, mb)
 				mb.resetMenu()
+				mb.updateSavesMenus()
 			},
 		}
 	}
@@ -102,9 +110,11 @@ func getRecentItems(roms []recentRom, console *game, mb *menuBar) []expandableOp
 // }
 
 func (mb *menuBar) getSaveStateItems() []expandableOption {
-	res := make([]expandableOption, len(mb.state.saves))
+	// fmt.Println("getting save items")
+	res := make([]expandableOption, 10)
 
-	for i, save := range mb.state.saves {
+	for i, save := range mb.state.NewSaves[mb.console.core.GetHash()] {
+		// fmt.Println("the save loading up is:", save)
 		res[i].enabled = true
 		if !save.filled {
 			res[i].label = "empty"
@@ -116,9 +126,12 @@ func (mb *menuBar) getSaveStateItems() []expandableOption {
 		}
 
 		res[i].onClick = func() {
+			save := mb.state.NewSaves[mb.console.core.GetHash()][i]
 
-			mb.console.clickSnapshot(mb.state, i)
-			mb.state.saves[i].filled = true
+			mb.console.clickSnapshot(&save)
+			save.filled = true
+
+			mb.state.NewSaves[mb.console.core.GetHash()][i] = save
 			mb.updateSavesMenus()
 
 		}
@@ -130,7 +143,7 @@ func (mb *menuBar) getSaveStateItems() []expandableOption {
 func (mb *menuBar) getLoadItems() []expandableOption {
 	res := make([]expandableOption, 0)
 
-	for i, save := range mb.state.saves {
+	for i, save := range mb.state.NewSaves[mb.console.core.GetHash()] {
 
 		if save.filled {
 			option := expandableOption{}
@@ -138,7 +151,7 @@ func (mb *menuBar) getLoadItems() []expandableOption {
 			option.enabled = true
 			option.Icon = "./icons/save-check.svg"
 			option.onClick = func() {
-				mb.console.loadSnapshot(mb.state, i)
+				mb.console.loadSnapshot(mb.state.NewSaves[mb.console.core.GetHash()][i])
 			}
 			res = append(res, option)
 		}
@@ -339,6 +352,9 @@ type TextOptions struct {
 }
 
 func drawText(text string, r *sdl.Renderer, cache map[string]textCache, options TextOptions) {
+	if text == "" {
+		return
+	}
 	var itemEntry string
 	if options.clamped {
 		itemEntry = text + convertColToString(options.col) + strconv.Itoa(int(options.rect.W))

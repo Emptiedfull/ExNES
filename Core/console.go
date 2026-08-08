@@ -48,6 +48,10 @@ func Init() {
 
 }
 
+func (c *Console) GetMapper() Mapper {
+	return c.mapper
+}
+
 func (c *Console) Pause() {
 	c.pausedMu.Lock()
 	defer c.pausedMu.Unlock()

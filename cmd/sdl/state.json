@@ -25,9 +25,47 @@
 "location": "/Users/test/Projects/ExNES/games/Mapper4/mario3.nes"
 }
 ],
+"NewSaves": {
+"70860fca": [
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{}
+],
+"d445f698": [
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{}
+],
+"eaf7ed72": [
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{}
+]
+},
 "settings": {
 "show_fps": true,
-"current_speed": "200%",
+"current_speed": "75%",
 "muted": false,
 "current_volume": "100%",
 "controlBinds": {
@@ -41,9 +79,8 @@
 "Start": "Return"
 },
 "turboBinds": {
-"Joypad-A": "Y",
-"Joypad-B": "W",
-"Start": "Escape"
+"Joypad-A": "Q",
+"Joypad-B": "W"
 }
 }
 }

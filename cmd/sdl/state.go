@@ -12,8 +12,9 @@ import (
 type localState struct {
 	RecentFiles []recentRom `json:"recent"`
 	running     bool
-	saves       []romSave
-	Settings    state_setting `json:"settings"`
+	// saves       []romSave
+	NewSaves map[string][]romSave
+	Settings state_setting `json:"settings"`
 }
 
 type state_setting struct {
@@ -37,8 +38,9 @@ func newState() *localState {
 	return &localState{
 		RecentFiles: make([]recentRom, 0),
 		running:     false,
-		saves:       make([]romSave, 10),
-		Settings:    defaultSettings(),
+		// saves:       make([]romSave, 10),
+		NewSaves: make(map[string][]romSave),
+		Settings: defaultSettings(),
 	}
 }
 
@@ -76,12 +78,14 @@ func loadState() *localState {
 
 	}
 
-	s.saves = make([]romSave, 10)
+	fmt.Println(s.Settings.Current_speed)
 
 	return s
 }
 
 func (state *localState) saveState() {
+	fmt.Println("saving the state to disk")
+	fmt.Println(state.Settings.Current_speed)
 
 	data, err := json.MarshalIndent(state, "", "")
 	if err != nil {
