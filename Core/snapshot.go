@@ -50,9 +50,11 @@ type CpuSnapshot struct {
 	Mem Cpu_Mem
 	t   temp
 
-	nmiPending   bool
-	executingNmi bool
-	nmiStep      int
+	intKind interuptKind
+	intStep int
+
+	NmiLine bool
+	IrqLine bool
 
 	currentOp   uint8
 	currentstep int
@@ -190,6 +192,7 @@ func (c Cpu) TakeCpuSnapshot(S *CpuSnapshot) {
 	S.S = c.S
 	S.P = c.P
 	S.X = c.X
+	S.A = c.A
 	S.Y = c.Y
 
 	S.Mem = Cpu_Mem{
@@ -198,9 +201,11 @@ func (c Cpu) TakeCpuSnapshot(S *CpuSnapshot) {
 
 	S.t = c.console.Cpu.temp
 
-	S.nmiPending = c.nmiPending
-	S.executingNmi = c.executingNmi
-	S.nmiStep = c.nmiStep
+	S.intKind = c.intPresent
+	S.intStep = c.intStep
+
+	S.NmiLine = c.NmiLine
+	S.IrqLine = c.irqLine
 
 	S.currentOp = c.currentOp
 	S.currentstep = c.currentstep
@@ -260,9 +265,11 @@ func (c *Cpu) LoadCpuSnapshot(snap CpuSnapshot) {
 
 	c.Mem.loadInternal(snap.Mem.internal)
 
-	c.nmiPending = snap.nmiPending
-	c.executingNmi = snap.executingNmi
-	c.nmiStep = snap.nmiStep
+	c.intPresent = snap.intKind
+	c.intStep = snap.intStep
+
+	c.NmiLine = snap.NmiLine
+	c.irqLine = snap.IrqLine
 
 	c.currentOp = snap.currentOp
 	c.currentstep = snap.currentstep

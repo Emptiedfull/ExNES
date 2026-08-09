@@ -185,7 +185,6 @@ func (main *cheatMain) renderInput(r *sdl.Renderer) {
 
 	main.drawRoundedRect(r, &main.input.inputRect, colFieldBG, true)
 	main.drawRoundedRect(r, &main.input.inputRect, borderCol, false)
-	// X := main.input.inputRect.X + 10
 
 	if main.input.TextUpdated == "" && !main.input.Focused {
 		drawText(placeHolder, r, main.textcache, TextOptions{
@@ -374,12 +373,15 @@ func (main *cheatMain) handleScroll(Y int32) {
 }
 
 func (main *cheatMain) addCheat() {
-	main.engine.AddCode(main.input.TextUpdated, "CUSTOM")
+	err := main.engine.AddCode(main.input.TextUpdated, "CUSTOM")
+	if err != nil {
+		fmt.Println("ERROR: Bad cheat, please input valid code")
+	}
 
 }
 
 func (main *cheatMain) handleMouseDown(x, y int32) {
-	fmt.Println("down")
+
 	if pointInRect(main.ThumbRect, x, y) {
 		main.DraggingThumb = true
 		main.dragStartOffset = main.scrollOffsetTarget

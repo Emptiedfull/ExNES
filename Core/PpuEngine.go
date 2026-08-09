@@ -168,8 +168,8 @@ func (p *ppu) step() {
 	if p.Scanline == 241 && p.Dot == 1 {
 		p.Mem.Vblank_flag = true
 		if p.Mem.register.NmiEnable {
-			p.console.Cpu.nmiPending = true
-			// fmt.Println("requesting nmi", p.console.Cpu.TotalCycles)
+			p.console.Cpu.NmiLine = true
+
 		}
 	}
 

@@ -223,9 +223,6 @@ func handleInputs(console *game, e *sdl.KeyboardEvent, inp Inputs, turboInp Inpu
 			return
 		}
 
-		console.TurboMux.Lock()
-		defer console.TurboMux.Unlock()
-
 		if pressed {
 			go console.beginTurbo(action)
 		} else {
@@ -346,6 +343,9 @@ func intializeTurboControls() Inputs {
 
 func (console *game) beginTurbo(button Core.BUTTON) {
 
+	console.TurboMux.Lock()
+	defer console.TurboMux.Unlock()
+
 	if console.TurboState[button] != nil {
 		return
 	}
@@ -370,6 +370,9 @@ func (console *game) beginTurbo(button Core.BUTTON) {
 }
 
 func (console *game) stopTurbo(button Core.BUTTON) {
+
+	console.TurboMux.Lock()
+	defer console.TurboMux.Unlock()
 
 	if console.TurboState[button] == nil {
 		return

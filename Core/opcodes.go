@@ -17,35 +17,9 @@ var FetchTable = []opCode{
 		AddressingMode: Implied,
 		Size:           1,
 		Execute: func(c *Cpu, step int) bool {
-			switch step {
-			case 0:
-				c.fetchone()
-				return false
-			case 1:
-				c.pushStack(uint8(c.PC >> 8))
-				return false
-			case 2:
-				c.pushStack(uint8(c.PC & 0x0FF))
-				return false
-			case 3:
-				c.setFlag(Break)
-
-				c.pushStack(c.P)
-				c.updateFlag(Break, false)
-				c.setFlag(Interrupt)
-				return false
-			case 4:
-				c.temp.low = c.Mem.Read(0xFFFE)
-
-				return false
-			case 5:
-				c.temp.high = c.Mem.Read(0xFFFF)
-				c.PC = builduint16(c.low, c.high)
-				return true
-			default:
-				fmt.Println("somethign wrong at 0x00")
-				return true
-			}
+			c.intPresent = intBRK
+			c.intStep = 2
+			return true
 		},
 	},
 

@@ -13,6 +13,15 @@ const (
 	Negative        = 1 << 7
 )
 
+type interuptKind int
+
+const (
+	intNone interuptKind = iota
+	intNMI
+	intIRQ
+	intBRK
+)
+
 type Cpu struct {
 	console *Console
 
@@ -26,11 +35,11 @@ type Cpu struct {
 	Mem *bus
 	temp
 
-	nmiPending   bool
-	executingNmi bool
-	nmiStep      int
-	nmiS         int
+	intPresent interuptKind
+	intStep    int
+	intVector  uint16
 
+	NmiLine bool
 	irqLine bool
 
 	currentOp   uint8
@@ -48,70 +57,50 @@ type CycleStep struct {
 	Mode string
 }
 
-func (c *Cpu) triggerIRQ() {
-	if c.getFlag(Interrupt) {
-		return
-	}
+// func (c *Cpu) executeNmiCycle() int {
 
-	c.pushStack(uint8(c.PC >> 8))
-	c.pushStack(uint8(c.PC & 0xFF))
-	c.pushStack(c.P &^ Break)
+// 	switch c.nmiStep {
+// 	case 1:
 
-	c.setFlag(Interrupt)
+// 		return 2
+// 	case 2:
 
-	l := c.Mem.Read(0xFFFE)
-	h := c.Mem.Read(0xFFFF)
+// 		return 3
+// 	case 3:
+// 		c.Mem.Write(0x0100+uint16(c.S), uint8(c.PC>>8))
+// 		c.S--
+// 		return 4
+// 	case 4:
+// 		c.Mem.Write(0x0100+uint16(c.S), uint8(c.PC&0xFF))
+// 		c.S--
+// 		return 5
+// 	case 5:
+// 		Status := c.P
+// 		Status = AssignBit(Status, 4, false)
+// 		Status = AssignBit(Status, 5, true)
 
-	c.PC = builduint16(l, h)
+// 		c.Mem.Write(0x0100+uint16(c.S), Status)
+// 		c.S--
 
-	c.Stall += 7
+// 		c.setFlag(Interrupt)
+// 		return 6
+// 	case 6:
+// 		c.low = c.Mem.Read(0xFFFA)
+// 		return 7
+// 	case 7:
+// 		c.high = c.Mem.Read(0xFFFB)
 
-}
+// 		c.PC = builduint16(c.low, c.high)
 
-func (c *Cpu) executeNmiCycle() int {
+// 		c.executingNmi = false
 
-	switch c.nmiStep {
-	case 1:
+// 		return 1
+// 	default:
+// 		return 1
 
-		return 2
-	case 2:
+// 	}
 
-		return 3
-	case 3:
-		c.Mem.Write(0x0100+uint16(c.S), uint8(c.PC>>8))
-		c.S--
-		return 4
-	case 4:
-		c.Mem.Write(0x0100+uint16(c.S), uint8(c.PC&0xFF))
-		c.S--
-		return 5
-	case 5:
-		Status := c.P
-		Status = AssignBit(Status, 4, false)
-		Status = AssignBit(Status, 5, true)
-
-		c.Mem.Write(0x0100+uint16(c.S), Status)
-		c.S--
-
-		c.setFlag(Interrupt)
-		return 6
-	case 6:
-		c.low = c.Mem.Read(0xFFFA)
-		return 7
-	case 7:
-		c.high = c.Mem.Read(0xFFFB)
-
-		c.PC = builduint16(c.low, c.high)
-
-		c.executingNmi = false
-
-		return 1
-	default:
-		return 1
-
-	}
-
-}
+// }
 
 func (c *Cpu) ResetTemp() {
 	c.temp = temp{}
@@ -127,21 +116,26 @@ func (c *Cpu) Tick() {
 
 	c.TotalCycles++
 
-	if c.currentstep == 0 && c.nmiPending {
-		c.executingNmi = true
-		c.nmiPending = false
-		c.nmiS++
-	}
-
-	if c.currentstep == 0 && c.irqLine && !c.getFlag(Interrupt) {
-		c.triggerIRQ()
+	if c.intPresent != intNone {
+		c.stepInt()
 		return
 	}
 
-	if c.executingNmi {
+	if c.currentstep == 0 {
+		if c.NmiLine {
+			c.NmiLine = false
+			c.intStep = 1
+			c.intPresent = intNMI
+			c.stepInt()
+			return
+		}
 
-		c.nmiStep = c.executeNmiCycle()
-		return
+		if c.irqLine && !c.getFlag(Interrupt) {
+			c.intStep = 1
+			c.intPresent = intIRQ
+			c.stepInt()
+			return
+		}
 	}
 
 	if c.currentstep == 0 {
@@ -162,6 +156,44 @@ func (c *Cpu) Tick() {
 		c.currentstep++
 	}
 
+}
+
+func (c *Cpu) stepInt() {
+	switch c.intStep {
+	case 1:
+		c.Mem.Read(c.PC)
+	case 2:
+		c.Mem.Read(c.PC)
+		if c.intPresent == intBRK {
+			c.PC++
+		}
+	case 3:
+		c.pushStack((uint8(c.PC >> 8)))
+	case 4:
+		c.pushStack(uint8(c.PC & 0xFF))
+	case 5:
+		if c.intPresent != intNMI && c.NmiLine {
+			c.intPresent = intNMI
+			c.NmiLine = false
+		}
+
+		c.intVector = 0xFFFE
+		if c.intPresent == intNMI {
+			c.intVector = 0xFFFA
+		}
+
+		c.low = c.Mem.Read(c.intVector)
+	case 6:
+		c.high = c.Mem.Read(c.intVector + 1)
+		c.PC = builduint16(c.low, c.high)
+
+		c.intPresent = intNone
+		c.intStep = 0
+
+		return
+	}
+
+	c.intStep++
 }
 
 type temp struct {

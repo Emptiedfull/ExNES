@@ -1,10 +1,5 @@
 package Core
 
-import (
-	"math"
-	"sync"
-)
-
 type APU struct {
 	Console *Console
 
@@ -29,17 +24,17 @@ type APU struct {
 
 	SampleBuffer []float32
 
-	ExposedBuf *exposedBuffer
+	// ExposedBuf *exposedBuffer
 
 	//danger fields
 
-	drivingBuffer *exposedBuffer
+	// drivingBuffer *exposedBuffer
 }
 
-type exposedBuffer struct {
-	mu   sync.Mutex
-	data []uint8
-}
+// type exposedBuffer struct {
+// 	mu   sync.Mutex
+// 	data []uint8
+// }
 
 func (a *APU) HasSample() bool {
 	return len(a.SampleBuffer) > 0
@@ -51,31 +46,31 @@ func (a *APU) PopSample() float32 {
 	return s
 }
 
-func (b *exposedBuffer) Read(p []uint8) (int, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
+// func (b *exposedBuffer) Read(p []uint8) (int, error) {
+// 	b.mu.Lock()
+// 	defer b.mu.Unlock()
 
-	if len(b.data) == 0 {
-		for i := range p {
-			p[i] = 0
-		}
-		return len(p), nil
-	}
-	n := copy(p, b.data)
+// 	if len(b.data) == 0 {
+// 		for i := range p {
+// 			p[i] = 0
+// 		}
+// 		return len(p), nil
+// 	}
+// 	n := copy(p, b.data)
 
-	b.data = b.data[n:]
-	return n, nil
-}
+// 	b.data = b.data[n:]
+// 	return n, nil
+// }
 
-func (b *exposedBuffer) pushBuffer(sample []float32) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
+// func (b *exposedBuffer) pushBuffer(sample []float32) {
+// 	b.mu.Lock()
+// 	defer b.mu.Unlock()
 
-	for _, s := range sample {
-		bits := math.Float32bits(s)
-		b.data = append(b.data, uint8(bits), uint8(bits>>8), uint8(bits>>16), uint8(bits>>24))
-	}
-}
+// 	for _, s := range sample {
+// 		bits := math.Float32bits(s)
+// 		b.data = append(b.data, uint8(bits), uint8(bits>>8), uint8(bits>>16), uint8(bits>>24))
+// 	}
+// }
 
 func NewApu(sampleRate float64, console *Console) *APU {
 	return &APU{
@@ -88,9 +83,9 @@ func NewApu(sampleRate float64, console *Console) *APU {
 		SampleRate:      sampleRate,
 		CyclesPerSample: 1_789_773.0 / sampleRate,
 		SampleBuffer:    make([]float32, 0, 4096),
-		ExposedBuf: &exposedBuffer{
-			data: make([]uint8, 0),
-		},
+		// ExposedBuf: &exposedBuffer{
+		// 	data: make([]uint8, 0),
+		// },
 	}
 
 }
