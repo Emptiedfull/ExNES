@@ -23,6 +23,10 @@
 {
 "name": "mario3.nes",
 "location": "/Users/test/Projects/ExNES/games/Mapper4/mario3.nes"
+},
+{
+"name": ".",
+"location": ""
 }
 ],
 "NewSaves": {
@@ -61,11 +65,23 @@
 {},
 {},
 {}
+],
+"f6035030": [
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{},
+{}
 ]
 },
 "settings": {
 "show_fps": true,
-"current_speed": "75%",
+"current_speed": "100%",
 "muted": false,
 "current_volume": "100%",
 "controlBinds": {

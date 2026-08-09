@@ -261,6 +261,7 @@ func (c *Cpu) LoadCpuSnapshot(snap CpuSnapshot) {
 	c.S = snap.S
 	c.P = snap.P
 	c.X = snap.X
+	c.A = snap.A
 	c.Y = snap.Y
 
 	c.Mem.loadInternal(snap.Mem.internal)

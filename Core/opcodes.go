@@ -19,6 +19,7 @@ var FetchTable = []opCode{
 		Execute: func(c *Cpu, step int) bool {
 			c.intPresent = intBRK
 			c.intStep = 2
+			c.stepInt()
 			return true
 		},
 	},

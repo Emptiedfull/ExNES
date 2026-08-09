@@ -172,6 +172,17 @@ func (c *Cpu) stepInt() {
 	case 4:
 		c.pushStack(uint8(c.PC & 0xFF))
 	case 5:
+		status := c.P | Unused
+		if c.intPresent == intBRK {
+			status |= Break
+		} else {
+			status &^= Break
+		}
+
+		c.pushStack(status)
+		c.setFlag(Interrupt)
+
+	case 6:
 		if c.intPresent != intNMI && c.NmiLine {
 			c.intPresent = intNMI
 			c.NmiLine = false
@@ -183,7 +194,7 @@ func (c *Cpu) stepInt() {
 		}
 
 		c.low = c.Mem.Read(c.intVector)
-	case 6:
+	case 7:
 		c.high = c.Mem.Read(c.intVector + 1)
 		c.PC = builduint16(c.low, c.high)
 

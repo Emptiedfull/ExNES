@@ -136,8 +136,12 @@ func (c *Console) InitRom(data io.Reader) error {
 
 	c.assignMapper(mapper, prgData, chrData, uint8(mirroring), hasBattery)
 
+	if c.mapper == nil {
+		return fmt.Errorf("Mapper not supported")
+	}
+
 	if c.LoadRam != nil {
-		fmt.Println("has battery:", hasBattery)
+
 		if hasBattery {
 			c.LoadRam(c.GetHash(), c.mapper.GetPRGRAM())
 		}
@@ -171,6 +175,7 @@ func InitializeConsole() *Console {
 		OpenBusVal: 0,
 		PalleteEngine: &PalleteEngine{
 			ListPal: make([]PalleteEntry, 0),
+			Loaded:  0,
 		},
 	}
 
@@ -225,31 +230,6 @@ func (c *Console) RunDisplayUpdates() {
 	}
 }
 
-// func (c *Console) tick() {
-// 	// c.RunDisplayUpdates()
-// 	if c.Cpu.Stall > 0 {
-// 		c.Cpu.Stall--
-// 		c.Cpu.TotalCycles++
-// 	} else {
-// 		c.Cpu.Tick()
-// 	}
-// 	for range 3 {
-// 		c.Ppu.step()
-// 	}
-
-// 	c.Apu.tick()
-
-// }
-
-// func (c *Console) RunFrame() {
-
-// 	targetFrame := c.Ppu.Frame + 1
-// 	for targetFrame != c.Ppu.Frame {
-// 		c.tick()
-// 	}
-
-// }
-
 func (c *Console) RunFrame() {
 	target := c.Ppu.Frame + 1
 	for target != c.Ppu.Frame {
@@ -269,43 +249,3 @@ func Quickstart(filepath string) *Console {
 
 	return c
 }
-
-// var nsPerFrame = int64(float64(time.Second.Nanoseconds()) / 60.0988)
-
-// func (c *Console) StartConsoleCycle() {
-
-// 	targetTime := time.Now()
-// 	defer fmt.Println("console stopped for some reason")
-
-// 	var framecount = 0
-// 	start := time.Now()
-
-// 	for {
-
-// 		if c.Paused {
-// 			time.Sleep(100 * time.Millisecond)
-// 			targetTime = time.Now()
-// 			continue
-// 		}
-
-// 		now := time.Now()
-// 		for now.After(targetTime) {
-// 			framecount++
-
-// 			c.RunFrame()
-// 			c.RunDisplayUpdates()
-
-// 			targetTime = targetTime.Add(time.Duration(nsPerFrame))
-// 		}
-
-// 		timeLeft := time.Until(targetTime)
-// 		if timeLeft > 0 {
-// 			time.Sleep(timeLeft)
-// 		}
-
-// 		if framecount == 60 {
-// 			fmt.Println(time.Since(start))
-// 		}
-// 	}
-
-// }

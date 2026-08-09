@@ -156,6 +156,14 @@ func (A *APU) writeReg(addr uint16, val uint8) {
 		A.Noise.WriteEnvelope(val)
 	case 0x400D:
 		// YEH FUCK U BRO DONT ACCESS THIS
+	case 4010:
+		A.Dmc.WriteFlags(val)
+	case 4011:
+		A.Dmc.WriteDL(val)
+	case 4012:
+		A.Dmc.WriteSampleAddr(val)
+	case 4013:
+		A.Dmc.WriteSampleLen(val)
 	case 0x400E:
 		A.Noise.WriteMode(val)
 	case 0x400F:

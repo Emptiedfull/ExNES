@@ -65,7 +65,7 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			BankSelect: 0,
 		}
 	case 4:
-		fmt.Println("loading mmc3")
+
 		m = &MMC3{
 			PRGROM:     prgData,
 			CHRROM:     chrData,
@@ -83,7 +83,7 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			Mirroring:  int(mirroring),
 		}
 	default:
-		fmt.Println("unknown:", id)
+		fmt.Println("unknown Mapper:", id)
 	}
 
 	c.mapper = m

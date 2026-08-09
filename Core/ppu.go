@@ -131,7 +131,7 @@ func (p *ppu) MirrorNameTable(addr uint16) uint16 {
 	table := addr / 0x400
 	offset := addr % 0x400
 
-	m := p.mirroring
+	m := p.console.mapper.getMirroring()
 
 	case0 := offset & -uint16(BoolToUint16(m == 0))
 	case1 := (0x400 + offset) & -uint16(BoolToUint16(m == 1))
@@ -184,7 +184,7 @@ func (p *ppu) Write(addr uint16, val uint8) {
 			palleteAddr -= 16
 		}
 
-		p.Mem.Pallete[palleteAddr] = val
+		p.Mem.Pallete[palleteAddr] = val & 0x3F
 	}
 }
 
