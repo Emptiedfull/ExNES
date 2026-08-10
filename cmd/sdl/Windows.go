@@ -48,10 +48,7 @@ func openCheatWindow(console *game) (Window, error) {
 		return nil, err
 	}
 
-	font, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(14*2))
-	if err != nil {
-		log.Fatal("something bad here:", err)
-	}
+	font := loadFont(14 * scale)
 
 	CheatWindow := cheatWindow{
 		id:       id,
@@ -130,15 +127,9 @@ type controlWindow struct {
 }
 
 func openControlWindow(state *localState) (Window, error) {
-	font, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(18*2))
-	if err != nil {
-		log.Fatal("something bad here:", err)
-	}
 
-	smallfont, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(14*2))
-	if err != nil {
-		log.Fatal("something bad here:", err)
-	}
+	font := loadFont(18 * scale)
+	smallfont := loadFont(14 * scale)
 
 	font.SetHinting(ttf.HINTING_LIGHT)
 	win, err := sdl.CreateWindow("controls", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 750, 450, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE|sdl.RENDERER_PRESENTVSYNC)

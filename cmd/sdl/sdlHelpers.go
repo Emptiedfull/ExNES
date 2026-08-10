@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 	"regexp"
@@ -13,6 +14,26 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
+
+//go:embed DejaVuSans.ttf
+var fontDat []byte
+
+func loadFont(size int32) *ttf.Font {
+
+	rw, err := sdl.RWFromMem(fontDat)
+	if err != nil {
+		log.Fatal("FONT NOT AVAILABLE")
+		return nil
+	}
+
+	font, err := ttf.OpenFontRW(rw, 1, int(size))
+	if err != nil {
+		log.Fatal("INVALID FONT")
+		return nil
+	}
+
+	return font
+}
 
 func drawArrowIcon(r *sdl.Renderer, rect sdl.Rect, col sdl.Color) {
 

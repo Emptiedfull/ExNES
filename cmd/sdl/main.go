@@ -52,13 +52,6 @@ func main() {
 
 	g.initConsole(displayChannel)
 
-	// go func() {
-	// 	time.Sleep(3 * time.Second)
-	// 	g.core.CheatEngine.AddCode("ZZZLTT", "")
-	// 	g.core.CheatEngine.Enabled = true
-	// 	fmt.Println("cheat applied")
-	// }()
-
 	state := loadState()
 
 	g.changeVolume(state.Settings.Current_volume)
@@ -69,10 +62,7 @@ func main() {
 		log.Fatal("fuck init failed:", err)
 	}
 
-	font, err := ttf.OpenFont("/System/Library/Fonts/SFNS.ttf", int(14*2))
-	if err != nil {
-		log.Fatal("something bad here:", err)
-	}
+	font := loadFont(14 * scale)
 
 	font.SetHinting(ttf.HINTING_LIGHT)
 
