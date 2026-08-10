@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	_ "embed"
 	"fmt"
 	"log"
@@ -17,6 +18,9 @@ import (
 
 //go:embed DejaVuSans.ttf
 var fontDat []byte
+
+//go:embed icons
+var icons embed.FS
 
 func loadFont(size int32) *ttf.Font {
 
@@ -584,7 +588,14 @@ func getIcon(r *sdl.Renderer, path string, col sdl.Color, cache map[string]*sdl.
 		return texture
 	}
 
-	texture, err := img.LoadTexture(r, path)
+	data, err := icons.ReadFile(path)
+	if err != nil {
+		log.Println("bad icon data")
+		return nil
+	}
+	rw, _ := sdl.RWFromMem(data)
+	texture, err = img.LoadTextureRW(r, rw, true)
+
 	texture.SetColorMod(col.R, col.G, col.B)
 	if err != nil {
 		log.Fatal(err)
