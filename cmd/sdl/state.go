@@ -5,6 +5,7 @@ import (
 	"exnes/Core"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -65,7 +66,7 @@ type recentRom struct {
 func loadState() *localState {
 	s := newState()
 
-	data, err := os.ReadFile("state.json")
+	data, err := os.ReadFile(filepath.Join(targetDir(), "state.json"))
 	if err != nil {
 		fmt.Println("error loading state:", err)
 		return s
@@ -78,14 +79,10 @@ func loadState() *localState {
 
 	}
 
-	fmt.Println(s.Settings.Current_speed)
-
 	return s
 }
 
 func (state *localState) saveState() {
-	fmt.Println("saving the state to disk")
-	fmt.Println(state.Settings.Current_speed)
 
 	data, err := json.MarshalIndent(state, "", "")
 	if err != nil {
@@ -93,10 +90,11 @@ func (state *localState) saveState() {
 		return
 	}
 
-	os.WriteFile("state.json", data, 0644)
+	os.WriteFile(filepath.Join(targetDir(), "state.json"), data, 0644)
 }
 
 func (state *localState) addRecentRom(new recentRom) {
+	fmt.Println("adding a recent rom")
 	for _, rom := range state.RecentFiles {
 		if rom.Location == new.Location {
 			return
@@ -139,4 +137,19 @@ func (inp *Inputs) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+func targetDir() string {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		fmt.Println("error loading config dir,", err)
+		return "./"
+	}
+
+	_, err = os.Stat(filepath.Join(dir, "exnes"))
+	if err != nil {
+
+		os.Mkdir(filepath.Join(dir, "exnes"), 0755)
+	}
+	return filepath.Join(dir, "exnes")
 }

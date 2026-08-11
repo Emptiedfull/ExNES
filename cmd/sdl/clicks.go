@@ -24,6 +24,11 @@ func openRom(console *game, state *localState, mb *menuBar) {
 			Name:     filepath.Base(filename),
 			Location: filename,
 		})
+
+		fmt.Println(getRecentItems(state.RecentFiles, mb.console, mb))
+
+		mb.Items[0].options[2].ExpandableItems = getRecentItems(state.RecentFiles, mb.console, mb)
+		mb.positionLayout()
 	}
 
 }
@@ -32,9 +37,6 @@ func (console *game) clickSnapshot(save *romSave) {
 
 	save.timestamp = getSaveTimeStamp()
 	save.snapshot = console.core.SaveState()
-
-	// state.saves[index].snapshot = console.core.SaveState()
-	// state.saves[index].timestamp = getSaveTimeStamp()
 
 }
 

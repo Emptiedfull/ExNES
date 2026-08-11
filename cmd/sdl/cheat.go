@@ -222,7 +222,7 @@ func (main *cheatMain) renderInput(r *sdl.Renderer) {
 	main.drawRoundedRect(r, &main.input.confirmBtn, btnCol, true)
 	main.drawRoundedRect(r, &main.input.confirmBtn, borderCol, false)
 
-	drawIcon(r, "./icons/plus.svg", iconCol, main.iconCache, &main.input.checkRect)
+	drawIcon(r, "icons/plus.svg", iconCol, main.iconCache, &main.input.checkRect)
 
 }
 

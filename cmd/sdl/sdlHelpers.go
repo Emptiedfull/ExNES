@@ -143,11 +143,11 @@ func (mb *menuBar) getSaveStateItems() []expandableOption {
 		res[i].enabled = true
 		if !save.filled {
 			res[i].label = "empty"
-			res[i].Icon = "./icons/save-plus.svg"
+			res[i].Icon = "icons/save-plus.svg"
 
 		} else {
 			res[i].label = save.timestamp
-			res[i].Icon = "./icons/save-check.svg"
+			res[i].Icon = "icons/save-check.svg"
 		}
 
 		res[i].onClick = func() {
@@ -174,7 +174,7 @@ func (mb *menuBar) getLoadItems() []expandableOption {
 			option := expandableOption{}
 			option.label = save.timestamp
 			option.enabled = true
-			option.Icon = "./icons/save-check.svg"
+			option.Icon = "icons/save-check.svg"
 			option.onClick = func() {
 				mb.console.loadSnapshot(mb.state.NewSaves[mb.console.core.GetHash()][i])
 			}
@@ -208,7 +208,7 @@ func (mb *menuBar) updatePalleteMenu() {
 		}
 
 		if i == mb.console.core.PalleteEngine.Loaded {
-			option.Icon = "./icons/check.svg"
+			option.Icon = "icons/check.svg"
 		}
 		list = append(list, option)
 
@@ -230,7 +230,7 @@ func (mb *menuBar) updateSettingsMenu() {
 	for i := range speedOptions {
 
 		if speedOptions[i].label == state.Current_speed {
-			speedOptions[i].Icon = "./icons/check.svg"
+			speedOptions[i].Icon = "icons/check.svg"
 
 			label := speedOptions[i].label
 			speedPerc, _ := strconv.Atoi(label[0 : len(label)-1])
@@ -249,7 +249,7 @@ func (mb *menuBar) updateSettingsMenu() {
 	}
 
 	if state.Show_fps {
-		fpsOption.Icon = "./icons/check.svg"
+		fpsOption.Icon = "icons/check.svg"
 	} else {
 		fpsOption.Icon = ""
 	}
@@ -264,7 +264,7 @@ func (mb *menuBar) updateSoundMenu() {
 
 	if state.Muted {
 		mb.console.changeVolume("0%")
-		muteOption.Icon = "./icons/check.svg"
+		muteOption.Icon = "icons/check.svg"
 		muteOption.onClick = func() {
 			mb.state.Settings.Muted = false
 			mb.updateSoundMenu()
@@ -288,7 +288,7 @@ func (mb *menuBar) updateSoundMenu() {
 		}
 
 		if label == state.Current_volume {
-			volumeOptions[i].Icon = "./icons/check.svg"
+			volumeOptions[i].Icon = "icons/check.svg"
 		} else {
 			volumeOptions[i].Icon = ""
 		}

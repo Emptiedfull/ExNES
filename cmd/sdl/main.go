@@ -41,6 +41,8 @@ var windows = make(Windows)
 
 func main() {
 
+	targetDir()
+
 	displayChannel := make(chan []uint32, 100)
 	pauseChannel := make(chan bool)
 

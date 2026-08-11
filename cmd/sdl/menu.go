@@ -135,7 +135,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					label:   "Load Rom",
 					onClick: func() { openRom(console, state, mb) },
 					enabled: true,
-					Icon:    "./icons/file-down.svg",
+					Icon:    "icons/file-down.svg",
 				},
 				{
 					label:           "Recent files",
@@ -149,14 +149,14 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				{
 					label:           "Save state",
 					Expandable:      true,
-					Icon:            "./icons/save-pen.svg",
+					Icon:            "icons/save-pen.svg",
 					ExpandableItems: mb.getSaveStateItems(),
 					enabled:         false,
 					affectedFlag:    gameRunning,
 				},
 				{
 					label:           "Load state",
-					Icon:            "./icons/save.svg",
+					Icon:            "icons/save.svg",
 					Expandable:      true,
 					ExpandableItems: make([]expandableOption, 0),
 					enabled:         false,
@@ -168,7 +168,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				{
 					label:   "Exit",
 					enabled: true,
-					Icon:    "./icons/x.svg",
+					Icon:    "icons/x.svg",
 					onClick: func() { state.running = false },
 				}},
 		},
@@ -177,7 +177,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			options: []ItemOption{
 				{
 					enabled:      false,
-					Icon:         "./icons/flag.svg",
+					Icon:         "icons/flag.svg",
 					label:        "Cheats",
 					affectedFlag: gameRunning,
 					onClick: func() {
@@ -192,7 +192,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				{
 					enabled:      false,
 					affectedFlag: gameRunning,
-					Icon:         "./icons/reset.svg",
+					Icon:         "icons/reset.svg",
 					label:        "Reset",
 					onClick: func() {
 						console.core.Cpu.Reset()
@@ -201,7 +201,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				{
 					enabled:      false,
 					affectedFlag: gameRunning,
-					Icon:         "./icons/refresh.svg",
+					Icon:         "icons/refresh.svg",
 					label:        "Power cycle",
 					onClick: func() {
 						console.core.PowerCycle()
@@ -210,7 +210,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				{
 					label:        "Reload Rom",
 					affectedFlag: gameRunning,
-					Icon:         "./icons/download.svg",
+					Icon:         "icons/download.svg",
 					enabled:      false,
 					onClick: func() {
 						console.reloadROM()
@@ -223,7 +223,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					enabled:      false,
 					affectedFlag: gamePlaying,
 					label:        "Pause",
-					Icon:         "./icons/pause.svg",
+					Icon:         "icons/pause.svg",
 					onClick: func() {
 						go console.PauseGame()
 						mb.setFlag(gamePlaying, false)
@@ -234,7 +234,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					enabled:      false,
 					affectedFlag: gamePaused,
 					label:        "Play",
-					Icon:         "./icons/play.svg",
+					Icon:         "icons/play.svg",
 					onClick: func() {
 						go console.UnPauseGame()
 						mb.setFlag(gamePlaying, true)
@@ -248,7 +248,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 			options: []ItemOption{
 				{
 					label:        "Speed",
-					Icon:         "./icons/gauge.svg",
+					Icon:         "icons/gauge.svg",
 					enabled:      false,
 					affectedFlag: gameRunning,
 					Expandable:   true,
@@ -284,7 +284,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 					label: "Sound",
 
 					affectedFlag: gameRunning,
-					Icon:         "./icons/headset.svg",
+					Icon:         "icons/headset.svg",
 
 					Expandable: true,
 					ExpandableItems: []expandableOption{
@@ -314,7 +314,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				{
 					label:   "Inputs",
 					enabled: true,
-					Icon:    "./icons/gamepad.svg",
+					Icon:    "icons/gamepad.svg",
 					onClick: func() {
 						for _, window := range windows {
 							if _, ok := window.(*controlWindow); ok {
@@ -331,7 +331,7 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				}, {
 					label:           "Palettes",
 					enabled:         true,
-					Icon:            "./icons/palette.svg",
+					Icon:            "icons/palette.svg",
 					Expandable:      true,
 					ExpandableItems: make([]expandableOption, 0),
 				},
