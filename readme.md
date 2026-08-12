@@ -8,9 +8,13 @@ Exnes is a multi-release NES emulation with a focus on balancing cross system pe
 
 The web build is currently hosted [here]()
 
-### Native builds
+## Native builds
 
 Executables for Windows, Mac and Linux are available on the releases page. 
+
+### Linux 
+
+Release for linux happens through AppImages, the source code for these are present inside build/AppImage.sh, this is there to ensure smooth experience while setting up on linux without needing to manually resolve dependcies or using a package manager. Stable AppImages can found in the releases page
 
 ### Running it locally 
 
