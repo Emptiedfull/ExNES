@@ -250,7 +250,7 @@ func (main *controlMain) layout(windowH, windowW int32) {
 	Joypad.rect = sdl.Rect{
 		X: windowW - int32(float32(windowW)/3.5) - 20,
 		W: int32(float32(windowW) / 3.5),
-		H: (itemH+padding)*2 + 20,
+		H: (itemH+padding)*scale + 20,
 		Y: (windowH - ((itemH+padding)*2 + 60)) / 2,
 	}
 
@@ -324,8 +324,8 @@ func (main *controlMain) layout(windowH, windowW int32) {
 	special.rect = sdl.Rect{
 		X: dpad.rect.X + dpad.rect.W + 35,
 		W: int32(float32(windowW) / 3.5),
-		H: (itemH+padding)*2 + 20,
-		Y: windowH - ((itemH+padding)*2 + 20) - 20,
+		H: (itemH+padding)*scale + 20,
+		Y: windowH - ((itemH+padding)*scale + 20) - 20,
 	}
 
 	w, h, _ = main.font.SizeUTF8(special.Title)
