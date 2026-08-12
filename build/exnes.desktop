@@ -6,3 +6,4 @@ Exec=exnes %f
 Icon=exnes
 MimeType=application/x-nes-rom
 Terminal=false
+Categories=Game;

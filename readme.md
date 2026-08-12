@@ -14,7 +14,18 @@ Executables for Windows, Mac and Linux are available on the releases page.
 
 ### Linux 
 
-Release for linux happens through AppImages, the source code for these are present inside build/AppImage.sh, this is there to ensure smooth experience while setting up on linux without needing to manually resolve dependcies or using a package manager. Stable AppImages can found in the releases page
+Release for linux happens through AppImages, the source code for these are present inside build/AppImage.sh, this is there to ensure smooth experience while setting up on linux without needing to manually resolve dependcies or using a package manager. Stable AppImages can found in the releases page.
+
+Download the AppImage and run the following 
+
+chmod +x AppImage.sh 
+./AppImage.sh
+
+The app image might not work on some legacy systems due to the compilation which was done to (PLEASE GOD REMEMBER TO FILL THIS), in which case it must be run from source.
+
+### Window 
+
+
 
 ### Running it locally 
 
