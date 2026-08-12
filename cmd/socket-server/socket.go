@@ -56,8 +56,6 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 
 func (c *client) runReciever(ctx context.Context) {
 
-	// debugConsole.Console.RunDisplayUpdates()
-	// c.conn.Write(ctx, websocket.MessageBinary, debugConsole.Console.Ppu.BackBuffer[:])
 	fmt.Println("opening conn:", c.ID)
 
 	for {

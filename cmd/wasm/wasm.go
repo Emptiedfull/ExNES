@@ -116,7 +116,7 @@ func startFrameDriver() {
 		syncInputs(emu, Input_Arr)
 		frame := emu.Ppu.Frame
 		for emu.Ppu.Frame < frame+1 {
-			emu.TickNoAudio()
+			emu.Step()
 			for emu.Apu.HasSample() {
 				emu.Apu.PopSample()
 			}
@@ -140,7 +140,7 @@ func startFrameDriver() {
 		for i := range samplesNeeded {
 
 			for !emu.Apu.HasSample() {
-				emu.Apu.Console.TickNoAudio()
+				emu.Apu.Console.Step()
 			}
 			sample := emu.Apu.PopSample()
 
