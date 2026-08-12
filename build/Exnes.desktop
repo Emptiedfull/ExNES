@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application 
+Name=ExNES
+GenericName=Cross platform NES Emulator
+Exec=exnes %f
+Icon=exnes 
+MimeType=Application/x-nes-rom
+Terminal=false

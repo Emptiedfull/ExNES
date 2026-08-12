@@ -83,20 +83,33 @@ func (g *game) SaveRam() {
 	data := g.core.GetRam()
 	if data != nil {
 
-		path := filepath.Join("./saves", string(g.core.GetHash())+".sav")
-		err := os.WriteFile(path, data, 0644)
-		if err != nil {
-			panic(err)
-		}
+		saveName := string(g.core.GetHash()) + ".sav"
+		saveWithFail(saveName, data)
+
 	} else {
 		fmt.Println("ignoring", g.core.GetName())
 	}
 }
 
+func saveWithFail(name string, data []uint8) {
+	saveDir := filepath.Join(targetDir(), "saves")
+	_, err := os.Stat(saveDir)
+	if err != nil {
+		os.MkdirAll(saveDir, 0755)
+	}
+
+	err = os.WriteFile(filepath.Join(saveDir, name), data, 0644)
+	if err != nil {
+		fmt.Println("error saving rom:", err)
+
+	}
+
+}
+
 func LoadRam(hash string, ram []uint8) {
 
-	path := filepath.Join("./saves", hash+".sav")
-	fmt.Println("trying to load a save", path)
+	path := filepath.Join(targetDir(), "./saves", hash+".sav")
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Println(err)

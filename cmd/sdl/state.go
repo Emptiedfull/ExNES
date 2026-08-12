@@ -149,7 +149,8 @@ func targetDir() string {
 	_, err = os.Stat(filepath.Join(dir, "exnes"))
 	if err != nil {
 
-		os.Mkdir(filepath.Join(dir, "exnes"), 0755)
+		os.MkdirAll(filepath.Join(dir, "exnes"), 0755)
+		os.MkdirAll(filepath.Join(dir, "exnes", "saves"), 0755)
 	}
 	return filepath.Join(dir, "exnes")
 }
