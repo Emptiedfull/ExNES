@@ -29,7 +29,7 @@ jobs:
       
   appimage:
     needs: check
-    if: github.event_name == "release"
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -40,7 +40,7 @@ jobs:
         run: docker build -t exnes-build -f build/Dockerfile .
 
       - name: build Image 
-        run: docker run --rm -v "$PWD:/src" -u "$(id -u):$(id -g)" -e HOME=/tmp -e GOCACHE=/tmp/go-build GOMODCACHE=/tmp/go-mod exnes-build ./build/appimage.sh
+        run: docker run --rm -v "$PWD:/src" -u "$(id -u):$(id -g)" -e HOME=/tmp -e GOCACHE=/tmp/go-build -e GOMODCACHE=/tmp/go-mod exnes-build ./build/appimage.sh
 
       - uses: softprops/action-gh-release@v2
         with: 
