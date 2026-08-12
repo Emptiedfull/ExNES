@@ -22,7 +22,7 @@ func setUpAudioDriver() {
 	config.PeriodSizeInMilliseconds = 8
 	config.Alsa.NoMMap = 1
 
-	device, err := malgo.InitDevice(ctx.Context, config, malgo.DeviceCallbacks{Data: debugConsole.Console.Apu.MalgoAdapter})
+	device, err := malgo.InitDevice(ctx.Context, config, malgo.DeviceCallbacks{Data: debugConsole.Apu.MalgoAdapter})
 	if err != nil {
 		log.Fatal(err)
 	}

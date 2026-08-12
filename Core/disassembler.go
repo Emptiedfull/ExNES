@@ -39,8 +39,8 @@ func (c *Console) DisAssemble(addr uint16) AssemblyLine {
 		return AssemblyLine{}
 	}
 
-	if _, ok := c.debug.Disassembly[addr]; ok {
-		return c.debug.Disassembly[addr]
+	if _, ok := c.Debug.Disassembly[addr]; ok {
+		return c.Debug.Disassembly[addr]
 	}
 
 	Mem := c.Cpu.Mem
@@ -68,7 +68,7 @@ func (c *Console) DisAssemble(addr uint16) AssemblyLine {
 		line.Val = Mem.Read(operand)
 	}
 
-	c.debug.Disassembly[addr] = line
+	c.Debug.Disassembly[addr] = line
 
 	return line
 }

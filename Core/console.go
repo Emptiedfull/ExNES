@@ -33,7 +33,7 @@ type Console struct {
 	Paused   bool
 	pausedMu sync.Mutex
 
-	debug *DebugEngine
+	Debug *DebugEngine
 
 	mapper  Mapper
 	LoadRam func(Name string, rom []uint8)

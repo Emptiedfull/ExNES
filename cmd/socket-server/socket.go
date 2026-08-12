@@ -4,7 +4,7 @@ package main
 
 import (
 	"context"
-	"exnes/Core"
+	"encoding/binary"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -18,7 +18,7 @@ var connectedClients []*client
 
 type client struct {
 	ID     string
-	Output chan Core.ScreenInfo
+	Output chan []uint32
 	conn   *websocket.Conn
 }
 
@@ -42,13 +42,13 @@ func acceptScreenConn(w http.ResponseWriter, r *http.Request) {
 	c := &client{
 		ID:     genRandomID(),
 		conn:   conn,
-		Output: make(chan Core.ScreenInfo, 60),
+		Output: make(chan []uint32, 60),
 	}
 
 	connectedClients = append(connectedClients, c)
 	defer removeClient(c)
 
-	if debugConsole.Console != nil {
+	if debugConsole != nil {
 		c.runReciever(ctx)
 	}
 
@@ -66,14 +66,20 @@ func (c *client) runReciever(ctx context.Context) {
 			fmt.Println("closing connection", c.ID)
 			return
 		case info := <-c.Output:
-			c.conn.Write(ctx, websocket.MessageBinary, info.Buffer)
+			tr := make([]uint8, len(info)*4)
+			for i, v := range info {
+				binary.LittleEndian.PutUint32(tr[i*4:], v)
+
+			}
+
+			c.conn.Write(ctx, websocket.MessageBinary, tr)
 		}
 	}
 
 }
 
 func HandleScreenUpdates() {
-	for s := range debugConsole.Console.ScreenChannel {
+	for s := range debugConsole.ScreenChannel {
 		for _, client := range connectedClients {
 			client.Output <- s
 		}
