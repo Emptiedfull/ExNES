@@ -1,5 +1,3 @@
-// #cgo CFLAGS: -Wno-deprecated-declarations
-
 package main
 
 import (

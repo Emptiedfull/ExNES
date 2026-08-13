@@ -1,16 +1,10 @@
 package main
 
-/*
-#cgo pkg-config: sdl2
-#include <SDL2/SDL.h>
-
-
-*/
-
-import "C"
 import (
 	"exnes/Core"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -41,7 +35,7 @@ var windows = make(Windows)
 
 func main() {
 
-	targetDir()
+	fmt.Println(os.Args)
 
 	displayChannel := make(chan []uint32, 100)
 	pauseChannel := make(chan bool)
@@ -73,12 +67,25 @@ func main() {
 	}
 	defer sdl.Quit()
 
+	sdl.EventState(sdl.DROPBEGIN, sdl.IGNORE)
+	sdl.EventState(sdl.DROPCOMPLETE, sdl.IGNORE)
+	sdl.EventState(sdl.DROPFILE, sdl.IGNORE)
+
 	gameWin, err := openGameWindow(font, g, state)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	windows[gameWin.getID()] = gameWin
+
+	if len(os.Args) > 1 {
+		if w, ok := gameWin.(*gameWindow); ok {
+			err := g.LoadRom(os.Args[1], w.menuBar)
+			if err != nil {
+				fmt.Println("error opening rom:", err)
+			}
+		}
+	}
 
 	startLoop(state)
 
@@ -124,6 +131,15 @@ func startLoop(state *localState) {
 				id := e.WindowID
 				if Window, ok := windows[id]; ok {
 					Window.handleScroll(e)
+				}
+			case *sdl.DropEvent:
+				if e.Type == sdl.DROPFILE {
+					if w, ok := windows[e.WindowID].(*gameWindow); ok {
+						err := w.menuBar.console.LoadRom(e.File, w.menuBar)
+						if err != nil {
+							fmt.Println("error loading file:", err)
+						}
+					}
 				}
 			case *sdl.TextInputEvent:
 				id := e.WindowID
