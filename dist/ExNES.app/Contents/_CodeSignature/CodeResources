@@ -47,6 +47,15 @@
 			<key>requirement</key>
 			<string>cdhash H"efacf69fc7ffad8fe4ad7ff3f78f93441445b4e3"</string>
 		</dict>
+		<key>Frameworks/libSDL3.dylib</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			oRuzbK0RpvA12HDutXOup6YiYNo=
+			</data>
+			<key>requirement</key>
+			<string>cdhash H"a11bb36cad11a6f035d870eeb573aea7a62260da"</string>
+		</dict>
 		<key>Frameworks/libaom.3.14.1.dylib</key>
 		<dict>
 			<key>cdhash</key>

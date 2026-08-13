@@ -31,6 +31,16 @@ rm -rf "$ICONSET"
 
 dylibbundler --overwrite-files --bundle-deps --create-dir --fix-file "$APPDIR/Contents/MacOS/$APP" --dest-dir "$APPDIR/Contents/Frameworks/" --install-path "@executable_path/../Frameworks/"
 
+SDL3_LIB="$(brew --prefix sdl3)/lib/libSDL3.dylib"
+if [ -f "$SDL3_LIB" ]; then
+    cp "$SDL3_LIB" "$APPDIR/Contents/Frameworks/"
+    dylibbundler --overwrite-files --bundle-deps --create-dir \
+        --fix-file "$APPDIR/Contents/Frameworks/libSDL3.dylib" \
+        --dest-dir "$APPDIR/Contents/Frameworks/" \
+        --install-path "@executable_path/../Frameworks/"
+fi
+
+
 codesign --force --deep --sign - "$APPDIR"
 codesign --verify --verbose "$APPDIR"
 
