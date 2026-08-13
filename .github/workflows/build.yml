@@ -26,6 +26,34 @@ jobs:
       - name: build 
         run: go build ./...
 
+  macos:
+    needs: check
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14      
+          - runner: macos-13     
+    runs-on: ${{matrix.runner}}
+    permissions:
+      contents: write 
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: "instal deps"
+        run: brew install sdl2 sdl2_ttf sdl2_image sdl2_gfx dylibbundler
+        
+      - name: "dmg time"
+        run: bash ./build/macos.sh
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.dmg
 
       
   appimage:

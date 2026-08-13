@@ -35,8 +35,6 @@ var windows = make(Windows)
 
 func main() {
 
-	fmt.Println(os.Args)
-
 	displayChannel := make(chan []uint32, 100)
 	pauseChannel := make(chan bool)
 
@@ -94,6 +92,8 @@ func main() {
 func startLoop(state *localState) {
 
 	for state.running {
+
+		sdl.FlushEvents(sdl.DROPFILE, sdl.DROPCOMPLETE)
 
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 
