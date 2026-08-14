@@ -15,24 +15,30 @@ CGO_ENABLED=1 go build -trimpath -ldflags "-s -w -H windowsgui" -o "$STAGE/$APP.
 
 echo "go build complete"
 
+echo " bundling DLLs"
 cd "$STAGE"
-
-for i in 1 2 3 4 5; do
-    echo "$i"
-    pre=$(find . -maxdepth 1 -type f -name '*.dll' | wc -l)
-       for f in "$APP.exe" ./*.dll; do
+ 
+for pass in 1 2 3 4 5; do
+    before=$(find . -maxdepth 1 -type f -name '*.dll' | wc -l)
+ 
+    for f in "$APP.exe" ./*.dll; do
         [ -e "$f" ] || continue
         ldd "$f" 2>/dev/null \
             | grep -iE '=> /(mingw64|ucrt64|clang64)/' \
-            | awk '{print $3}' | sort -u \
+            | awk '{print $3}' \
+            | sort -u \
             | while read -r dll; do
                   [ -f "$dll" ] && cp -n "$dll" . || true
-              done
+              done || true
     done
-    post=$(find . -maxdepth 1 -type f -name '*.dll' | wc -l)
-    [ "$pre" = "$post" ] && break 
-
-done 
+ 
+    after=$(find . -maxdepth 1 -type f -name '*.dll' | wc -l)
+    echo "    pass $pass: $before -> $after DLLs"
+    [ "$before" = "$after" ] && break
+done
+ 
+echo "    final contents:"
+ls -1 | sed 's/^/      /'
 
 cd "$DIST"
 zip -qr "Win-$ARCH.zip" "$(basename "$STAGE")"
