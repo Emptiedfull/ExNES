@@ -13,9 +13,12 @@ mkdir -p "$STAGE"
 
 CGO_ENABLED=1 go build -trimpath -ldflags "-s -w -H windowsgui" -o "$STAGE/$APP.exe" ./cmd/sdl
 
+echo "go build complete"
+
 cd "$STAGE"
 
 for i in 1 2 3 4 5; do
+    echo "$i"
     pre=$(find . -maxdepth 1 -type f -name '*.dll' | wc -l)
        for f in "$APP.exe" ./*.dll; do
         [ -e "$f" ] || continue

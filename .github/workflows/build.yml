@@ -3,6 +3,7 @@ name: build
 on: 
   push:
     branches: [main]
+  workflow_dispatch:
   release:
     types: [published]
 
@@ -52,12 +53,19 @@ jobs:
         run: bash ./build/macos.sh
 
       - uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
         with:
           files: dist/*.dmg
+      
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'release'
+        with:
+          name: exnes-macos
+          path: dist/*.dmg
 
   windows:
     needs: check 
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     permissions:
       contents: write 
@@ -83,15 +91,28 @@ jobs:
       - name: build 
         run: bash ./build/windows.sh
 
+      - name: installer 
+        shell: pwsh
+        run: |
+            choco install innosetup --no-progress -y 
+            $v = "${{ github.event.release.tag_name}}" -replace '^v',''
+
       - uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
         with: 
           files: dist/*.zip
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'release'
+        with:
+          name: exnes-windows
+          path: dist/*.zip
 
 
       
   appimage:
     needs: check
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || github.event_name == 'workflow-dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -105,8 +126,15 @@ jobs:
         run: docker run --rm -v "$PWD:/src" -u "$(id -u):$(id -g)" -e HOME=/tmp -e GOCACHE=/tmp/go-build -e GOMODCACHE=/tmp/go-mod exnes-build ./build/AppImage.sh
 
       - uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
         with: 
           files: dist/*.AppImage
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'release'
+        with:
+          name: exnes-appImage
+          path: dist/*.AppImage
 
   
 
