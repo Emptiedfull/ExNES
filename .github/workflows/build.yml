@@ -55,6 +55,39 @@ jobs:
         with:
           files: dist/*.dmg
 
+  windows:
+    needs: check 
+    if: github.event_name == 'release'
+    runs-on: windows-latest
+    permissions:
+      contents: write 
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with: 
+          msystem: MINGW64
+          update: true 
+          install: >-
+              mingw-w64-x86_64-toolchain
+              mingw-w64-x86_64-go
+              mingw-w64-x86_64-SDL2
+              mingw-w64-x86_64-SDL2_ttf
+              mingw-w64-x86_64-SDL2_image
+              mingw-w64-x86_64-SDL2_gfx
+              zip
+
+      - name: build 
+        run: bash ./build/windows.sh
+
+      - uses: softprops/action-gh-release@v2
+        with: 
+          files: dist/*.zip
+
+
       
   appimage:
     needs: check

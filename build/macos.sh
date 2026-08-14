@@ -40,7 +40,6 @@ if [ -f "$SDL3_LIB" ]; then
         --install-path "@executable_path/../Frameworks/"
 fi
 
-
 codesign --force --deep --sign - "$APPDIR"
 codesign --verify --verbose "$APPDIR"
 
