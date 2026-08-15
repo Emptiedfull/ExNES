@@ -47,8 +47,6 @@ type menuBar struct {
 	W     int32
 	H     int32
 	scale int32
-
-	errEngine errorEngine
 }
 
 type TextureCache struct {
@@ -324,9 +322,12 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 						}
 						win, err := openControlWindow(state)
 						if err != nil {
-							panic(err)
+
+							pushError("Controls:", err, true)
+						} else {
+							windows[win.getID()] = win
 						}
-						windows[win.getID()] = win
+
 					},
 				}, {
 					label:           "Palettes",

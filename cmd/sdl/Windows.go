@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -30,6 +31,7 @@ type cheatWindow struct {
 }
 
 func openCheatWindow(console *game) (Window, error) {
+
 	win, err := sdl.CreateWindow("Cheats", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 350, 450, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE|sdl.RENDERER_PRESENTVSYNC)
 	if err != nil {
 		return nil, err
@@ -127,6 +129,7 @@ type controlWindow struct {
 }
 
 func openControlWindow(state *localState) (Window, error) {
+	return nil, fmt.Errorf("hello")
 
 	font := loadFont(18 * scale)
 	smallfont := loadFont(14 * scale)
@@ -331,6 +334,8 @@ func (win *gameWindow) render() {
 
 	win.menuBar.renderBar(win.renderer)
 	win.menuBar.renderFps(win.renderer)
+
+	renderToasts(win.renderer, win.menuBar.Font, win.menuBar.cache.textCache, *win.gameRect)
 
 	win.renderer.Present()
 }

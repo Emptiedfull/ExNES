@@ -10,8 +10,6 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
-var errEngine errorEngine
-
 const (
 	game_width  = 256
 	game_heigth = 240
@@ -36,6 +34,7 @@ type Windows map[uint32]Window
 var windows = make(Windows)
 
 func main() {
+	toasts = make([]errorToast, 0)
 
 	displayChannel := make(chan []uint32, 100)
 	pauseChannel := make(chan bool)
