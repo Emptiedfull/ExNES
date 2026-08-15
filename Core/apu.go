@@ -1,5 +1,7 @@
 package Core
 
+import "math"
+
 type APU struct {
 	Console *Console
 
@@ -23,18 +25,7 @@ type APU struct {
 	IRGPending bool
 
 	SampleBuffer []float32
-
-	// ExposedBuf *exposedBuffer
-
-	//danger fields
-
-	// drivingBuffer *exposedBuffer
 }
-
-// type exposedBuffer struct {
-// 	mu   sync.Mutex
-// 	data []uint8
-// }
 
 func (a *APU) HasSample() bool {
 	return len(a.SampleBuffer) > 0
@@ -45,32 +36,6 @@ func (a *APU) PopSample() float32 {
 	a.SampleBuffer = a.SampleBuffer[1:]
 	return s
 }
-
-// func (b *exposedBuffer) Read(p []uint8) (int, error) {
-// 	b.mu.Lock()
-// 	defer b.mu.Unlock()
-
-// 	if len(b.data) == 0 {
-// 		for i := range p {
-// 			p[i] = 0
-// 		}
-// 		return len(p), nil
-// 	}
-// 	n := copy(p, b.data)
-
-// 	b.data = b.data[n:]
-// 	return n, nil
-// }
-
-// func (b *exposedBuffer) pushBuffer(sample []float32) {
-// 	b.mu.Lock()
-// 	defer b.mu.Unlock()
-
-// 	for _, s := range sample {
-// 		bits := math.Float32bits(s)
-// 		b.data = append(b.data, uint8(bits), uint8(bits>>8), uint8(bits>>16), uint8(bits>>24))
-// 	}
-// }
 
 func NewApu(sampleRate float64, console *Console) *APU {
 	return &APU{
@@ -83,9 +48,6 @@ func NewApu(sampleRate float64, console *Console) *APU {
 		SampleRate:      sampleRate,
 		CyclesPerSample: 1_789_773.0 / sampleRate,
 		SampleBuffer:    make([]float32, 0, 4096),
-		// ExposedBuf: &exposedBuffer{
-		// 	data: make([]uint8, 0),
-		// },
 	}
 
 }
@@ -156,13 +118,13 @@ func (A *APU) writeReg(addr uint16, val uint8) {
 		A.Noise.WriteEnvelope(val)
 	case 0x400D:
 		// YEH FUCK U BRO DONT ACCESS THIS
-	case 4010:
+	case 0x4010:
 		A.Dmc.WriteFlags(val)
-	case 4011:
+	case 0x4011:
 		A.Dmc.WriteDL(val)
-	case 4012:
+	case 0x4012:
 		A.Dmc.WriteSampleAddr(val)
-	case 4013:
+	case 0x4013:
 		A.Dmc.WriteSampleLen(val)
 	case 0x400E:
 		A.Noise.WriteMode(val)
@@ -351,4 +313,35 @@ func (a *APU) DrainSamples() []float32 {
 
 	a.SampleBuffer = a.SampleBuffer[:0]
 	return out
+}
+
+func (a *APU) MalgoAdapter(output []byte, input []byte, framecount uint32) {
+	a.DriveSamples(output, framecount)
+}
+
+func (a *APU) DriveSamples(output []byte, samplesNeeded uint32) {
+	for i := range samplesNeeded {
+		for !a.HasSample() {
+			a.Console.Step()
+		}
+
+		sample := a.PopSample()
+
+		bits := math.Float32bits(sample)
+		output[i*4] = byte(bits)
+		output[i*4+1] = byte(bits >> 8)
+		output[i*4+2] = byte(bits >> 16)
+		output[i*4+3] = byte(bits >> 24)
+	}
+
+	if a.Console.Ppu.ScreenChanged {
+		a.Console.RunDisplayUpdates()
+
+		if a.Console.Ppu.Frame%20 == 0 {
+
+			a.Console.TakeSnapshot()
+		}
+
+	}
+
 }

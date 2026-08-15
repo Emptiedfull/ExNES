@@ -615,3 +615,9 @@ var (
 	svgWidthRe  = regexp.MustCompile(`width="[^"]*"`)
 	svgHeightRe = regexp.MustCompile(`height="[^"]*"`)
 )
+
+type errorEngine struct {
+	font         *ttf.Font
+	MsgRect      sdl.Rect
+	ErrorMessage string
+}

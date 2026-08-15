@@ -47,6 +47,8 @@ type menuBar struct {
 	W     int32
 	H     int32
 	scale int32
+
+	errEngine errorEngine
 }
 
 type TextureCache struct {

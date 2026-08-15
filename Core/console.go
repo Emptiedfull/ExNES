@@ -48,6 +48,33 @@ func Init() {
 
 }
 
+func (c *Console) Step() {
+	if c.Cpu.Stall > 0 {
+		c.Cpu.Stall--
+		c.Cpu.TotalCycles++
+	} else {
+		c.Cpu.Tick()
+	}
+
+	for range 3 {
+		c.Ppu.step()
+	}
+
+	c.Apu.tick()
+
+	c.Cpu.irqLine = c.Apu.IRGPending || c.Apu.Dmc.IRGPending
+
+	if m, ok := c.mapper.(IrqClocker); ok {
+
+		if m.IRQPending() {
+
+			c.Cpu.irqLine = true
+		}
+
+	}
+
+}
+
 func (c *Console) GetMapper() Mapper {
 	return c.mapper
 }

@@ -57,51 +57,6 @@ type CycleStep struct {
 	Mode string
 }
 
-// func (c *Cpu) executeNmiCycle() int {
-
-// 	switch c.nmiStep {
-// 	case 1:
-
-// 		return 2
-// 	case 2:
-
-// 		return 3
-// 	case 3:
-// 		c.Mem.Write(0x0100+uint16(c.S), uint8(c.PC>>8))
-// 		c.S--
-// 		return 4
-// 	case 4:
-// 		c.Mem.Write(0x0100+uint16(c.S), uint8(c.PC&0xFF))
-// 		c.S--
-// 		return 5
-// 	case 5:
-// 		Status := c.P
-// 		Status = AssignBit(Status, 4, false)
-// 		Status = AssignBit(Status, 5, true)
-
-// 		c.Mem.Write(0x0100+uint16(c.S), Status)
-// 		c.S--
-
-// 		c.setFlag(Interrupt)
-// 		return 6
-// 	case 6:
-// 		c.low = c.Mem.Read(0xFFFA)
-// 		return 7
-// 	case 7:
-// 		c.high = c.Mem.Read(0xFFFB)
-
-// 		c.PC = builduint16(c.low, c.high)
-
-// 		c.executingNmi = false
-
-// 		return 1
-// 	default:
-// 		return 1
-
-// 	}
-
-// }
-
 func (c *Cpu) ResetTemp() {
 	c.temp = temp{}
 

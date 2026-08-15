@@ -10,6 +10,8 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
+var errEngine errorEngine
+
 const (
 	game_width  = 256
 	game_heigth = 240

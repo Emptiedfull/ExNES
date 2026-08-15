@@ -96,17 +96,20 @@ jobs:
         run: |
             choco install innosetup --no-progress -y 
             $v = "${{ github.event.release.tag_name}}" -replace '^v',''
+            if (-not $v) { $v = "0.0.0" }
+            & "C:\Program files(x86)\Inno Setup 6\ISSC.exe" /DAppVersion=$v build\installer.iss
 
       - uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with: 
-          files: dist/*.zip
+          files: dist/*.zip dist/*-setup.exe
+
 
       - uses: actions/upload-artifact@v4
         if: github.event_name != 'release'
         with:
           name: exnes-windows
-          path: dist/*.zip
+          path: dist/*.zip dist/*-setup.exe
       
   appimage:
     needs: check
