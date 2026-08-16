@@ -62,7 +62,7 @@ func renderToasts(r *sdl.Renderer, font *ttf.Font, cache map[string]textCache, a
 			continue
 		}
 
-		tw := max(int32(w)/fontSample+20, area.W-12)
+		tw := min(int32(w)/fontSample+20, area.W-12)
 		th := int32(h)/fontSample + 10
 
 		y -= th

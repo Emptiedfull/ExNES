@@ -4,7 +4,6 @@ import (
 	"embed"
 	_ "embed"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -25,13 +24,15 @@ func loadFont(size int32) *ttf.Font {
 
 	rw, err := sdl.RWFromMem(fontDat)
 	if err != nil {
-		log.Fatal("FONT NOT AVAILABLE")
+
+		pushError("font", err, false)
 		return nil
 	}
 
 	font, err := ttf.OpenFontRW(rw, 1, int(size))
 	if err != nil {
-		log.Fatal("INVALID FONT")
+
+		pushError("font", err, false)
 		return nil
 	}
 
@@ -402,8 +403,8 @@ func drawText(text string, r *sdl.Renderer, cache map[string]textCache, options 
 		}
 		defer surface.Free()
 
-		entry.W = int32(surface.W / 2)
-		entry.H = int32(surface.H / 2)
+		entry.W = int32(surface.W / fontSample)
+		entry.H = int32(surface.H / fontSample)
 
 		texture, err := r.CreateTextureFromSurface(surface)
 		if err != nil {

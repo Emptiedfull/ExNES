@@ -675,13 +675,11 @@ func (mb *menuBar) renderFps(r *sdl.Renderer) {
 		label := fmt.Sprintf("%d Fps (%v)", mb.console.fps, mb.state.Settings.Current_speed)
 
 		rect := sdl.Rect{
-			X: mb.W - 100,
+			X: mb.W - textWdith(label, mb.Font) - 10,
 			Y: mb.H + menu_height,
 			W: 100,
 			H: 30,
 		}
-
-		// drawText(label, rect, r, 0, colText, mb.cache.textCache, mb.Font, false)
 
 		drawText(label, r, mb.cache.textCache, TextOptions{rect: rect, font: mb.Font, col: colText})
 	}

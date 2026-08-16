@@ -3,7 +3,6 @@ package main
 import (
 	"exnes/Core"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -100,7 +99,7 @@ func saveWithFail(name string, data []uint8) {
 
 	err = os.WriteFile(filepath.Join(saveDir, name), data, 0644)
 	if err != nil {
-		fmt.Println("error saving rom:", err)
+		pushError("Save", err, false)
 
 	}
 
@@ -130,7 +129,10 @@ func (g *game) reloadROM() {
 	file, err := os.Open(g.romPath)
 
 	if err != nil {
-		log.Fatal("AHHHH:", err)
+
+		pushError("ROM", err, false)
+		return
+
 	}
 
 	g.core.InitRom(file)
@@ -263,7 +265,8 @@ func (console *game) changeVolume(volumeStr string) {
 
 	volumeInt, err := strconv.Atoi(volumeStr)
 	if err != nil {
-		log.Fatal("man stop giving me non int values", err)
+
+		pushError("Volume", err, false)
 	}
 
 	volume := float32(volumeInt) / 100.0
