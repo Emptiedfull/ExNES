@@ -97,8 +97,7 @@ jobs:
             choco install innosetup --no-progress -y 
             $v = "${{ github.event.release.tag_name}}" -replace '^v',''
             if (-not $v) { $v = "0.0.0" }
-            ls -lh "C:\Program files(x86)"
-            & "C:\Program files(x86)\Inno Setup 6\ISSC.exe" /DAppVersion=$v build\installer.iss
+            & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=$v build\installer.iss
 
       - uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'

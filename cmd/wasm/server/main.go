@@ -43,6 +43,7 @@ var compressibleList = map[string]bool{
 }
 
 func main() {
+	fmt.Println("starting")
 	noWatch := flag.Bool("no-watch", false, "disable the file watcher")
 	flag.Parse()
 
