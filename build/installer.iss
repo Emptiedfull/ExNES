@@ -38,7 +38,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
 [Languages]
-Name="English"; MessageFile: "compiler:Default.isl" 
+Name:"English"; MessageFile: "compiler:Default.isl" 
 
 [Tasks]
 Name: "desktopicon"; Description: "Create shortcut"; GroupDescription: "Shortcuts:"; Flags: unchecked

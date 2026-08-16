@@ -92,8 +92,6 @@ const updateBinding = (action,newKey) =>{
         }
     })
 
-    
-
     keyMap[newKey] = action
 
     checkForMissingKeys()

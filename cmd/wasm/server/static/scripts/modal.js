@@ -30,6 +30,10 @@ export const createModal = async (head,body,error = false,fleeting = true)=>{
     para.textContent = body
     modal.appendChild(para)
 
+    modal.addEventListener("click",()=>{
+        deactivateModal(modal)
+    })
+
     modalList.appendChild(modal)
 
     if (fleeting){

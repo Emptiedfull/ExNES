@@ -1863,6 +1863,9 @@ var createModal = async (head, body2, error = false, fleeting = true) => {
   para.classList.add("modal-text");
   para.textContent = body2;
   modal.appendChild(para);
+  modal.addEventListener("click", () => {
+    deactivateModal(modal);
+  });
   modalList.appendChild(modal);
   if (fleeting) {
     setUpForFailure(modal);
