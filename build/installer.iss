@@ -11,7 +11,7 @@
 #endif
 
 [Setup]
-AppId={{7C3F1A62-5E4D-4B18-9A77-2F0B6D3C8E51}}
+AppId={{7C3F1A62-5E4D-4B18-9A77-2F0B6D3C8E51}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
@@ -38,7 +38,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
 [Languages]
-Name:"English"; MessageFile: "compiler:Default.isl" 
+Name:"English"; MessagesFile: "compiler:Default.isl" 
 
 [Tasks]
 Name: "desktopicon"; Description: "Create shortcut"; GroupDescription: "Shortcuts:"; Flags: unchecked
@@ -50,14 +50,14 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: deskto
 
 [Files]
 Source: "{#StageDir}\{#AppExeName}";DestDir: "{app}"; Flags: ignoreversion
-Source: "{#StageDir}\*.dll";DestDir: "app"; Flags: ignoreversion
+Source: "{#StageDir}\*.dll";DestDir: "{app}"; Flags: ignoreversion
 
 [Registry]
 Root: HKA; Subkey: "Software\Classes\.nes\OpenWithProgids"; ValueType: string; ValueName: "ExNES.rom"; ValueData: ""; Flags:uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\ExNES.rom"; ValueType: string; ValueName: ""; ValueData: "NES ROM"; Flags: uninsdeletevalue; Tasks: associate
-Root: HKA; Subkey: "Software\Classes\ExNES.rom\DefaultIcon"; \ ValueType: string; ValueName:"";ValueData: "{app}\{#AppExeName},0" Tasks: associate
+Root: HKA; Subkey: "Software\Classes\ExNES.rom\DefaultIcon";  ValueType: string; ValueName:"";ValueData: "{app}\{#AppExeName},0" Tasks: associate
 Root: HKA; Subkey: "Software\Classes\ExNES.rom\shell\open\command"; ValueType: string; ValueName:""; ValueData: """{app}\{#AppExeName}"" ""%1"""; Tasks: associate
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilient
+Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
 
