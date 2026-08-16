@@ -27,6 +27,7 @@ for pass in 1 2 3 4 5; do
             | grep -iE '=> /(mingw64|ucrt64|clang64)/' \
             | awk '{print $3}' \
             | sort -u \
+            | echo "loop itr" \
             | while read -r dll; do
                   [ -f "$dll" ] && cp -n "$dll" . || true
               done || true
