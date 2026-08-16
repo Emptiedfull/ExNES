@@ -44,11 +44,19 @@ const fontSample = 2
 
 func renderToasts(r *sdl.Renderer, font *ttf.Font, cache map[string]textCache, area sdl.Rect) {
 	toastMux.Lock()
-	defer toastMux.Unlock()
 
-	y := area.Y + menu_height*2 + 10
+	active := make([]errorToast, 0)
+	for _, toast := range toasts {
+		if time.Since(toast.begin) < time.Second*3 {
+			active = append(active, toast)
+		}
+	}
 
-	for _, t := range toasts {
+	toastMux.Unlock()
+
+	y := area.Y + area.H - 10
+
+	for _, t := range active {
 		w, h, err := font.SizeUTF8(t.msg)
 		if err != nil {
 			continue
@@ -77,5 +85,4 @@ func renderToasts(r *sdl.Renderer, font *ttf.Font, cache map[string]textCache, a
 
 	}
 
-	toasts = make([]errorToast, 0)
 }

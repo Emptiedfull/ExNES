@@ -10,12 +10,16 @@ import (
 func openRom(console *game, state *localState, mb *menuBar) {
 	filename, err := dialog.File().Filter("", ".nes").Title("Load Rom").Load()
 	if err != nil {
-		fmt.Println("error opening rom", err)
+
+		pushError("ROM:", err, false)
+		return
 	}
 
 	err = console.LoadRom(filename, mb)
 	if err != nil {
-		fmt.Println("error loading rom", err)
+
+		pushError("ROM:", err, false)
+		return
 	}
 
 	if state != nil {
@@ -29,6 +33,8 @@ func openRom(console *game, state *localState, mb *menuBar) {
 
 		mb.Items[0].options[2].ExpandableItems = getRecentItems(state.RecentFiles, mb.console, mb)
 		mb.positionLayout()
+	} else {
+		pushError("State:", fmt.Errorf("No state present"), false)
 	}
 
 }

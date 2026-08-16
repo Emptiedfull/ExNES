@@ -2,8 +2,6 @@ package main
 
 import (
 	"exnes/Core"
-	"fmt"
-	"log"
 	"os"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -54,7 +52,7 @@ func main() {
 	defer state.saveState()
 
 	if err := ttf.Init(); err != nil {
-		log.Fatal("fuck init failed:", err)
+		panic(err)
 	}
 
 	font := loadFont(14 * scale)
@@ -72,7 +70,7 @@ func main() {
 
 	gameWin, err := openGameWindow(font, g, state)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	windows[gameWin.getID()] = gameWin
@@ -81,7 +79,8 @@ func main() {
 		if w, ok := gameWin.(*gameWindow); ok {
 			err := g.LoadRom(os.Args[1], w.menuBar)
 			if err != nil {
-				fmt.Println("error opening rom:", err)
+
+				pushError("ROM", err, false)
 			}
 		}
 	}
@@ -138,7 +137,8 @@ func startLoop(state *localState) {
 					if w, ok := windows[e.WindowID].(*gameWindow); ok {
 						err := w.menuBar.console.LoadRom(e.File, w.menuBar)
 						if err != nil {
-							fmt.Println("error loading file:", err)
+
+							pushError("ROM:", err, false)
 						}
 					}
 				}
@@ -155,7 +155,6 @@ func startLoop(state *localState) {
 			if window != nil {
 				window.render()
 			}
-
 		}
 
 	}

@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"exnes/Core"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -68,13 +67,14 @@ func loadState() *localState {
 
 	data, err := os.ReadFile(filepath.Join(targetDir(), "state.json"))
 	if err != nil {
-		fmt.Println("error loading state:", err)
+
 		return s
 	}
 
 	err = json.Unmarshal(data, s)
 	if err != nil {
-		fmt.Println("error unmarshaling state:", err)
+
+		pushError("State", err, false)
 		return s
 
 	}
@@ -86,7 +86,8 @@ func (state *localState) saveState() {
 
 	data, err := json.MarshalIndent(state, "", "")
 	if err != nil {
-		fmt.Println("error marshaling save state", err)
+
+		pushError("save", err, false)
 		return
 	}
 
@@ -94,7 +95,7 @@ func (state *localState) saveState() {
 }
 
 func (state *localState) addRecentRom(new recentRom) {
-	fmt.Println("adding a recent rom")
+
 	for _, rom := range state.RecentFiles {
 		if rom.Location == new.Location {
 			return
@@ -113,7 +114,7 @@ func (inp Inputs) MarshalJSON() ([]byte, error) {
 
 	x, err := json.Marshal(res)
 	if err != nil {
-		fmt.Println("unable to marshal json:", err)
+		pushError("state", err, false)
 		return make([]byte, 0), err
 	}
 
@@ -142,7 +143,8 @@ func (inp *Inputs) UnmarshalJSON(data []byte) error {
 func targetDir() string {
 	dir, err := os.UserConfigDir()
 	if err != nil {
-		fmt.Println("error loading config dir,", err)
+
+		pushError("State", err, false)
 		return "./"
 	}
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"exnes/Core"
-	"fmt"
 	"math"
 	"time"
 
@@ -375,7 +374,8 @@ func (main *cheatMain) handleScroll(Y int32) {
 func (main *cheatMain) addCheat() {
 	err := main.engine.AddCode(main.input.TextUpdated, "CUSTOM")
 	if err != nil {
-		fmt.Println("ERROR: Bad cheat, please input valid code")
+		pushError("Cheat", err, false)
+
 	}
 
 }

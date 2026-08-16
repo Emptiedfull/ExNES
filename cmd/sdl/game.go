@@ -36,13 +36,13 @@ func (console *game) LoadRom(filepath string, mb *menuBar) error {
 	file, err := os.Open(filepath)
 
 	if err != nil {
-		return fmt.Errorf("uhm: %v", err)
+		return err
 	}
 	defer file.Close()
 
 	err = console.core.InitRom(file)
 	if err != nil {
-		return fmt.Errorf("bad rom: %v", err)
+		return err
 	}
 	console.core.Cpu.Reset()
 	console.romPath = filepath

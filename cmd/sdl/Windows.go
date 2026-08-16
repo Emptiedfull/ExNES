@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -129,7 +126,6 @@ type controlWindow struct {
 }
 
 func openControlWindow(state *localState) (Window, error) {
-	return nil, fmt.Errorf("hello")
 
 	font := loadFont(18 * scale)
 	smallfont := loadFont(14 * scale)
@@ -137,12 +133,14 @@ func openControlWindow(state *localState) (Window, error) {
 	font.SetHinting(ttf.HINTING_LIGHT)
 	win, err := sdl.CreateWindow("controls", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, 750, 450, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.WINDOW_RESIZABLE|sdl.RENDERER_PRESENTVSYNC)
 	if err != nil {
-		log.Fatal("WINDOW BAD", err)
+
+		return nil, err
 	}
 
 	renderer, err := sdl.CreateRenderer(win, -1, sdl.RENDERER_ACCELERATED)
 	if err != nil {
-		log.Fatal("RENDER BAD", err)
+		return nil, err
+
 	}
 
 	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
@@ -150,7 +148,8 @@ func openControlWindow(state *localState) (Window, error) {
 
 	id, err := win.GetID()
 	if err != nil {
-		log.Fatal("ID BAD", err)
+
+		return nil, err
 	}
 
 	controlWin := &controlWindow{
@@ -242,7 +241,7 @@ func openGameWindow(font *ttf.Font, console *game, state *localState) (Window, e
 
 	win, err := sdl.CreateWindow("ExNES", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, windowW, windowH, sdl.WINDOW_SHOWN|sdl.WINDOW_ALLOW_HIGHDPI|sdl.RENDERER_PRESENTVSYNC)
 	if err != nil {
-		log.Fatal("man why even", err)
+
 		return nil, err
 	}
 
@@ -296,7 +295,8 @@ func openGameWindow(font *ttf.Font, console *game, state *localState) (Window, e
 
 	audioDevice, err := sdl.OpenAudioDevice("", false, &audioSpec, nil, 0)
 	if err != nil {
-		log.Fatal("unable to begin audio device", err)
+
+		return nil, err
 	}
 
 	state.running = true

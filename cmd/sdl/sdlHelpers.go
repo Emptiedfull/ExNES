@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -397,7 +396,9 @@ func drawText(text string, r *sdl.Renderer, cache map[string]textCache, options 
 
 		surface, err := options.font.RenderUTF8Blended(text, options.col)
 		if err != nil {
-			panic(err)
+
+			pushError("Text Render:", err, true)
+			return
 		}
 		defer surface.Free()
 
@@ -406,7 +407,9 @@ func drawText(text string, r *sdl.Renderer, cache map[string]textCache, options 
 
 		texture, err := r.CreateTextureFromSurface(surface)
 		if err != nil {
-			log.Fatal(err)
+
+			pushError("Text Render:", err, true)
+			return
 		}
 
 		entry.texture = texture
@@ -454,7 +457,8 @@ func truncateStr(font *ttf.Font, text string, MaxWidth int32) string {
 func textWdith(text string, font *ttf.Font) int32 {
 	w, _, err := font.SizeUTF8(text)
 	if err != nil {
-		fmt.Println("bad fucking text: ", err)
+		pushError("Text", err, false)
+		return 0
 	}
 
 	return int32(w) / upfactor
@@ -470,7 +474,8 @@ func (mb *menuBar) getHoverPill(r *sdl.Renderer, w, h int32) *sdl.Texture {
 
 	texture, err := createHover(r, colHover, w, h)
 	if err != nil {
-		log.Fatal(err)
+
+		pushError("Texture", err, false)
 		return nil
 	}
 
@@ -486,7 +491,7 @@ func createHover(r *sdl.Renderer, col sdl.Color, w, h int32) (*sdl.Texture, erro
 
 	tex, err := r.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_TARGET, bigW, bigH)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create texture fuck: %v", err)
+		return nil, err
 	}
 
 	tex.SetBlendMode(sdl.BLENDMODE_BLEND)
@@ -533,7 +538,8 @@ func (p panelCache) getRoundedRect(r *sdl.Renderer, col sdl.Color, w, h int32, f
 	}
 	entry, err := createRoundedRect(r, col, w, h, filled)
 	if err != nil {
-		fmt.Println("no tex:", err)
+
+		pushError("Texture", err, true)
 		return nil
 	}
 
@@ -551,7 +557,7 @@ func createRoundedRect(r *sdl.Renderer, col sdl.Color, w, h int32, filled bool) 
 
 	tex, err := r.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_TARGET, bigW, bigH)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create texture fuck: %v", err)
+		return nil, err
 	}
 
 	tex.SetBlendMode(sdl.BLENDMODE_BLEND)
@@ -590,7 +596,7 @@ func getIcon(r *sdl.Renderer, path string, col sdl.Color, cache map[string]*sdl.
 
 	data, err := icons.ReadFile(path)
 	if err != nil {
-		log.Println("bad icon data")
+		pushError("ICON", err, false)
 		return nil
 	}
 	rw, _ := sdl.RWFromMem(data)
@@ -598,7 +604,8 @@ func getIcon(r *sdl.Renderer, path string, col sdl.Color, cache map[string]*sdl.
 
 	texture.SetColorMod(col.R, col.G, col.B)
 	if err != nil {
-		log.Fatal(err)
+
+		pushError("ICON", err, false)
 		return nil
 	}
 
@@ -610,8 +617,3 @@ func getIcon(r *sdl.Renderer, path string, col sdl.Color, cache map[string]*sdl.
 func pointInRect(rect sdl.Rect, x, y int32) bool {
 	return x >= rect.X && x <= rect.X+rect.W && y >= rect.Y && y <= rect.Y+rect.H
 }
-
-var (
-	svgWidthRe  = regexp.MustCompile(`width="[^"]*"`)
-	svgHeightRe = regexp.MustCompile(`height="[^"]*"`)
-)
