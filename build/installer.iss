@@ -53,10 +53,10 @@ Source: "{#StageDir}\{#AppExeName}";DestDir: "{app}"; Flags: ignoreversion
 Source: "{#StageDir}\*.dll";DestDir: "{app}"; Flags: ignoreversion
 
 [Registry]
-Root: HKA; Subkey: "Software\Classes\.nes\OpenWithProgids"; ValueType: string; ValueName: "ExNES.rom"; ValueData: ""; Flags:uninsdeletevalue; Tasks: associate
-Root: HKA; Subkey: "Software\Classes\ExNES.rom"; ValueType: string; ValueName: ""; ValueData: "NES ROM"; Flags: uninsdeletevalue; Tasks: associate
-Root: HKA; Subkey: "Software\Classes\ExNES.rom\DefaultIcon";  ValueType: string; ValueName:"";ValueData: "{app}\{#AppExeName},0" Tasks: associate
-Root: HKA; Subkey: "Software\Classes\ExNES.rom\shell\open\command"; ValueType: string; ValueName:""; ValueData: """{app}\{#AppExeName}"" ""%1"""; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.nes\OpenWithProgids"; ValueType: string; ValueName: "ExNES.rom"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\ExNES.rom"; ValueType: string; ValueName: ""; ValueData: "NES ROM"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\ExNES.rom\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#AppExeName},0"; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\ExNES.rom\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" ""%1"""; Tasks: associate
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent
