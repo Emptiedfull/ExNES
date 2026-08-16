@@ -21,18 +21,15 @@ cd "$STAGE"
 for pass in 1 2 3 4 5; do
     before=$(find . -maxdepth 1 -type f -name '*.dll' | wc -l)
  
-    for f in "$APP.exe" ./*.dll; do
+      for f in "$APP.exe" ./*.dll; do
         [ -e "$f" ] || continue
-        ldd "$f" 2>/dev/null \
-            | grep -iE '=> /(mingw64|ucrt64|clang64)/' \
-            | awk '{print $3}' \
-            | sort -u \
-            | echo "loop itr" \
-            | while read -r dll; do
-                  [ -f "$dll" ] && cp -n "$dll" . || true
-              done || true
+        
+        ldd "$f" 2>/dev/null | awk '{print $1}' | while read -r name; do
+            case "$name" in *.dll|*.DLL) ;; *) continue ;; esac
+            src="/mingw64/bin/$name"
+            [ -f "$src" ] && cp -n "$src" . || true
+        done || true
     done
- 
     after=$(find . -maxdepth 1 -type f -name '*.dll' | wc -l)
     echo "    pass $pass: $before -> $after DLLs"
     [ "$before" = "$after" ] && break
