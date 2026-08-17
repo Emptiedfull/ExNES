@@ -3,3 +3,7 @@ nes6502/
 *.xml
 *.sav
 */dist/
+.DS_Store
+__pycache__/
+*.pyc
+**/dist/

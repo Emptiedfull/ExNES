@@ -217,6 +217,7 @@ func InitializeConsole() *Console {
 	c.CheatEngine = InitCheat()
 
 	c.Ppu.NewBuffer = make([]uint32, 256*240)
+	c.Ppu.ShowBuffer = make([]uint32, 256*240)
 
 	c.Player1 = &joyPad{}
 	c.Player2 = &joyPad{}
@@ -252,7 +253,7 @@ func (c *Console) PowerCycle() {
 func (c *Console) RunDisplayUpdates() {
 
 	if c.Ppu.ScreenChanged {
-		c.ScreenChannel <- c.Ppu.NewBuffer
+		c.ScreenChannel <- c.Ppu.ShowBuffer
 		c.Ppu.ScreenChanged = false
 	}
 }

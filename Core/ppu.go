@@ -10,11 +10,8 @@ type ppu struct {
 	Scanline int
 	Frame    int
 
-	// BackBuffer [245760]uint8
-
-	// BackBuffer []uint8
-
-	NewBuffer []uint32
+	NewBuffer  []uint32
+	ShowBuffer []uint32
 
 	mirroring int
 

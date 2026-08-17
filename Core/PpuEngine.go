@@ -32,11 +32,9 @@ func (p *ppu) cycleTick() {
 			p.Frame++
 
 			p.ScreenChanged = true
+			copy(p.ShowBuffer, p.NewBuffer)
+			// p.ShowBuffer = p.NewBuffer
 
-			// if m, ok := p.console.mapper.(*MMC3); ok {
-			// 	fmt.Printf("frame: %v, edges %v \n", p.Frame, m.edges)
-			// 	m.edges = 0
-			// }
 		}
 	}
 

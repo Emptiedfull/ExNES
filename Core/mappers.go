@@ -85,7 +85,7 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 		}
 	default:
 
-		return fmt.Errorf("unknown mapper", id)
+		return fmt.Errorf("unknown mapper: %d", id)
 	}
 
 	c.mapper = m
