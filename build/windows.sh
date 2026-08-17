@@ -36,6 +36,7 @@ for pass in 1 2 3 4 5; do
 done
  
 echo "    final contents:"
+# shellcheck disable=SC2012
 ls -1 | sed 's/^/      /'
 
 cd "$DIST"

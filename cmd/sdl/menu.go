@@ -281,9 +281,8 @@ func createNewMenu(font *ttf.Font, console *game, state *localState, menuH, menu
 				{
 					label: "Sound",
 
-					affectedFlag: gameRunning,
-					Icon:         "icons/headset.svg",
-
+					Icon:       "icons/headset.svg",
+					enabled:    true,
 					Expandable: true,
 					ExpandableItems: []expandableOption{
 						{

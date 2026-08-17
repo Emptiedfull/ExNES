@@ -37,7 +37,7 @@ func getMapper(header []byte) int {
 	return int(high | low)
 }
 
-func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring uint8, hasBattery bool) {
+func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring uint8, hasBattery bool) error {
 	var m Mapper
 	switch id {
 	case 0:
@@ -46,6 +46,7 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			CHRROM:     chrData,
 			Mirrroring: mirroring,
 		}
+
 	case 1:
 		m = &Mapper1{
 			PRGROM:        prgData,
@@ -83,10 +84,12 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 			Mirroring:  int(mirroring),
 		}
 	default:
-		fmt.Println("unknown Mapper:", id)
+
+		return fmt.Errorf("unknown mapper", id)
 	}
 
 	c.mapper = m
+	return nil
 }
 
 //MAPPER 0
@@ -725,9 +728,9 @@ func (m *MMC3) WritePRG(addr uint16, val uint8) {
 	case addr >= 0xA000 && addr < 0xC000:
 		if even {
 			if val&0x01 == 0 {
-				m.Mirroring = 3
-			} else {
 				m.Mirroring = 2
+			} else {
+				m.Mirroring = 3
 			}
 		} else {
 			m.protect = val

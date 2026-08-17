@@ -545,9 +545,14 @@ func (d *DMC) stepOutput() {
 			if d.excessBytes > 0 {
 				d.stall = 4
 			}
+
 		} else {
 			d.mute = true
 		}
+	}
+
+	if !d.BufferFull && d.excessBytes > 0 && d.stall == 0 {
+		d.stall = 4
 	}
 }
 
