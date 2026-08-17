@@ -31,7 +31,7 @@ func openRom(console *game, state *localState, mb *menuBar) {
 
 		fmt.Println(getRecentItems(state.RecentFiles, mb.console, mb))
 
-		mb.Items[0].options[2].ExpandableItems = getRecentItems(state.RecentFiles, mb.console, mb)
+		mb.Items[0].options[1].ExpandableItems = getRecentItems(state.RecentFiles, mb.console, mb)
 		mb.positionLayout()
 	} else {
 		pushError("State:", fmt.Errorf("No state present"), false)

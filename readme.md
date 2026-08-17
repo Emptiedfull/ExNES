@@ -14,17 +14,56 @@ Executables for Windows, Mac and Linux are available on the releases page.
 
 ### Linux 
 
-Release for linux happens through AppImages, the source code for these are present inside build/AppImage.sh, this is there to ensure smooth experience while setting up on linux without needing to manually resolve dependcies or using a package manager. Stable AppImages can found in the releases page.
+Release for linux happens through AppImages, there are no prerequisite dependencies or package manager involved. Stable AppImages can found in the releases page.
 
-Download the AppImage and run the following 
+```
+chmod +x ExNES-x86_64.AppImage
+./ExNES-x86_64.AppImage
+```
+The appImage was built against `Debian 12(glic 2.36)` and hence will not work on older legacy systems, these including distributions like Ubuntu 22.04 and RHEL 8. On these systems build from source instead, a list of needed dependencies can be found in ` AppImage.sh `
 
-chmod +x AppImage.sh 
-./AppImage.sh
+### Mac 
 
-The app image might not work on some legacy systems due to the compilation which was done to (PLEASE GOD REMEMBER TO FILL THIS), in which case it must be run from source.
+MacOS version ships as a `.dmg` for both silicon based and intel based Macs. Due to the unsigned nature of the binary (it costs an arm and leg), the first run will require to explicity allow execution by going to `Settings > Privacy`.
 
-### Window 
+> Dragging and Dropping files on the macOS edition will cause the emulator to crash, this is a known issue with no fix currently.
 
+### Windows
+
+There are two options for windows included with every release
+
+1) Use the zipped application 
+
+- Download "" from releases
+- Unzip the folder 
+- Run `exnes.exe`
+
+2) Use the native installer 
+
+- Download "" from the releases
+- Run the installer 
+- Follow the wizard for further information
+
+Both methods are batteries included and all needed dependencies are installed as per need. 
+
+The native installer also sets up file associations for the application allowing for opening roms using the inbuilt context menu or through drag and drop. 
+
+All settings and saves reside in `%AppData%\exnes`
+
+### Controls 
+
+The default mappings are common across the native builds and are as follows: 
+
+ 
+| NES button | Key | Turbo |
+|---|---|---|
+| D-pad | Arrow keys | — |
+| A | `Z` | `Q` |
+| B | `X` | `W` |
+| Start | `Enter` | — |
+| Select | `Left Shift` | — |
+
+The default mappings can be changed by going to `Settings > Input` 
 
 
 ### Running it locally 

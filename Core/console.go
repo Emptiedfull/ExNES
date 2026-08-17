@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"sync"
 )
 
 type Console struct {
@@ -29,9 +28,6 @@ type Console struct {
 	ScreenChannel chan []uint32
 
 	Snapshots SnapshotBuffer
-
-	Paused   bool
-	pausedMu sync.Mutex
 
 	Debug *DebugEngine
 
@@ -77,18 +73,6 @@ func (c *Console) Step() {
 
 func (c *Console) GetMapper() Mapper {
 	return c.mapper
-}
-
-func (c *Console) Pause() {
-	c.pausedMu.Lock()
-	defer c.pausedMu.Unlock()
-	c.Paused = true
-}
-
-func (c *Console) UnPause() {
-	c.pausedMu.Lock()
-	defer c.pausedMu.Unlock()
-	c.Paused = false
 }
 
 func (c *Console) OpenRomFile(filepath string) (io.Reader, error) {
@@ -161,10 +145,10 @@ func (c *Console) InitRom(data io.Reader) error {
 
 	}
 
-	c.assignMapper(mapper, prgData, chrData, uint8(mirroring), hasBattery)
+	err := c.assignMapper(mapper, prgData, chrData, uint8(mirroring), hasBattery)
 
-	if c.mapper == nil {
-		return fmt.Errorf("Mapper not supported")
+	if err != nil {
+		return err
 	}
 
 	if c.LoadRam != nil {
@@ -272,7 +256,10 @@ func Quickstart(filepath string) *Console {
 	if err != nil {
 		log.Fatalln("error reading file data", err)
 	}
-	c.InitRom(file)
+	err = c.InitRom(file)
+	if err != nil {
+		return nil
+	}
 	c.Cpu.Reset()
 
 	return c

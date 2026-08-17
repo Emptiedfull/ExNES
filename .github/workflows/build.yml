@@ -102,18 +102,23 @@ jobs:
       - uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with: 
-          files: dist/*.zip dist/*-setup.exe
+          files: |
+            dist/*.zip 
+            dist/*-setup.exe
 
 
       - uses: actions/upload-artifact@v4
         if: github.event_name != 'release'
         with:
           name: exnes-windows
-          path: dist/*.zip dist/*-setup.exe
+          if-no-files-found: error 
+          path: | 
+            dist/*.zip
+            dist/*-setup.exe 
       
   appimage:
     needs: check
-    if: github.event_name == 'release' || github.event_name == 'workflow-dispatch'
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write

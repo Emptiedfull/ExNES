@@ -130,6 +130,8 @@ func (m *Mapper0) TakeSnapshot(s MapperScreenShot) {
 		log.Fatalf("babababa")
 	}
 
+	res.Mirroring = m.Mirrroring
+
 	copy(res.CHRROM, m.CHRROM)
 	copy(res.PRGROM, m.PRGROM)
 
