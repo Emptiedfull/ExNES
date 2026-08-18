@@ -48,7 +48,6 @@ Both methods are batteries included and all needed dependencies are installed as
 
 The native installer also sets up file associations for the application allowing for opening roms using the inbuilt context menu or through drag and drop. 
 
-All settings and saves reside in `%AppData%\exnes`
 
 ### Controls 
 
@@ -64,6 +63,31 @@ The default mappings are common across the native builds and are as follows:
 | Select | `Left Shift` | — |
 
 The default mappings can be changed by going to `Settings > Input` 
+
+### Whats included 
+
+The desktop build comes with a sdl based application window with a lightweight custom made graphics and state handler. 
+
+- Loading rom files from memory with recent files support 
+- 10 Save states linked to ROM's hash 
+- Battery backed ram support for included Mappers 
+- Support for emulation control: Pause,Unpause,Reset,Power Cycle,etc
+- Cheat suport in both memory and code format
+- Hash based database support linked to cheats menu 
+- Support for variable emualtion speed upto 3x
+- Volume and fps control 
+- Support for dynamic pallete changes
+- Customizable controls 
+- Turbo controls 
+- File associations for os-dependent context menus 
+
+All settings and battery backed ram saves are persistent and stored in: 
+
+| Platform | Path |
+|---|---|
+| Linux | `~/.config/exnes` |
+| macOS | `~/Library/Application Support/exnes` |
+| Windows | `%AppData%\exnes` |
 
 
 ### Running it locally 
@@ -109,7 +133,7 @@ The other 2 builds present in cmd/wasm are for internal testing and may or may n
 
 Present in ./CORE it contains all the neccesary functions and helpers responsible for emulating the NES Console.
 
-It includes a cycle accurate 6502 rioch cpu with full opcode coverage including all illegal and unstable opcodes. It also includes cycle accurate RDY and DMA capablities with mid instruction blocking. 
+It includes a cycle accurate 6502 Rioch 2A03 cpu with full opcode coverage including all illegal and unstable opcodes. These are tested against [SingleStepTests](https://github.com/SingleStepTests/65x02) `nes6502/v1`. Along with cycle accuracy for opcodes, it also contains cycle accurate state machines for interrupts.
 
 NOTE: The cooked branch includes a sub cycle accurate RDY pin behaviour but it is currently unstable and cant be used freely without risk of crash. 
 
