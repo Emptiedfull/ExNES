@@ -634,8 +634,8 @@ type MMC3 struct {
 	PRGRAM []uint8
 	CHRROM []uint8
 
-	prgWin [4][]uint8
-	chrWin [4][]uint8
+	prgWin [8][]uint8
+	chrWin [8][]uint8
 
 	Mirroring uint8
 
