@@ -1,14 +1,34 @@
 # EXNES
 
-Exnes is a multi-release NES emulation with a focus on balancing cross system performance with accuracy to the hardware. 
+A cycle accurate emulator for the Nintendo Entertainment System written in go, built for performance and compatiblity
 
-## Trying it
+The core offers a standalone package without any external dependencies and no timing, rendering or audio management preferences. Allowing for extensive compatiblity and ease of use. 
 
-### Web build
+This repo ships with a sdl frontend for native applications and a web build that runs straight in the browser using web assembly. 
 
-The web build is currently hosted [here]()
+## Playing it 
+
+### Web 
+
+<p align="center">
+  <img src="./media/web/main.png" alt="ExNES icon" width="200" hspace="30">
+   <img src="./media/web/select.png" alt="ExNES icon" width="200" hspace="30">
+    <img src="./media/web/rewind.png" alt="ExNES icon" width="200">
+</p>
+
+The web build runs in any browser with support for shared memory array buffers (most major modern browsers). It is currently only playable on desktop browsers however. A curated set of roms is available built in however support for custom roms is not present. 
+
+> **Hosted at:** https://exnes.a.shipwrights.dev/
+
+
 
 ## Native builds
+
+<p align="center">
+  <img src="./media/sdl/honme.png" alt="ExNES icon" width="200" hspace="30">
+   <img src="./media/sdl/controls.png" alt="ExNES icon" width="220" hspace="30">
+    <img src="./media/sdl/cheat.png" alt="ExNES icon" width="120">
+</p>
 
 Executables for Windows, Mac and Linux are available on the releases page. 
 
@@ -30,25 +50,26 @@ MacOS version ships as a `.dmg` for both silicon based and intel based Macs. Due
 
 ### Windows
 
-There are two options for windows included with every release
+Every release ships two options.
 
-1) Use the zipped application 
+**Portable zip.** Download `ExNES-windows-x86_64.zip`, unpack it anywhere, and run
+`exnes.exe`. Nothing is installed and nothing is written outside the app's own
+config directory.
 
-- Download "" from releases
-- Unzip the folder 
-- Run `exnes.exe`
+**Installer.** Download `ExNES-<version>-windows-x64-setup.exe` and run it. It
+installs per-user by default, so Windows never prompts for admin rights, and it
+adds Start Menu and optional desktop shortcuts.
 
-2) Use the native installer 
+Both are self-contained, SDL2 and everything else is bundled alongside the exe,
+so there is no runtime to install and no package manager involved. 
 
-- Download "" from the releases
-- Run the installer 
-- Follow the wizard for further information
+The installer additionally registers `.nes` as a file type, which lets you launch
+a ROM by double-clicking it, via right-click → Open With, or by dropping it onto
+the ExNES icon.
 
-Both methods are batteries included and all needed dependencies are installed as per need. 
-
-The native installer also sets up file associations for the application allowing for opening roms using the inbuilt context menu or through drag and drop. 
-
-
+> Neither download is code-signed yet, so SmartScreen will show a
+> "Windows protected your PC" warning on first run. Click **More info** →
+> **Run anyway**.
 ### Controls 
 
 The default mappings are common across the native builds and are as follows: 
@@ -62,7 +83,9 @@ The default mappings are common across the native builds and are as follows:
 | Start | `Enter` | — |
 | Select | `Left Shift` | — |
 
-The default mappings can be changed by going to `Settings > Input` 
+The default mappings can be changed by going to `Settings > Input`
+
+Turbo buttons act like turbo buttons on the pro nes controllers and spam a given input while they are held.
 
 ### Whats included 
 
@@ -90,31 +113,65 @@ All settings and battery backed ram saves are persistent and stored in:
 | Windows | `%AppData%\exnes` |
 
 
-### Running it locally 
+## Running it locally 
 
-### Web build 
+### Building from Source
 
-There are 2 methods of running the web build depending on the purpose, 
+Requires Go 1.24+, cgo, and SDL2 development headers.
 
-#### Production 
+> Installing depts:
 
-The root includes a dockerfile and Caddyfile, these can be used as it is to run wherever docker is supported.
+```sh
+# Debian / Ubuntu
+sudo apt install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev libsdl2-gfx-dev
+ 
+# macOS
+brew install sdl2 sdl2_ttf sdl2_image sdl2_gfx
+ 
+# MSYS2 (MINGW64 shell)
+pacman -S mingw-w64-x86_64-toolchain mingw-w64-x86_64-SDL2 \
+          mingw-w64-x86_64-SDL2_ttf mingw-w64-x86_64-SDL2_image \
+          mingw-w64-x86_64-SDL2_gfx
+```
 
-The port is hardcoded and can only be changed by editing *Caddyfile with no support for env variables currently.
+> Building Binary 
 
-#### Development 
+```sh
+go build -o exnes ./cmd/sdl
+./exnes
+```
 
-For easy development testing and iteration, a server is included with:
+### Using Release artifacts 
 
-1) File path watching for auto re-compile of wasm binary 
-2) Brotli compression with inbuilt in-memory cache 
-3) Creation of requisite lists for frontend consumption 
+`.github/workflows/build.yml` builds all 4 dispatches on every github release, or on a manual action. 
 
-To use the server navigate to cmd/wasm/server and run the binary provided, it defaults to port 8070 
+For producing them locally: 
 
-#### Misc
+| Target | Command | Output |
+|---|---|---|
+| Linux  | `docker build -t exnes-build build/` then `build/AppImage.sh` | `dist/*.AppImage` |
+| macOS `.dmg` | `bash build/macos.sh` | `dist/*.dmg` |
+| Windows `.zip` | `bash build/windows.sh` (MSYS2 MINGW64) | `dist/*.zip` |
+| Windows installer | `iscc /DAppVersion=1.0.0 build\installer.iss` | `dist/*-setup.exe` | 
 
-The other 2 builds present in cmd/wasm are for internal testing and may or may not work depending on the commit, so uh I'm not providing any documentation for it but that might change in the future if I make it stable.
+### Running web build 
+
+**Production:** The repository root has a `dockerfile` and `Caddyfile` that work as-is anywhere Docker runs:
+
+```sh 
+docker build -t exnes-web 
+docker run -p 6000:80 exnes-web
+```
+
+The port can be manually changed in the `Caddyfile` but it currently lacks env variable support.
+
+**Development:** `cmd/wasm/server` is a custom built development server specifically made for this project, by default it comes with automatic Wasm recompilation and bundling, brotli compression backed by an in memory cache, and generation support for files used by frontend. 
+
+The default port is set to 8070
+
+```sh
+go run ./cmd/wasm/server
+```
 
 ### Features
 
@@ -126,6 +183,18 @@ The other 2 builds present in cmd/wasm are for internal testing and may or may n
 | RAM memory |  ✅ |   | 
 | Rom Support | Custom |  Included | 
 
+
+## Repository Map 
+
+```
+Core\           # Contains NES Core package 
+Cmd\            # Entrypoints
+    Sdl\            # Native frontend wtih sdl2
+    Wasm\           # Web assembly build + Dev Server and bundler
+    ssts\           # Test harness for single step tests
+Build\          # Build scripts and artifacts
+Media\          # Image gallery for readme
+```
 
 ## Technical details 
 
@@ -172,4 +241,8 @@ These are the following:
 The native build runs cross platform by utilizing the sdl library, it includes no dependencies apart from sdl including a layout engine. This means that every window contains its own discrete layout engine and state manager, a lot of this values are hardcoded for ease of development and thus extensions should be carefully made.
 
 It is technically supposed to work on every platform due to the cross platform nature of golang and sdl, but its only been tested on macOs. Please report any issues on other platforms.
+
+## Contributions 
+
+Issues and pull requests are welcome. Platform reports are especially useful, the desktop build is tested mainly on macOS, so Linux and Windows regressions tend to be found by users rather than by CI.
 
