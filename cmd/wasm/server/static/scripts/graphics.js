@@ -1,6 +1,6 @@
 import { openGuides } from "./guides.js"
 import { createModal } from "./modal.js"
-import { activateTip } from "./tooltips.js"
+
 
 
 
@@ -104,9 +104,6 @@ export const updateKey = async (key) => {
 
 const initCanvas = () => {
 
-  screen.addEventListener("mouseenter", async () => {
-    activateTip("fullscreen")
-  })
 
   screen.addEventListener("click", async () => {
     try {

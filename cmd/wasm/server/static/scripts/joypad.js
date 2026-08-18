@@ -18,6 +18,7 @@ const keyMap = {
     'ArrowUp': 'dpad-up',
     'ArrowDown': 'dpad-down',
     'ArrowLeft': 'dpad-left',
+
     'ArrowRight': 'dpad-right'
 }
 
@@ -177,10 +178,6 @@ export function wait(ms) {
     return new Promise(r => setTimeout(r, ms));
 }
 
-const listeners = {
-    "arrow up":function(
 
-    ){},
-}
 
 

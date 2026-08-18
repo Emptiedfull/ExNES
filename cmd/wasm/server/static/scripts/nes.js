@@ -2,10 +2,8 @@ import { openCap, closeCap, slotCart, activateJoypad, alignCable, pushbtn, turnK
 import { initConsole, loadRom, state, updateVolume, UpdateSpeed, PauseGame, ResumeGame, switchMode, ResetGame } from "./driver.js"
 import { wait } from "./joypad.js"
 import { createModal } from "./modal.js"
-import { activateTip, startRandomTipEngine } from "./tooltips.js"
 import { makeMockTiles } from "./rewind.js"
 import { checkForFirstGuide, openGuides } from "./guides.js"
-
 
 
 let currentIndex = 3
@@ -38,7 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     checkForFirstGuide()
     setUpMainLinks()
-    await startRandomTipEngine()
+    
     await setUpRocker()
     await setUpKnobs()
     await setUpButtons()

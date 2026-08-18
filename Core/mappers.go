@@ -67,13 +67,15 @@ func (c *Console) assignMapper(id int, prgData []byte, chrData []byte, mirroring
 		}
 	case 4:
 
-		m = &MMC3{
+		mm := &MMC3{
 			PRGROM:     prgData,
 			CHRROM:     chrData,
 			PRGRAM:     make([]uint8, 0x2000),
 			Mirroring:  mirroring,
 			hasBattery: hasBattery,
 		}
+		mm.syncBanks()
+		m = mm
 
 	case 163:
 		m = &Mapper163{
@@ -632,6 +634,9 @@ type MMC3 struct {
 	PRGRAM []uint8
 	CHRROM []uint8
 
+	prgWin [4][]uint8
+	chrWin [4][]uint8
+
 	Mirroring uint8
 
 	hasBattery bool
@@ -699,6 +704,8 @@ func (s MMC3SS) LoadSS(m Mapper) {
 
 	safe.prevA12 = s.prevA12
 
+	safe.syncBanks()
+
 }
 
 func (m *MMC3) CreateEmptySnapshot() MapperScreenShot {
@@ -708,6 +715,61 @@ func (m *MMC3) CreateEmptySnapshot() MapperScreenShot {
 		PRGRAM: make([]uint8, len(m.PRGRAM)),
 	}
 	return &s
+}
+
+func (m *MMC3) syncBanks() {
+	numPRG := uint32(len(m.PRGROM) / 0x2000)
+	last, secondlast := numPRG-1, numPRG-2
+
+	prgMode := (m.BankSelect >> 6) & 0x01
+
+	sel := func(b uint32) []uint8 {
+		b %= numPRG
+		return m.PRGROM[b*0x2000 : b*0x2000+0x2000]
+	}
+
+	if prgMode == 0 {
+		m.prgWin[0] = sel(uint32(m.BankReg[6]))
+		m.prgWin[2] = sel(secondlast)
+	} else {
+		m.prgWin[0] = sel(secondlast)
+		m.prgWin[2] = sel(uint32(m.BankReg[6]))
+	}
+
+	m.prgWin[1] = sel(uint32(m.BankReg[7]))
+	m.prgWin[3] = sel(last)
+
+	numCHR := uint32(len(m.CHRROM) / 0x400)
+	chrMode := (m.BankSelect >> 7) & 0x01
+	csel := func(b uint32) []uint8 {
+		b %= numCHR
+		return m.CHRROM[b*0x400 : b*0x400+0x400]
+	}
+
+	for region := range uint32(8) {
+		var bank uint32
+		if chrMode == 0 {
+			switch {
+			case region < 2:
+				bank = (uint32(m.BankReg[0]) &^ 1) + region
+			case region < 4:
+				bank = (uint32(m.BankReg[1]) &^ 1) + (region - 2)
+			default:
+				bank = uint32(m.BankReg[region-2])
+			}
+		} else {
+			switch {
+			case region < 4:
+				bank = uint32(m.BankReg[region+2])
+			case region < 6:
+				bank = (uint32(m.BankReg[0] &^ 1)) + (region - 4)
+			default:
+				bank = (uint32(m.BankReg[1] &^ 1)) + (region - 6)
+			}
+		}
+		m.chrWin[region] = csel(bank)
+	}
+
 }
 
 func (m *MMC3) WritePRG(addr uint16, val uint8) {
@@ -726,6 +788,7 @@ func (m *MMC3) WritePRG(addr uint16, val uint8) {
 			m.BankReg[m.BankSelect&0x07] = val
 
 		}
+		m.syncBanks()
 		return
 	case addr >= 0xA000 && addr < 0xC000:
 		if even {
@@ -762,82 +825,98 @@ func (m *MMC3) WritePRG(addr uint16, val uint8) {
 
 }
 
-func (m *MMC3) ReadPRG(addr uint16) uint8 {
-	if addr >= 0x6000 && addr < 0x8000 {
-		return m.PRGRAM[addr-0x6000]
-	}
+// func (m *MMC3) ReadPRG(addr uint16) uint8 {
+// 	if addr >= 0x6000 && addr < 0x8000 {
+// 		return m.PRGRAM[addr-0x6000]
+// 	}
 
+// 	if addr < 0x8000 {
+// 		return 0
+// 	}
+
+// 	numBanks := uint32(len(m.PRGROM) / 0x2000)
+// 	last := numBanks - 1
+// 	secondLast := numBanks - 2
+
+// 	slot := (addr - 0x8000) / 0x2000
+// 	offset := uint32(addr % 0x2000)
+
+// 	prgMode := (m.BankSelect >> 6) & 0x01
+
+// 	var bank uint32
+// 	switch {
+// 	case slot == 0:
+// 		if prgMode == 0 {
+// 			bank = uint32(m.BankReg[6]) % numBanks
+
+// 		} else {
+// 			bank = secondLast
+// 		}
+// 	case slot == 1:
+// 		bank = uint32(m.BankReg[7]) % numBanks
+// 	case slot == 2:
+// 		if prgMode == 0 {
+// 			bank = secondLast
+// 		} else {
+// 			bank = uint32(m.BankReg[6]) % numBanks
+// 		}
+// 	default:
+// 		bank = last
+// 	}
+
+// 	return m.PRGROM[bank*0x2000+offset]
+// }
+
+func (m *MMC3) ReadPRG(addr uint16) uint8 {
 	if addr < 0x8000 {
+		if addr > 0x6000 {
+			return m.PRGRAM[addr-0x6000]
+		}
 		return 0
 	}
 
-	numBanks := uint32(len(m.PRGROM) / 0x2000)
-	last := numBanks - 1
-	secondLast := numBanks - 2
+	return m.prgWin[(addr>>13)&3][addr&0x1FFF]
 
-	slot := (addr - 0x8000) / 0x2000
-	offset := uint32(addr % 0x2000)
-
-	prgMode := (m.BankSelect >> 6) & 0x01
-
-	var bank uint32
-	switch {
-	case slot == 0:
-		if prgMode == 0 {
-			bank = uint32(m.BankReg[6]) % numBanks
-
-		} else {
-			bank = secondLast
-		}
-	case slot == 1:
-		bank = uint32(m.BankReg[7]) % numBanks
-	case slot == 2:
-		if prgMode == 0 {
-			bank = secondLast
-		} else {
-			bank = uint32(m.BankReg[6]) % numBanks
-		}
-	default:
-		bank = last
-	}
-
-	return m.PRGROM[bank*0x2000+offset]
 }
 
 func (m *MMC3) ReadCHR(addr uint16) uint8 {
-	numBanks := uint32(len(m.CHRROM) / 0x400)
-	chrMode := (m.BankSelect >> 7) & 0x01
-
-	var bank uint32
-	var offset uint32
-
-	region := uint32(addr / 0x400)
-	offset = uint32(addr % 0x400)
-
-	if chrMode == 0 {
-		switch {
-		case region < 2:
-			bank = (uint32(m.BankReg[0]) &^ 1) + region
-		case region < 4:
-			bank = (uint32(m.BankReg[1]) &^ 1) + (region - 2)
-		default:
-			bank = uint32(m.BankReg[region-2])
-		}
-	} else {
-		switch {
-		case region < 4:
-			bank = (uint32(m.BankReg[region+2]))
-		case region < 6:
-			bank = (uint32(m.BankReg[0] &^ 1)) + (region - 4)
-		default:
-			bank = (uint32(m.BankReg[1] &^ 1)) + (region - 6)
-		}
-	}
-
-	bank %= numBanks
-	return m.CHRROM[bank*0x400+offset]
-
+	return m.chrWin[(addr>>10)&7][addr&0x3FF]
 }
+
+// func (m *MMC3) ReadCHR(addr uint16) uint8 {
+// 	numBanks := uint32(len(m.CHRROM) / 0x400)
+// 	chrMode := (m.BankSelect >> 7) & 0x01
+
+// 	var bank uint32
+// 	var offset uint32
+
+// 	region := uint32(addr / 0x400)
+// 	offset = uint32(addr % 0x400)
+
+// 	if chrMode == 0 {
+// 		switch {
+// 		case region < 2:
+// 			bank = (uint32(m.BankReg[0]) &^ 1) + region
+// 		case region < 4:
+// 			bank = (uint32(m.BankReg[1]) &^ 1) + (region - 2)
+// 		default:
+// 			bank = uint32(m.BankReg[region-2])
+// 		}
+// 	} else {
+// 		switch {
+// 		case region < 4:
+// 			bank = (uint32(m.BankReg[region+2]))
+// 		case region < 6:
+// 			bank = (uint32(m.BankReg[0] &^ 1)) + (region - 4)
+// 		default:
+// 			bank = (uint32(m.BankReg[1] &^ 1)) + (region - 6)
+// 		}
+// 	}
+
+// 	bank %= numBanks
+// 	return m.CHRROM[bank*0x400+offset]
+
+// }
 
 func (m *MMC3) WriteCHR(addr uint16, val uint8) {
 

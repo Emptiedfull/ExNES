@@ -1,10 +1,6 @@
 import { wait } from "./joypad"
 
 
-export const SetUpModals = ()=>{
-    
-
-}
 
 export const createModal = async (head,body,error = false,fleeting = true)=>{
 
